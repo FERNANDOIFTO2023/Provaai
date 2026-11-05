@@ -8,6 +8,8 @@ export type ClassRoom = {
   grade: string;
   subject: string;
   period: string;
+  template_override_id?: string | null;
+  use_provaai_template?: boolean;
   color: string;
   created_at: string;
 };

@@ -6,10 +6,9 @@ import { supabase } from '@/lib/supabase';
 import {
   emailAuthError,
   isRejectedCode,
-  verifyEmailCode,
 } from '@/lib/email-auth';
 
-import { clearUsedCode, requestOrReuseCode } from '@/lib/pending-email-code';
+import { emailCodeRequest, requestOrReuseCode } from '@/lib/pending-email-code';
 
 export default function EmailLogin({
   onStageChange,
@@ -73,6 +72,10 @@ export default function EmailLogin({
     } catch (err) {
       if (verifying && isRejectedCode(err)) rejectInput(emailAuthError(err));
       else setError(emailAuthError(err));
+      if (['send_failed', 'send_limit', 'expired_code'].includes((err as {code?: string}).code ?? '')) {
+        setRetryAt(0);
+        setRemaining(0);
+      }
     } finally {
       pending.current = false;
       setBusy(false);
@@ -81,7 +84,7 @@ export default function EmailLogin({
 
   async function send() {
     await run(async () => {
-      const { address, deadline, reused } = await requestOrReuseCode(supabase.auth, sentTo || email);
+      const { address, deadline, reused } = await requestOrReuseCode(sentTo || email);
       setRetryAt(deadline);
       setRemaining(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
       setSentTo(address);
@@ -100,8 +103,21 @@ export default function EmailLogin({
       return;
     }
     await run(async () => {
-      await verifyEmailCode(supabase.auth, sentTo, code);
-      await clearUsedCode(sentTo);
+      const result = await emailCodeRequest('verify', sentTo, code);
+      if (result.rotated) {
+        const deadline = Date.parse(result.expiresAt ?? '');
+        if (!Number.isFinite(deadline)) throw new Error('Solicite o código novamente.');
+        setRetryAt(deadline);
+        setRemaining(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
+        setCode('');
+        setMessage('Limite de tentativas atingido. Um novo código foi enviado por e-mail. Confira a caixa de entrada ou o spam.');
+        onRejected();
+        codeInput.current?.focus();
+        return;
+      }
+      if (!result.session) throw new Error('Não foi possível iniciar sua sessão.');
+      const { error } = await supabase.auth.setSession(result.session);
+      if (error) throw error;
     }, true);
   }
 

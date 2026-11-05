@@ -31,6 +31,8 @@ export async function verifyEmailCode(
 export function isRejectedCode(error: unknown) {
   const item = error as { code?: string; message?: string } | null;
   return (
+    item?.code === 'invalid_code' ||
+    item?.code === 'expired_code' ||
     item?.code === 'otp_expired' ||
     /token has expired or is invalid/i.test(item?.message ?? '')
   );
@@ -42,6 +44,8 @@ export function emailAuthError(error: unknown) {
     status?: number;
     message?: string;
   } | null;
+  if (['invalid_code', 'expired_code', 'send_failed', 'send_limit'].includes(item?.code ?? ''))
+    return item?.message || 'Não foi possível concluir o acesso.';
   if (isRejectedCode(error) || item?.code === 'otp_disabled')
     return 'Código inválido ou expirado. Confira o código ou solicite um novo.';
   if (item?.status === 429 || item?.code === 'over_email_send_rate_limit')

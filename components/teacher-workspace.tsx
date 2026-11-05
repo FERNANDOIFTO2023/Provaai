@@ -92,6 +92,7 @@ export default function TeacherWorkspace({
   startNavigation: (change: () => void) => void;
 }) {
   const [data, setData] = useState<DataSet>(() => (demo ? demoData() : empty)),
+    [teacherTemplate, setTeacherTemplate] = useState<string | null>(null),
     [view, setView] = useState('classes'),
     [current, setCurrent] = useState<string | null>(null),
     [search, setSearch] = useState(''),
@@ -107,6 +108,7 @@ export default function TeacherWorkspace({
     [mobile, setMobile] = useState(false),
     [progress, setProgress] = useState(''),
     [templateText, setTemplateText] = useState(''),
+    [templateFiles, setTemplateFiles] = useState<File[]>([]),
     [format, setFormat] = useState<'pdf' | 'docx'>('pdf');
   const active = data.classes.find((c) => c.id === current),
     students = data.students.filter((s) => s.class_id === current),
@@ -123,22 +125,21 @@ export default function TeacherWorkspace({
   }, [screenPending, onPendingChange]);
   const approved = data.exams.filter((e) => e.status === 'approved');
   async function load() {
-    const results = await Promise.all(
-      ['sala_classes', 'sala_students', 'sala_exams', 'sala_templates'].map(
-        (t) =>
-          supabase
-            .from(t)
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(1000),
-      ),
-    );
-    const failed = results.find((r) => r.error);
+    if (!user) return;
+    const tables = ['sala_classes', 'sala_students', 'sala_exams', 'sala_templates'];
+    const [results, preference] = await Promise.all([
+      Promise.all(tables.map(table => supabase.from(table).select('*')
+        .order('created_at', { ascending: false }).limit(1000))),
+      supabase.from('sala_teacher_template_defaults').select('template_id')
+        .eq('user_id', user.id).maybeSingle(),
+    ]);
+    const failed = [preference, ...results].find((r) => r.error);
     if (failed) {
       setDbError(cleanError(failed.error));
       return;
     }
     setDbError('');
+    setTeacherTemplate(preference.data?.template_id ?? null);
     setData({
       classes: results[0].data as ClassRoom[],
       students: results[1].data as Student[],
@@ -225,6 +226,26 @@ export default function TeacherWorkspace({
   }
   const uid = demo ? 'demo' : user?.id;
   const now = () => new Date().toISOString();
+  const teacherTemplateName = teacherTemplate
+    ? data.templates.find(t => t.id === teacherTemplate)?.name ?? 'Modelo salvo'
+    : 'Modelo Provaai';
+  const classTemplateChoice = active?.template_override_id ?? (active?.use_provaai_template ? 'builtin' : 'inherit');
+
+  async function setDefaultTemplate(id: string | null) {
+    if (!demo) {
+      const { error } = await supabase.from('sala_teacher_template_defaults')
+        .upsert({ user_id: uid, template_id: id }, { onConflict: 'user_id' });
+      if (error) throw error;
+    }
+    setTeacherTemplate(id);
+    setMessage('Modelo padrão atualizado.');
+  }
+  function defaultControl(id: string | null, ready = true) {
+    if (id === teacherTemplate)
+      return <span className="status good"><Check size={14} /> Meu padrão</span>;
+    return <button type="button" className="button secondary" disabled={busy || !ready}
+      onClick={() => void action(() => setDefaultTemplate(id))}>Definir como padrão</button>;
+  }
   async function saveClass(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = Object.fromEntries(new FormData(e.currentTarget));
@@ -327,6 +348,22 @@ export default function TeacherWorkspace({
         );
       if (aiMode && !ai)
         throw new Error('A IA ainda não está configurada no servidor.');
+      const choice = String(f.get('template_choice'));
+      const templateId = choice === 'inherit' ? teacherTemplate : choice === 'builtin' ? null : choice;
+      if (templateId && !data.templates.some(t => t.id === templateId && (demo || t.processing_status === 'ready')))
+        throw new Error('Escolha um modelo com leitura concluída antes de preparar as provas.');
+      if (choice !== classTemplateChoice) {
+        const preference = {
+          template_override_id: choice === 'inherit' || choice === 'builtin' ? null : choice,
+          use_provaai_template: choice === 'builtin',
+        };
+        if (!demo) {
+          const { error } = await supabase.from('sala_classes').update(preference)
+            .eq('id', room.id).eq('user_id', uid).select('id').single();
+          if (error) throw error;
+        }
+        setData(d => ({ ...d, classes: d.classes.map(c => c.id === room.id ? { ...c, ...preference } : c) }));
+      }
       let failures = 0;
       for (let i = 0; i < selected.length; i++) {
         const s = selected[i];
@@ -340,7 +377,7 @@ export default function TeacherWorkspace({
           subject: room.subject,
           topics,
           question_count: count,
-          template_id: String(f.get('template_id') || '') || null,
+          template_id: templateId,
           status: 'draft',
           content: {
             objectiveCount,
@@ -446,60 +483,87 @@ export default function TeacherWorkspace({
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     await action(async () => {
-      const file = f.get('file') as File;
-      if (!file?.size || file.size > 20 * 1024 * 1024)
-        throw new Error('Escolha um arquivo de até 20 MB.');
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      if (!['pdf', 'doc', 'docx'].includes(ext || ''))
-        throw new Error('Use PDF, DOC ou DOCX.');
-      const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
-      const valid =
-        ext === 'pdf'
-          ? new TextDecoder().decode(bytes).startsWith('%PDF-')
-          : ext === 'docx'
-            ? bytes[0] === 80 && bytes[1] === 75
-            : bytes[0] === 208 && bytes[1] === 207;
-      if (!valid)
-        throw new Error(
-          'O conteúdo do arquivo não corresponde ao formato informado.',
-        );
-      const id = crypto.randomUUID(),
-        path = `${uid}/${id}.${ext}`;
-      if (!demo) {
-        const { error } = await supabase.storage
-          .from('sala-templates')
-          .upload(path, file, {
-            contentType:
-              ext === 'pdf'
-                ? 'application/pdf'
-                : ext === 'doc'
-                  ? 'application/msword'
-                  : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          });
-        if (error) throw error;
+      if (!templateFiles.length) throw new Error('Selecione ao menos um arquivo.');
+      const names = f.getAll('template_name').map(value => String(value).trim());
+      if (templateFiles.some((_, index) => !names[index]))
+        throw new Error('Informe um nome para cada modelo.');
+      for (const file of templateFiles) {
+        await validateTemplateFile(file);
       }
-      try {
-        await persist('templates', 'sala_templates', {
-          id,
-          user_id: uid,
-          name: String(f.get('name')),
-          filename: file.name,
-          path,
-          reference_text: templateText,
-          created_at: now(),
-        });
-      } catch (e) {
-        if (!demo) await supabase.storage.from('sala-templates').remove([path]);
-        throw e;
+      const issues: string[] = [];
+      let saved = 0;
+      for (const [index, file] of templateFiles.entries()) {
+        setProgress(`Salvando modelo ${index + 1} de ${templateFiles.length}…`);
+        try {
+          const id = await storeTemplateFile(file, names[index]);
+          saved++;
+          if (!demo) {
+            try { await processTemplate(id); }
+            catch { issues.push(`${names[index]}: salvo. Use “Ler arquivo novamente” para concluir a leitura.`); }
+          }
+        } catch (err) {
+          issues.push(`${names[index]}: ${cleanError(err)}`);
+        }
       }
-      setModal(null);
-      if (!demo) {
-        await processTemplate(id);
+      setProgress('');
+      if (saved) {
+        setModal(null);
+        setMessage(saved === 1 ? 'Modelo adicionado à sua biblioteca.' : `${saved} modelos adicionados à sua biblioteca.`);
       }
-      setMessage(
-        'Modelo salvo e lido. Confira o texto extraído antes de gerar provas.',
-      );
+      if (issues.length) throw new Error(issues.join(' '));
     });
+  }
+  async function validateTemplateFile(file: File) {
+    if (!file?.size || file.size > 20 * 1024 * 1024)
+      throw new Error('Escolha um arquivo de até 20 MB.');
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!['pdf', 'doc', 'docx'].includes(ext || ''))
+      throw new Error('Use PDF, DOC ou DOCX.');
+    const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    const valid =
+      ext === 'pdf'
+        ? new TextDecoder().decode(bytes).startsWith('%PDF-')
+        : ext === 'docx'
+          ? bytes[0] === 80 && bytes[1] === 75
+          : bytes[0] === 208 && bytes[1] === 207;
+    if (!valid)
+      throw new Error(
+        'O conteúdo do arquivo não corresponde ao formato informado.',
+      );
+  }
+  async function storeTemplateFile(file: File, name: string) {
+    const ext = file.name.split('.').pop()!.toLowerCase();
+    const id = crypto.randomUUID(),
+      path = `${uid}/${id}.${ext}`;
+    if (!demo) {
+      const { error } = await supabase.storage
+        .from('sala-templates')
+        .upload(path, file, {
+          contentType:
+            ext === 'pdf'
+              ? 'application/pdf'
+              : ext === 'doc'
+                ? 'application/msword'
+                : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
+      if (error) throw error;
+    }
+    try {
+      await persist('templates', 'sala_templates', {
+        id,
+        user_id: uid,
+        name,
+        filename: file.name,
+        path,
+        reference_text: templateText,
+        ...(demo ? { processing_status: 'ready' } : {}),
+        created_at: now(),
+      });
+    } catch (e) {
+      if (!demo) await supabase.storage.from('sala-templates').remove([path]);
+      throw e;
+    }
+    return id;
   }
   async function signout() {
     if (busy) return;
@@ -1165,19 +1229,19 @@ export default function TeacherWorkspace({
                     Modelos de prova<span>.</span>
                   </h1>
                   <p>
-                    Guarde seus arquivos e as orientações que vão guiar cada
-                    avaliação.
+                    Adicione seus modelos e escolha qual a IA deve usar por padrão nas suas turmas.
                   </p>
                 </div>
                 <button
                   className="button primary"
                   onClick={() => {
                     setTemplateText('');
+                    setTemplateFiles([]);
                     open('template');
                   }}
                 >
                   <Upload size={18} />
-                  Enviar modelo
+                  Adicionar modelos
                 </button>
               </div>
               <div className="notice soft">
@@ -1201,7 +1265,7 @@ export default function TeacherWorkspace({
                   </div>
                   <h3>Modelo Provaai</h3>
                   <p>A4 · Identificação · Espaço para respostas</p>
-                  <span className="status good">Padrão incluído</span>
+                  {defaultControl(null)}
                 </div>
                 {data.templates.map((t) => (
                   <div className="template-card" key={t.id}>
@@ -1212,6 +1276,7 @@ export default function TeacherWorkspace({
                     <h3>{t.name}</h3>
                     <p>{t.filename}</p>
                     <p className="muted">{t.reference_text.slice(0, 100)}</p>
+                    {defaultControl(t.id, demo || t.processing_status === 'ready')}
                     <p>
                       {t.processing_status === 'ready'
                         ? 'Leitura concluída'
@@ -1328,6 +1393,7 @@ export default function TeacherWorkspace({
                       className="button secondary"
                       onClick={() => {
                         setData(demoData());
+                        setTeacherTemplate(null);
                         setMessage('Demonstração restaurada.');
                       }}
                     >
@@ -1367,7 +1433,7 @@ export default function TeacherWorkspace({
                 : modal === 'generate'
                   ? 'Preparar provas individuais'
                   : modal === 'template'
-                    ? 'Seu modelo de referência'
+                    ? 'Adicionar modelos de referência'
                     : 'Revisar prova'
           }
           wide={modal === 'exam' || modal === 'generate'}
@@ -1539,15 +1605,19 @@ export default function TeacherWorkspace({
               </Field>
               <QuestionCounts />
               <Field label="Modelo de referência">
-                <select name="template_id">
-                  <option value="">Modelo Provaai · padrão</option>
+                <select name="template_choice" defaultValue={classTemplateChoice} aria-describedby="class-template-hint">
+                  <option value="inherit">Seguir meu padrão · {teacherTemplateName}</option>
+                  <option value="builtin">Modelo Provaai</option>
                   {data.templates.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
+                    <option key={t.id} value={t.id} disabled={!demo && t.processing_status !== 'ready'}>
+                      {t.name}{!demo && t.processing_status !== 'ready' ? ' · leitura pendente' : ''}
                     </option>
                   ))}
                 </select>
               </Field>
+              <p className="helper-note" id="class-template-hint">
+                Ao preparar as provas, a escolha fica salva só nesta turma. Selecione “Seguir meu padrão” para acompanhar as mudanças feitas em Modelos.
+              </p>
               <h3>Quem vai receber a prova?</h3>
               <div className="student-picks" key={current}>
                 {students.map((s) => (
@@ -1617,22 +1687,23 @@ export default function TeacherWorkspace({
           )}
           {modal === 'template' && (
             <form onSubmit={uploadTemplate}>
-              <Field label="Nome do modelo">
-                <input
-                  name="name"
-                  placeholder="Ex.: Avaliação bimestral"
-                  required
-                  maxLength={100}
-                />
-              </Field>
-              <Field label="Arquivo PDF, DOC ou DOCX · até 20 MB">
+              <Field label="Arquivos PDF, DOC ou DOCX · até 20 MB por arquivo">
                 <input
                   type="file"
                   name="file"
+                  multiple
+                  disabled={busy}
+                  onChange={e => setTemplateFiles(Array.from(e.target.files ?? []))}
                   accept=".pdf,.doc,.docx"
                   required
                 />
               </Field>
+              {templateFiles.map((file, index) => (
+                <Field key={`${index}-${file.name}-${file.lastModified}`} label={`Nome do modelo · ${file.name}`}>
+                  <input name="template_name" required maxLength={100} disabled={busy}
+                    defaultValue={(file.name.replace(/\.[^.]+$/, '') || file.name).slice(0, 100)} />
+                </Field>
+              ))}
               <Field label="Orientações adicionais (opcional)">
                 <textarea
                   rows={6}
@@ -1650,7 +1721,7 @@ export default function TeacherWorkspace({
               </p>
               <div className="dialog-actions">
                 <button className="button primary" disabled={busy}>
-                  {busy ? 'Enviando…' : 'Salvar modelo'}
+                  {busy ? progress || 'Enviando…' : templateFiles.length > 1 ? 'Salvar modelos' : 'Salvar modelo'}
                   <Upload size={17} />
                 </button>
               </div>

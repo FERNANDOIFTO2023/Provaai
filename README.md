@@ -31,16 +31,18 @@ A configuração pública incluída aponta para o Supabase usado pelo site publi
 
 1. **Acesso.** Informe o e-mail e digite o código recebido para criar ou acessar a conta. O botão **Sair** encerra a sessão neste navegador e volta ao login. O mascote acompanha o ponteiro, reage à validação e aparece durante o carregamento. A interface respeita a preferência de movimento reduzido do sistema.
 2. **Turmas.** Crie a turma com nome, série e matéria. Na turma, cadastre os alunos com um código único naquela turma. O perfil reúne nível, dificuldades e critérios que devem orientar a prova. Não é preciso informar turno.
-3. **Modelos, se desejar.** Envie um PDF, DOC ou DOCX em **Modelos**. Acrescente orientações e confira o texto extraído. O sistema utiliza esse texto como referência pedagógica. A exportação usa a diagramação própria da Provaai.
+3. **Modelos, se desejar.** Em **Modelos**, adicione um ou mais arquivos PDF, DOC ou DOCX, dê um nome a cada modelo e confira o texto extraído. Após a leitura, use **Definir como padrão**. Ao preparar provas, a turma começa em **Seguir meu padrão**. Escolher outro modelo e confirmar **Preparar provas** guarda a escolha apenas nessa turma. Para voltar a acompanhar o padrão do professor, selecione **Seguir meu padrão** na próxima preparação. Cada prova guarda a referência escolhida no momento da criação. O texto do modelo orienta a IA e a exportação usa a diagramação da Provaai.
 4. **Preparação.** Abra uma turma com alunos e escolha **Preparar provas**. Selecione os alunos, informe título, tópicos e o total de 1 a 30 questões por aluno. Ao ajustar o número de objetivas, a interface calcula o número de discursivas, e vice-versa. Por exemplo, 10 questões com 6 objetivas resultam em 4 discursivas. É possível escolher todas de um único tipo.
 5. **Revisão.** Em **Provas**, abra o rascunho de cada aluno. Confira enunciados, alternativas, resposta esperada, objetivo e pontuação. Questões objetivas têm quatro alternativas, e a resposta deve corresponder a uma delas. Depois da revisão, aprove a prova. Editar o conteúdo de uma prova aprovada exige nova aprovação.
 6. **Entrega.** Exporte em PDF para impressão ou DOCX para edição. A versão do aluno e o gabarito do professor são arquivos separados. Ao selecionar várias provas aprovadas, o download é um ZIP com os arquivos e um manifesto CSV.
 
 ### Login no celular
 
-Após um envio aceito, o formulário confirma em verde e orienta a consultar a caixa de entrada ou o spam. Por 10 minutos, informar o mesmo endereço novamente no navegador abre a verificação do código anterior. Recarregar a página ou abrir outra aba preserva o prazo. O navegador guarda o horário de liberação por endereço, sem armazenar o código. Um código usado com sucesso é descartado. Ao completar o prazo, **Reenviar código** permite solicitar outro.
+Após o envio, o formulário orienta o professor a conferir a caixa de entrada ou o spam. Durante os 10 minutos seguintes, ele pode usar o mesmo código para entrar mais de uma vez, inclusive em outro dispositivo. Pedir de novo nesse prazo mostra a orientação para usar o código anterior. Um login bem-sucedido zera a contagem de erros e preserva o horário de expiração.
 
-Para aplicar esse intervalo também entre dispositivos, configure no Supabase Auth o intervalo mínimo entre envios por destinatário e a validade do código para 600 segundos. Os valores locais correspondentes são `auth.email.max_frequency` e `auth.email.otp_expiry` em `supabase/config.toml`. O deploy do site na Vercel é independente dessa configuração.
+Na quinta tentativa incorreta consecutiva, o servidor invalida o código anterior e solicita outro para o mesmo endereço imediatamente. O novo prazo começa quando o Supabase aceita o envio. Se a entrega for recusada, o professor vê o erro e pode tentar novamente. Cada endereço tem um limite de seis solicitações de envio por hora, incluindo substituições.
+
+A Edge Function `provaai-auth` controla os prazos no banco e usa o SMTP configurado no Supabase. O primeiro login valida o código no Auth. Para permitir novo login, o servidor guarda uma assinatura HMAC vinculada ao endereço e ao código, junto com o identificador do professor. Os acessos seguintes recebem sessões próprias. A tabela e as funções de controle são privadas. Se o Auth bloquear uma substituição pelo intervalo do destinatário, a função libera o relógio de envio apenas para a conta com uma reserva válida e um envio anterior recente. As cotas gerais do provedor continuam valendo.
 
 Em telas de até 760 px de largura, a faixa violeta reúne a marca e o mascote animado. O formulário começa logo abaixo. O botão principal solicita o código e **Explorar demonstração** aparece como ação secundária. Depois do envio, o espaço fica dedicado à digitação do código, ao reenvio e à troca de e-mail. Em telas baixas, o mascote ocupa menos altura. A página permite rolar quando o espaço disponível diminui.
 
@@ -61,7 +63,8 @@ As regras de layout ficam em `app/bloub.css`. O atributo `data-login-stage` de `
 | `supabase/functions/_shared/` | Validação das questões, distribuição, comunicação com o Gemini e regras de geração compartilhadas com o servidor Next.js. |
 | `supabase/functions/sala-ai/`, `sala-ai-mistral/` | Entradas das Edge Functions e processamento de documentos por provedor. O adaptador Mistral também é usado pela geração compartilhada. |
 | `supabase/templates/acesso-sala.html` | E-mail de autenticação usado no cadastro e no retorno de professores. |
-| `public/schema.sql` | Instalação completa do banco em um projeto novo. |
+| `supabase/functions/provaai-auth/`, `supabase/migrations/` | Login por código e regras de prazo, tentativas e envio. |
+| `public/schema.sql` | Esquema inicial de turmas, alunos, provas e modelos. |
 | `public/bloub/`, `public/favicon.svg` | Símbolo e expressões estáticas e animadas do mascote. |
 | `tests/`, `docs/` | Testes automatizados e especificação acadêmica da versão. |
 
@@ -75,6 +78,7 @@ O navegador usa o cliente do Supabase com a sessão do professor. As políticas 
 | `sala_classes` | Turmas do professor. O campo legado `period` tem valor padrão no banco para compatibilidade com cadastros anteriores. |
 | `sala_students` | Aluno, turma, código e perfil. A combinação de turma e código é única. |
 | `sala_templates` | Nome, caminho do arquivo, orientações, texto extraído e estado de processamento. |
+| `sala_teacher_template_defaults` | Modelo padrão da conta. A turma pode ter uma referência própria em `sala_classes`. As políticas de acesso e as chaves de professor impedem referências a modelos de outras contas. |
 | `sala_exams` | Uma prova por registro, vinculada ao aluno e à turma, com modelo opcional. Guarda o perfil no momento da criação, conteúdo JSON, distribuição solicitada e status `draft` ou `approved`. |
 | `sala_generation_jobs` | Reserva por prova para impedir duas gerações simultâneas do mesmo rascunho. |
 | `sala-templates` | Bucket privado. Cada arquivo fica sob o identificador do professor. |
@@ -83,16 +87,17 @@ Os nomes técnicos com prefixo `sala` fazem parte do esquema usado em produção
 
 ## Configurar um Supabase separado
 
-1. Crie um projeto. No SQL Editor do **novo projeto vazio**, execute `public/schema.sql` uma vez. O script cria tabelas, índices, políticas, trigger de revisão e bucket privado. Para um banco existente, compare o esquema e aplique uma migração específica.
+1. Crie um projeto. No SQL Editor do **novo projeto vazio**, execute `public/schema.sql` uma vez. O script cria tabelas, índices, políticas, trigger de revisão e bucket privado. Em seguida, execute os arquivos SQL de `supabase/migrations/` na ordem do nome. Para um banco existente, compare o esquema e aplique uma migração específica.
 2. Copie `.env.example` para `.env.local`. Preencha **juntas** `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` com a URL e a chave publicável do novo projeto. A chave administrativa dá acesso privilegiado e deve ficar fora do aplicativo.
 3. Em **Authentication**, habilite o provedor de e-mail e o cadastro de usuários. Configure a URL do site e os redirecionamentos para a origem correta do ambiente. Para o servidor local, use `http://127.0.0.1:3001`. No projeto publicado, a origem é `https://provaai.vercel.app`.
 4. Nos modelos **Confirm sign up** e **Magic link or OTP**, cole `supabase/templates/acesso-sala.html`. Use o assunto `{{ .Token }} é seu código de acesso à Provaai`. O marcador `{{ .Token }}` no corpo é substituído pelo Supabase a cada solicitação.
-5. Para entregar códigos em endereços reais, configure no Supabase seu SMTP, endereço de remetente e nome de exibição **Provaai**. A foto do remetente é configurada na conta do serviço de e-mail. A interface aceita códigos numéricos de 6 a 10 dígitos.
+5. Para entregar códigos em endereços reais, configure no Supabase seu SMTP, endereço de remetente e nome de exibição **Provaai**. A foto do remetente é configurada na conta do serviço de e-mail. Use 600 segundos para a validade e o intervalo normal por destinatário. Publique a função de login antes de publicar o site. A interface aceita códigos numéricos de 6 a 10 dígitos.
 6. Para processar arquivos de modelo ou delegar a geração ao Supabase, publique a função do provedor escolhido. Com a CLI do Supabase instalada, execute na raiz:
 
 ```sh
 supabase login
 supabase link --project-ref SEU_PROJECT_REF
+supabase functions deploy provaai-auth
 supabase functions deploy sala-ai
 # Para usar Mistral, publique a função correspondente:
 supabase functions deploy sala-ai-mistral
