@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import QuestionCounts from './question-counts';
+import TemplateFilePicker from './template-file-picker';
 import { questionMix } from '@/supabase/functions/_shared/question-mix';
 import { BloubMood } from './motion';
 import {
@@ -1686,41 +1687,23 @@ export default function TeacherWorkspace({
             </form>
           )}
           {modal === 'template' && (
-            <form onSubmit={uploadTemplate}>
-              <Field label="Arquivos PDF, DOC ou DOCX · até 20 MB por arquivo">
-                <input
-                  type="file"
-                  name="file"
-                  multiple
-                  disabled={busy}
-                  onChange={e => setTemplateFiles(Array.from(e.target.files ?? []))}
-                  accept=".pdf,.doc,.docx"
-                  required
-                />
-              </Field>
-              {templateFiles.map((file, index) => (
-                <Field key={`${index}-${file.name}-${file.lastModified}`} label={`Nome do modelo · ${file.name}`}>
-                  <input name="template_name" required maxLength={100} disabled={busy}
-                    defaultValue={(file.name.replace(/\.[^.]+$/, '') || file.name).slice(0, 100)} />
-                </Field>
-              ))}
+            <form className="template-upload" onSubmit={uploadTemplate}>
+              <TemplateFilePicker files={templateFiles} onChange={setTemplateFiles} disabled={busy} />
               <Field label="Orientações adicionais (opcional)">
                 <textarea
-                  rows={6}
+                  rows={2}
                   value={templateText}
                   onChange={(e) => setTemplateText(e.target.value)}
                   maxLength={12000}
-                  placeholder="Indique orientações adicionais. O conteúdo será lido do arquivo."
+                  placeholder="Ex.: Priorize questões de interpretação."
                 />
               </Field>
               <p className="helper-note">
-                O arquivo será lido automaticamente. PDFs são enviados ao
-                provedor de IA para leitura, inclusive páginas digitalizadas.
-                Remova dados pessoais antes de enviar. Revise a extração; a
-                diagramação final usa o modelo Provaai.
+                Remova dados pessoais antes de enviar. Os PDFs são lidos pela IA.
+                Confira o texto extraído em Modelos.
               </p>
               <div className="dialog-actions">
-                <button className="button primary" disabled={busy}>
+                <button className="button primary" disabled={busy || !templateFiles.length}>
                   {busy ? progress || 'Enviando…' : templateFiles.length > 1 ? 'Salvar modelos' : 'Salvar modelo'}
                   <Upload size={17} />
                 </button>
