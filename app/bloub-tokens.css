@@ -1,0 +1,23 @@
+:root {
+  --color-brand: #2adfb8;
+  --color-action: #5210ce;
+  --color-actionHover: #400da3;
+  --color-ink: #0d1823;
+  --color-muted: #505866;
+  --color-canvas: #f5f3f5;
+  --color-surface: #ffffff;
+  --color-line: #dad6df;
+  --color-success: #115c4c;
+  --color-successSurface: #d9faf2;
+  --color-warning: #79500a;
+  --color-warningSurface: #fff2c9;
+  --color-danger: #a4373a;
+  --color-dangerSurface: #fdecee;
+  --radius-control: 14px;
+  --radius-card: 24px;
+  --radius-hero: 36px;
+  --radius-pill: 999px;
+  --font-display: Trebuchet MS, system-ui, sans-serif;
+  --font-body: Segoe UI, system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
