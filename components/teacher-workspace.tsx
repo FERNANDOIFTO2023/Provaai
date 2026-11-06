@@ -37,8 +37,12 @@ import {
   Trash2,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import ExamLibrary from './exam-library';
+import RecoveryWorkspace from './recovery-workspace';
 import QuestionCounts from './question-counts';
 import TemplateFilePicker from './template-file-picker';
+import { useTemplateQueue } from './use-template-queue';
+import { useExamBatch } from './use-exam-batch';
 import { questionMix } from '@/supabase/functions/_shared/question-mix';
 import { BloubMood } from './motion';
 import {
@@ -56,7 +60,8 @@ import {
 } from '@/lib/model';
 import { downloadExams } from '@/lib/export';
 import { Dialog, Field, Empty } from './workspace-ui';
-type Modal = 'class' | 'student' | 'generate' | 'template' | 'exam' | null;
+type Modal = 'class' | 'student' | 'generate' | 'template' | 'uploads' | 'exam' | null;
+const uploadStages = { queued: 'Na fila', uploading: 'Enviando arquivo', reading: 'Lendo conteúdo', ready: 'Pronto', failed: 'Não concluído' };
 const empty: DataSet = { classes: [], students: [], exams: [], templates: [] };
 const initials = (name: string) =>
   name
@@ -70,6 +75,7 @@ export type Teacher = { id: string; email?: string };
 const sections = [
   { id: 'classes', short: 'Turmas', name: 'Minhas turmas', icon: LayoutGrid },
   { id: 'exams', short: 'Provas', name: 'Minhas provas', icon: FileText },
+  { id: 'recovery', short: 'Recuperação', name: 'Recuperação', icon: GraduationCap },
   {
     id: 'templates',
     short: 'Modelos',
@@ -104,17 +110,19 @@ export default function TeacherWorkspace({
     [message, setMessage] = useState(''),
     [error, setError] = useState(''),
     [dbError, setDbError] = useState(''),
-    [selection, setSelection] = useState<string[]>([]),
+    [recoveryMembers, setRecoveryMembers] = useState<string[]>([]),
+    [recoveryStudent, setRecoveryStudent] = useState<Student | null>(null),
+    [showArchived, setShowArchived] = useState(false),
     [ai, setAi] = useState(false),
     [mobile, setMobile] = useState(false),
     [progress, setProgress] = useState(''),
     [templateText, setTemplateText] = useState(''),
     [templateFiles, setTemplateFiles] = useState<File[]>([]),
-    [format, setFormat] = useState<'pdf' | 'docx'>('pdf');
+    [generationChoice, setGenerationChoice] = useState('inherit');
   const active = data.classes.find((c) => c.id === current),
-    students = data.students.filter((s) => s.class_id === current),
+    students = data.students.filter((s) => s.class_id === current && !s.archived_at),
     totalProfiles = data.students.filter(
-      (s) => s.difficulties || s.criteria,
+      (s) => !s.archived_at && (s.difficulties || s.criteria),
     ).length;
   const classListHeading = useRef<HTMLHeadingElement>(null);
   const [initialLoad, setInitialLoad] = useState(!demo);
@@ -124,10 +132,35 @@ export default function TeacherWorkspace({
     onPendingChange(screenPending);
     return () => onPendingChange(false);
   }, [screenPending, onPendingChange]);
+  const uploads = useTemplateQueue();
+  const uploading = uploads.active.length > 0;
+  const uploadFailed = uploads.tasks.some(task => task.stage === 'failed');
+  useEffect(() => {
+    if (!uploads.tasks.length || uploading || uploadFailed) return;
+    setModal(current => current === 'uploads' ? null : current);
+    setMessage(uploads.tasks.length === 1 ? 'Modelo pronto para usar.' : 'Modelos prontos para usar.');
+    uploads.dismiss();
+  }, [uploads.tasks, uploading, uploadFailed]);
   const approved = data.exams.filter((e) => e.status === 'approved');
-  async function load() {
+  async function exportExams(exams: Exam[], format: 'pdf'|'docx', answerKey=false) {
+    if (demo) return downloadExams(exams,format,answerKey);
+    const {data:{session}}=await supabase.auth.getSession();
+    if (!session) throw new Error('Entre novamente para exportar a prova.');
+    await downloadExams(exams,format,answerKey,async (exam,format,answerKey)=>{
+      const response=await fetch('/api/export/exam',{method:'POST',headers:{
+        authorization:'Bearer '+session.access_token,'content-type':'application/json',
+      },body:JSON.stringify({id:exam.id,format,answerKey})});
+      if (!response.ok) {
+        const body=await response.json().catch(()=>({}));
+        throw new Error(body.error || 'Não foi possível baixar a prova. Tente novamente.');
+      }
+      return response.blob();
+    });
+  }
+  async function load(includeTemplates = false) {
     if (!user) return;
-    const tables = ['sala_classes', 'sala_students', 'sala_exams', 'sala_templates'];
+    const tables = ['sala_classes', 'sala_students', 'sala_exams', 'sala_recovery_students'];
+    if (includeTemplates) tables.push('sala_templates');
     const [results, preference] = await Promise.all([
       Promise.all(tables.map(table => supabase.from(table).select('*')
         .order('created_at', { ascending: false }).limit(1000))),
@@ -140,13 +173,14 @@ export default function TeacherWorkspace({
       return;
     }
     setDbError('');
+    setRecoveryMembers((results[3].data as {student_id:string}[]).map(row => row.student_id));
     setTeacherTemplate(preference.data?.template_id ?? null);
-    setData({
+    setData(previous => ({
       classes: results[0].data as ClassRoom[],
       students: results[1].data as Student[],
       exams: results[2].data as Exam[],
-      templates: results[3].data as Template[],
-    });
+      templates: includeTemplates ? results[4].data as Template[] : previous.templates,
+    }));
   }
   useEffect(() => {
     fetch('/api/config')
@@ -156,10 +190,16 @@ export default function TeacherWorkspace({
       .finally(() => setConfigPending(false));
   }, []);
   const userId = user?.id;
+  const generation = useExamBatch(userId, async () => {
+    const {data: exams,error} = await supabase.from('sala_exams').select('*')
+      .order('created_at',{ascending:false}).limit(1000);
+    if (error) throw error;
+    setData(previous => ({...previous,exams:exams as Exam[]}));
+  });
   useEffect(() => {
     if (!userId || demo) return;
     let mounted = true;
-    load()
+    load(true)
       .catch((error) => {
         if (mounted) setDbError(cleanError(error));
       })
@@ -180,12 +220,14 @@ export default function TeacherWorkspace({
       setView(next);
       setCurrent(null);
       setSearch('');
-      setSelection([]);
+      setRecoveryStudent(null);
+      setShowArchived(false);
       setMobile(false);
     });
   }
   function open(m: Modal) {
     setError('');
+    if (m === 'generate') {setGenerationChoice(classTemplateChoice);setRecoveryStudent(null);}
     setModal(m);
   }
   async function action(fn: () => Promise<void>) {
@@ -231,6 +273,12 @@ export default function TeacherWorkspace({
     ? data.templates.find(t => t.id === teacherTemplate)?.name ?? 'Modelo salvo'
     : 'Modelo Provaai';
   const classTemplateChoice = active?.template_override_id ?? (active?.use_provaai_template ? 'builtin' : 'inherit');
+  const generationTemplate = generationChoice === 'inherit' ? teacherTemplate
+    : generationChoice === 'builtin' ? null : generationChoice;
+  function templateReady(id: string | null | undefined) {
+    return !id || (!uploads.active.some(t => t.id === id) &&
+      data.templates.some(t => t.id === id && t.processing_status === 'ready'));
+  }
 
   async function setDefaultTemplate(id: string | null) {
     if (!demo) {
@@ -300,36 +348,16 @@ export default function TeacherWorkspace({
       setMessage('Perfil do aluno salvo.');
     });
   }
-  async function generateOne(item: Exam) {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const r = await fetch('/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.access_token || ''}`,
-      },
-      body: JSON.stringify({
-        examId: item.id,
-        objectiveCount: item.content.objectiveCount,
-      }),
-    });
-    const body = (await r.json()) as {
-      error?: { message?: string };
-      exam: Exam;
-    };
-    if (!r.ok) throw new Error(body.error?.message || 'Falha na geração.');
-    return body.exam as Exam;
-  }
   async function createExams(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     await action(async () => {
       const room = active;
-      if (view !== 'classes' || !room)
+      if (!room)
         throw new Error('Abra uma turma para preparar as provas.');
-      const ids = new Set(f.getAll('student').map(String));
+      const ids = new Set(recoveryStudent ? [recoveryStudent.id] : f.getAll('student').map(String));
+      const purpose = recoveryStudent ? 'recovery' : 'regular';
+      if (recoveryStudent && !recoveryMembers.includes(recoveryStudent.id)) throw new Error('Adicione o aluno à recuperação primeiro.');
       const selected = students.filter((student) => ids.has(student.id));
       if (!selected.length || selected.length !== ids.size)
         throw new Error('Selecione pelo menos um aluno desta turma.');
@@ -351,9 +379,18 @@ export default function TeacherWorkspace({
         throw new Error('A IA ainda não está configurada no servidor.');
       const choice = String(f.get('template_choice'));
       const templateId = choice === 'inherit' ? teacherTemplate : choice === 'builtin' ? null : choice;
-      if (templateId && !data.templates.some(t => t.id === templateId && (demo || t.processing_status === 'ready')))
+      if (!templateReady(templateId))
         throw new Error('Escolha um modelo com leitura concluída antes de preparar as provas.');
-      if (choice !== classTemplateChoice) {
+      if (generation.busy) throw new Error('Aguarde o lote de provas em andamento.');
+      if (aiMode) {
+        await generation.start({classId:room.id,students:[...ids],title,topics,count,objectiveCount,choice,purpose});
+        if (!recoveryStudent) setData(d => ({...d,classes:d.classes.map(c => c.id===room.id ? {...c,
+          template_override_id:choice==='inherit'||choice==='builtin'?null:choice,
+          use_provaai_template:choice==='builtin'} : c)}));
+        setModal(null);
+        return;
+      }
+      if (!recoveryStudent && choice !== classTemplateChoice) {
         const preference = {
           template_override_id: choice === 'inherit' || choice === 'builtin' ? null : choice,
           use_provaai_template: choice === 'builtin',
@@ -365,7 +402,6 @@ export default function TeacherWorkspace({
         }
         setData(d => ({ ...d, classes: d.classes.map(c => c.id === room.id ? { ...c, ...preference } : c) }));
       }
-      let failures = 0;
       for (let i = 0; i < selected.length; i++) {
         const s = selected[i];
         setProgress(`Preparando ${i + 1} de ${selected.length}: ${s.name}`);
@@ -374,6 +410,7 @@ export default function TeacherWorkspace({
           user_id: uid!,
           class_id: room.id,
           student_id: s.id,
+          purpose,
           title,
           subject: room.subject,
           topics,
@@ -397,23 +434,13 @@ export default function TeacherWorkspace({
           updated_at: now(),
         };
         await persist('exams', 'sala_exams', item);
-        if (aiMode) {
-          try {
-            await generateOne(item);
-          } catch {
-            failures++;
-          }
-        }
       }
       if (!demo) await load();
       setProgress('');
       setModal(null);
-      navigate('exams');
-      setMessage(
-        failures
-          ? `${failures} prova(s) aguardam geração. Os rascunhos foram preservados para tentar novamente.`
-          : 'Provas criadas. Revise o conteúdo antes de aprovar.',
-      );
+      if (!recoveryStudent) {setView('exams');setSearch('');}
+      else setView('recovery');
+      setMessage('Provas criadas. Revise o conteúdo antes de aprovar.');
     });
     setProgress('');
   }
@@ -463,10 +490,20 @@ export default function TeacherWorkspace({
       );
     });
   }
-  async function processTemplate(id: string) {
+  function mergeTemplate(template: Template) {
+    setData(previous => ({
+      ...previous,
+      templates: previous.templates.some(t => t.id === template.id)
+        ? previous.templates.map(t => t.id === template.id ? template : t)
+        : [template, ...previous.templates],
+    }));
+  }
+  async function processTemplate(id: string, signal: AbortSignal) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
+    signal.throwIfAborted();
+    if (!session || session.user.id !== uid) throw new Error('Entre novamente para ler o arquivo.');
     const r = await fetch('/api/template/process', {
       method: 'POST',
       headers: {
@@ -474,45 +511,48 @@ export default function TeacherWorkspace({
         Authorization: 'Bearer ' + (session?.access_token || ''),
       },
       body: JSON.stringify({ templateId: id }),
+      signal,
     });
-    const result = (await r.json()) as { error?: { message: string } };
-    await load();
-    if (!r.ok)
+    const result = (await r.json()) as { template?: Template; error?: { message: string } };
+    if (!r.ok || result.template?.id !== id || result.template.processing_status !== 'ready')
       throw new Error(result.error?.message || 'Falha ao ler o modelo.');
+    mergeTemplate(result.template);
   }
-  async function uploadTemplate(e: FormEvent<HTMLFormElement>) {
+  async function readSavedTemplate(id: string, signal: AbortSignal) {
+    try {
+      await processTemplate(id, signal);
+    } catch (err) {
+      signal.throwIfAborted();
+      const reason = cleanError(err);
+      setData(d => ({ ...d, templates: d.templates.map(t => t.id === id
+        ? { ...t, processing_status: 'error', processing_error: reason } : t) }));
+      throw new Error(`Arquivo salvo. ${reason} Use “Ler arquivo novamente” em Modelos.`);
+    }
+  }
+  function uploadTemplate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    await action(async () => {
-      if (!templateFiles.length) throw new Error('Selecione ao menos um arquivo.');
-      const names = f.getAll('template_name').map(value => String(value).trim());
-      if (templateFiles.some((_, index) => !names[index]))
-        throw new Error('Informe um nome para cada modelo.');
-      for (const file of templateFiles) {
+    const names = f.getAll('template_name').map(value => String(value).trim());
+    if (!templateFiles.length || templateFiles.some((_, index) => !names[index])) {
+      setError('Selecione um arquivo e informe um nome para cada modelo.');
+      return;
+    }
+    uploads.enqueue(templateFiles.map((file, index) => {
+      const id = crypto.randomUUID();
+      const name = names[index];
+      return { id, name, run: async (report, signal) => {
+        report('uploading');
         await validateTemplateFile(file);
-      }
-      const issues: string[] = [];
-      let saved = 0;
-      for (const [index, file] of templateFiles.entries()) {
-        setProgress(`Salvando modelo ${index + 1} de ${templateFiles.length}…`);
-        try {
-          const id = await storeTemplateFile(file, names[index]);
-          saved++;
-          if (!demo) {
-            try { await processTemplate(id); }
-            catch { issues.push(`${names[index]}: salvo. Use “Ler arquivo novamente” para concluir a leitura.`); }
-          }
-        } catch (err) {
-          issues.push(`${names[index]}: ${cleanError(err)}`);
+        signal.throwIfAborted();
+        await storeTemplateFile(id, file, name, signal);
+        if (!demo) {
+          report('reading');
+          await readSavedTemplate(id, signal);
         }
-      }
-      setProgress('');
-      if (saved) {
-        setModal(null);
-        setMessage(saved === 1 ? 'Modelo adicionado à sua biblioteca.' : `${saved} modelos adicionados à sua biblioteca.`);
-      }
-      if (issues.length) throw new Error(issues.join(' '));
-    });
+      }};
+    }));
+    setTemplateFiles([]);
+    open('uploads');
   }
   async function validateTemplateFile(file: File) {
     if (!file?.size || file.size > 20 * 1024 * 1024)
@@ -532,10 +572,9 @@ export default function TeacherWorkspace({
         'O conteúdo do arquivo não corresponde ao formato informado.',
       );
   }
-  async function storeTemplateFile(file: File, name: string) {
+  async function storeTemplateFile(id: string, file: File, name: string, signal: AbortSignal) {
     const ext = file.name.split('.').pop()!.toLowerCase();
-    const id = crypto.randomUUID(),
-      path = `${uid}/${id}.${ext}`;
+    const path = `${uid}/${id}.${ext}`;
     if (!demo) {
       const { error } = await supabase.storage
         .from('sala-templates')
@@ -550,21 +589,26 @@ export default function TeacherWorkspace({
       if (error) throw error;
     }
     try {
-      await persist('templates', 'sala_templates', {
+      signal.throwIfAborted();
+      const template: Template = {
         id,
-        user_id: uid,
+        user_id: uid!,
         name,
         filename: file.name,
         path,
         reference_text: templateText,
-        ...(demo ? { processing_status: 'ready' } : {}),
+        processing_status: demo ? 'ready' : 'pending',
         created_at: now(),
-      });
+      };
+      if (!demo) {
+        const { error } = await supabase.from('sala_templates').insert(template);
+        if (error) throw error;
+      }
+      mergeTemplate(template);
     } catch (e) {
       if (!demo) await supabase.storage.from('sala-templates').remove([path]);
       throw e;
     }
-    return id;
   }
   async function signout() {
     if (busy) return;
@@ -577,11 +621,40 @@ export default function TeacherWorkspace({
       if (error) throw error;
     });
   }
-  const filteredExams = data.exams.filter((e) =>
-    `${e.title} ${e.profile_snapshot.name} ${e.subject}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
+  function prepareForClass(room: ClassRoom, student: Student | null = null) {
+    setCurrent(room.id);
+    setRecoveryStudent(student);
+    setGenerationChoice(room.template_override_id ?? (room.use_provaai_template ? 'builtin' : 'inherit'));
+    setError('');
+    setModal('generate');
+  }
+  function reviewExam(item: Exam) {setExam(structuredClone(item));open('exam');}
+  async function addRecovery(student: Student, goToPage = false) {
+    await action(async () => {
+      if (student.archived_at) throw new Error('Restaure o aluno na turma antes de adicioná-lo.');
+      if (!demo) {
+        const {error} = await supabase.from('sala_recovery_students').upsert(
+          {user_id:uid,student_id:student.id},{onConflict:'user_id,student_id',ignoreDuplicates:true});
+        if (error) throw error;
+      }
+      setRecoveryMembers(ids => ids.includes(student.id) ? ids : [...ids,student.id]);
+      if (goToPage) navigate('recovery');
+      setMessage(student.name + ' adicionado à recuperação. O vínculo com a turma foi mantido.');
+    });
+  }
+  async function archiveStudent(student: Student, restore = false) {
+    if (!restore && !window.confirm(`Retirar ${student.name} da turma? As provas e o histórico serão preservados. Você poderá restaurar o aluno depois.`)) return;
+    await action(async () => {
+      const archived_at = restore ? null : now();
+      if (!demo) {
+        const {error} = await supabase.from('sala_students').update({archived_at}).eq('id',student.id).eq('user_id',uid).select('id').single();
+        if (error) throw error;
+      }
+      setData(previous => ({...previous,students:previous.students.map(item => item.id === student.id ? {...item,archived_at} : item)}));
+      setMessage(restore ? 'Aluno restaurado na turma.' : 'Aluno retirado. O histórico foi preservado.');
+    });
+  }
+  const pendingExamIds = generation.batch?.exam_ids.slice(generation.batch.completed) ?? [];
   return (
     <div className="app-shell">
       <aside className={`sidebar ${mobile ? 'is-open' : ''}`}>
@@ -605,7 +678,7 @@ export default function TeacherWorkspace({
         </div>
         <span className="nav-caption">ORGANIZAR & ENSINAR</span>
         <nav aria-label="Menu lateral">
-          {sections.slice(0, 3).map((n) => (
+          {sections.filter(section => section.id !== 'settings').map((n) => (
             <button
               key={n.id}
               className={view === n.id ? 'active' : ''}
@@ -613,8 +686,8 @@ export default function TeacherWorkspace({
             >
               <n.icon size={19} />
               {n.name}
-              {n.id === 'exams' && data.exams.length > 0 && (
-                <span className="nav-count">{data.exams.length}</span>
+              {n.id === 'exams' && data.exams.some(exam => exam.purpose !== 'recovery') && (
+                <span className="nav-count">{data.exams.filter(exam => exam.purpose !== 'recovery').length}</span>
               )}
             </button>
           ))}
@@ -686,7 +759,27 @@ export default function TeacherWorkspace({
             </button>
           </div>
         </header>
-        <main className="main-content" key={view + String(current)}>
+        <main className="main-content" key={view === 'classes' ? view + String(current) : view}>
+          {generation.busy && <div className="generation-notice" role="status">
+            <BloubMood mood="curioso" />
+            <div><strong>Gerando provas com IA em segundo plano…</strong>
+              <p>{generation.batch && generation.batch.completed < generation.batch.exam_ids.length
+                ? `${generation.batch.title} · ${generation.batch.completed} de ${generation.batch.exam_ids.length} processadas. ` : ''}
+                Você pode continuar usando a Provaai. Outra geração será liberada ao terminar.</p></div>
+          </div>}
+          {generation.syncError && generation.busy && <p role="status">{generation.syncError}</p>}
+          {generation.notice && <div className="generation-notice" role="status">
+            <span>{generation.notice}</span>
+            <button className="text-button" onClick={()=>{generation.dismiss();navigate('exams');}}>Ver provas</button>
+            <button className="icon-button" aria-label="Fechar aviso de geração" onClick={generation.dismiss}><X size={16}/></button>
+          </div>}
+          {uploads.tasks.length > 0 && (uploading || uploadFailed) && (
+            <button type="button" className="upload-notice" onClick={() => open('uploads')}>
+              {uploading ? <Loader2 size={17} className="spin" /> : <AlertCircle size={17} />}
+              <span>{uploading ? 'Anexando modelos em segundo plano' : 'Verificar modelos com falha'}</span>
+              <ArrowRight size={16} />
+            </button>
+          )}
           {dbError && (
             <div className="notice">
               <AlertCircle size={19} />
@@ -768,7 +861,7 @@ export default function TeacherWorkspace({
                     <Users size={20} />
                   </span>
                   <strong>
-                    {data.students.length}
+                    {data.students.filter(s => !s.archived_at).length}
                     <small>Alunos cadastrados</small>
                   </strong>
                 </div>
@@ -814,7 +907,7 @@ export default function TeacherWorkspace({
                   )
                   .map((c) => {
                     const list = data.students.filter(
-                        (s) => s.class_id === c.id,
+                        (s) => s.class_id === c.id && !s.archived_at,
                       ),
                       n = list.filter(
                         (s) => s.criteria || s.difficulties,
@@ -932,7 +1025,7 @@ export default function TeacherWorkspace({
                   </button>
                   <button
                     className="button primary"
-                    disabled={!students.length}
+                    disabled={!students.length || generation.busy}
                     title={
                       !students.length
                         ? 'Adicione um aluno à turma primeiro'
@@ -970,6 +1063,9 @@ export default function TeacherWorkspace({
               </div>
               <div className="section-heading">
                 <h2>Alunos da turma</h2>
+                <button className="button secondary small-button" onClick={() => setShowArchived(value => !value)}>
+                  {showArchived ? 'Ver alunos ativos' : `Alunos retirados (${data.students.filter(s => s.class_id === current && s.archived_at).length})`}
+                </button>
                 <div className="search">
                   <Search size={17} />
                   <input
@@ -980,7 +1076,7 @@ export default function TeacherWorkspace({
                   />
                 </div>
               </div>
-              {!students.length ? (
+              {!students.length && !showArchived ? (
                 <Empty
                   title="Vamos conhecer sua turma?"
                   text="Cadastre o primeiro aluno e registre o que ele precisa praticar."
@@ -1009,7 +1105,7 @@ export default function TeacherWorkspace({
                       </tr>
                     </thead>
                     <tbody>
-                      {students
+                      {data.students.filter(s => s.class_id === current && Boolean(s.archived_at) === showArchived)
                         .filter((s) =>
                           `${s.name} ${s.code}`
                             .toLowerCase()
@@ -1046,6 +1142,7 @@ export default function TeacherWorkspace({
                             <td>
                               <button
                                 className="icon-button"
+                                disabled={Boolean(s.archived_at)}
                                 aria-label={`Editar ${s.name}`}
                                 onClick={() => {
                                   setEditing(s);
@@ -1053,6 +1150,14 @@ export default function TeacherWorkspace({
                                 }}
                               >
                                 <Pencil size={17} />
+                              </button>
+                              {!s.archived_at && <button className="button secondary small-button" disabled={busy || recoveryMembers.includes(s.id)}
+                                onClick={() => void addRecovery(s,true)} aria-label={`Encaminhar ${s.name} à recuperação`}>
+                                {recoveryMembers.includes(s.id) ? 'Na recuperação' : 'Recuperação'}
+                              </button>}
+                              <button className="button secondary small-button" disabled={busy || generation.busy}
+                                onClick={() => void archiveStudent(s,Boolean(s.archived_at))} aria-label={`${s.archived_at ? 'Restaurar' : 'Retirar'} ${s.name} ${s.archived_at ? 'na' : 'da'} turma`}>
+                                {s.archived_at ? 'Restaurar' : 'Retirar'}
                               </button>
                             </td>
                           </tr>
@@ -1063,164 +1168,15 @@ export default function TeacherWorkspace({
               )}
             </>
           )}
-          {view === 'exams' && (
-            <>
-              <div className="page-heading">
-                <div>
-                  <span className="eyebrow">
-                    DO PLANEJAMENTO À SALA DE AULA
-                  </span>
-                  <h1>
-                    Minhas provas<span>.</span>
-                  </h1>
-                  <p>Revise com cuidado. Aprove e leve para seus alunos.</p>
-                </div>
-                <button
-                  className="button primary"
-                  onClick={() => {
-                    navigate('classes');
-                    if (!data.classes.length) open('class');
-                  }}
-                >
-                  <Users size={18} />
-                  {data.classes.length
-                    ? 'Escolher uma turma'
-                    : 'Criar primeira turma'}
-                </button>
-              </div>
-              <div className="section-heading">
-                <div className="search">
-                  <Search size={17} />
-                  <input
-                    aria-label="Buscar provas"
-                    placeholder="Buscar por aluno, matéria ou título…"
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setSelection([]);
-                    }}
-                  />
-                </div>
-                <span className="muted">
-                  {approved.length} aprovadas ·{' '}
-                  {data.exams.length - approved.length} em revisão
-                </span>
-              </div>
-              {!!data.exams.length && (
-                <div className="selection-bar">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={
-                        filteredExams.filter((e) => e.status === 'approved')
-                          .length > 0 &&
-                        filteredExams
-                          .filter((e) => e.status === 'approved')
-                          .every((e) => selection.includes(e.id))
-                      }
-                      onChange={(e) =>
-                        setSelection(
-                          e.target.checked
-                            ? filteredExams
-                                .filter((e) => e.status === 'approved')
-                                .map((e) => e.id)
-                            : [],
-                        )
-                      }
-                    />
-                    Selecionar todas as aprovadas
-                  </label>
-                  <span>{selection.length} selecionadas</span>
-                  <select
-                    aria-label="Formato de download"
-                    value={format}
-                    onChange={(e) =>
-                      setFormat(e.target.value as 'pdf' | 'docx')
-                    }
-                  >
-                    <option value="pdf">PDF</option>
-                    <option value="docx">DOCX</option>
-                  </select>
-                  <button
-                    className="button secondary small-button"
-                    disabled={!selection.length || busy}
-                    onClick={() =>
-                      void action(async () => {
-                        await downloadExams(
-                          data.exams.filter((e) => selection.includes(e.id)),
-                          format,
-                        );
-                        setMessage('Download preparado.');
-                      })
-                    }
-                  >
-                    <Download size={16} />
-                    Baixar {selection.length > 1 ? 'ZIP' : ''}
-                  </button>
-                </div>
-              )}
-              {!filteredExams.length ? (
-                <Empty
-                  title="Uma nova avaliação começa aqui"
-                  text="Escolha uma turma e prepare provas com os critérios de cada aluno."
-                />
-              ) : (
-                <div className="exam-list">
-                  {filteredExams.map((e) => (
-                    <div className="exam-row" key={e.id}>
-                      <input
-                        type="checkbox"
-                        aria-label={`Selecionar prova de ${e.profile_snapshot.name}`}
-                        disabled={e.status !== 'approved'}
-                        checked={selection.includes(e.id)}
-                        onChange={(v) =>
-                          setSelection(
-                            v.target.checked
-                              ? [...selection, e.id]
-                              : selection.filter((x) => x !== e.id),
-                          )
-                        }
-                      />
-                      <span className="file-icon">
-                        <FileText size={23} />
-                      </span>
-                      <div className="exam-row-info">
-                        <h3>{e.title}</h3>
-                        <p>
-                          {e.profile_snapshot.name} <span>·</span>{' '}
-                          {data.classes.find((c) => c.id === e.class_id)?.name}{' '}
-                          <span>·</span> {e.content.questions.length} questões
-                        </p>
-                      </div>
-                      <span
-                        className={`status ${e.status === 'approved' ? 'good' : 'pending'}`}
-                      >
-                        {e.status === 'approved' ? (
-                          <CheckCircle2 size={13} />
-                        ) : (
-                          <Clock size={13} />
-                        )}{' '}
-                        {e.status === 'approved' ? 'Aprovada' : 'Em revisão'}
-                      </span>
-                      <button
-                        className="button secondary small-button"
-                        onClick={() => {
-                          setExam(structuredClone(e));
-                          open('exam');
-                        }}
-                      >
-                        Revisar <ArrowUpRight size={15} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p className="helper-note">
-                <Printer size={16} /> As provas são respondidas em papel, na
-                sala de aula. O gabarito fica separado.
-              </p>
-            </>
-          )}
+          {view === 'exams' && <ExamLibrary classes={data.classes} exams={data.exams} pending={pendingExamIds}
+            busy={busy} generating={generation.busy} onReview={reviewExam} onPrepare={prepareForClass}
+            onDownload={(items,format) => void action(async () => {await exportExams(items,format);setMessage('Download preparado.');})}/>}
+          {view === 'recovery' && <RecoveryWorkspace classes={data.classes} students={data.students}
+            exams={data.exams} members={recoveryMembers} pending={pendingExamIds} busy={busy} generating={generation.busy}
+            onReview={reviewExam} onAdd={student => void addRecovery(student)} onPrepare={student => {
+              const room=data.classes.find(item => item.id === student.class_id);
+              if (room) prepareForClass(room,student);
+            }}/>}
           {view === 'templates' && (
             <>
               <div className="page-heading">
@@ -1251,7 +1207,7 @@ export default function TeacherWorkspace({
                   A IA usa o conteúdo extraído do arquivo e suas orientações.
                   Revise o texto antes de gerar provas. PDFs digitalizados são
                   lidos por IA; imagens dentro de arquivos Word não são
-                  extraídas. A diagramação de saída usa o modelo Provaai.
+                  extraídas. Modelos DOCX também fornecem a diagramação do PDF e do Word. Use campos em branco como “Nome do estudante:”, “Turma:” e “Tema”.
                 </p>
               </div>
               <div className="template-grid">
@@ -1277,17 +1233,23 @@ export default function TeacherWorkspace({
                     <h3>{t.name}</h3>
                     <p>{t.filename}</p>
                     <p className="muted">{t.reference_text.slice(0, 100)}</p>
-                    {defaultControl(t.id, demo || t.processing_status === 'ready')}
+                    {defaultControl(t.id, templateReady(t.id))}
                     <p>
-                      {t.processing_status === 'ready'
+                      {uploads.active.some(task => task.id === t.id) ? 'Anexando modelo…' : t.processing_status === 'ready'
                         ? 'Leitura concluída'
                         : t.processing_error || 'Leitura pendente'}
                     </p>
                     {!demo && (
                       <button
-                        disabled={busy}
+                        disabled={busy || uploads.active.some(task => task.id === t.id)}
                         className="text-button"
-                        onClick={() => void action(() => processTemplate(t.id))}
+                        onClick={() => {
+                          uploads.enqueue([{ id: t.id, name: t.name, run: async (report, signal) => {
+                            report('reading');
+                            await readSavedTemplate(t.id, signal);
+                          }}]);
+                          open('uploads');
+                        }}
                       >
                         Ler arquivo novamente
                       </button>
@@ -1307,7 +1269,8 @@ export default function TeacherWorkspace({
                                 })
                                 .eq('id', t.id);
                               if (error) throw error;
-                              await load();
+                              setData(d => ({ ...d, templates: d.templates.map(row => row.id === t.id
+                                ? { ...row, extracted_text: String(f.get('text')) } : row) }));
                               setMessage('Texto revisado salvo.');
                             });
                           }}
@@ -1432,7 +1395,8 @@ export default function TeacherWorkspace({
                   ? 'Perfil do aluno'
                   : 'Conheça mais um aluno'
                 : modal === 'generate'
-                  ? 'Preparar provas individuais'
+                  ? recoveryStudent ? 'Preparar recuperação individual' : 'Preparar provas individuais'
+                  : modal === 'uploads' ? 'Envio de modelos'
                   : modal === 'template'
                     ? 'Adicionar modelos de referência'
                     : 'Revisar prova'
@@ -1446,6 +1410,23 @@ export default function TeacherWorkspace({
             <p className="error" role="alert">
               {error}
             </p>
+          )}
+          {modal === 'uploads' && (
+            <section className="upload-wait">
+              <BloubMood mood={uploading ? 'sonolento' : 'curioso'} />
+              <h3 role="status">{uploading ? 'Anexando modelo de prova! Aguarde um pouquinho.' : 'Confira o resultado do envio.'}</h3>
+              {uploading && <p>Pode continuar usando a Provaai. Mantenha esta aba aberta até o envio e a leitura terminarem.</p>}
+              <ul>
+                {uploads.tasks.map(task => <li key={task.id}>
+                  <strong>{task.name}</strong>
+                  <span>{task.error || uploadStages[task.stage]}</span>
+                </li>)}
+              </ul>
+              <button className="button primary" type="button" onClick={() => {
+                if (!uploading) uploads.dismiss();
+                setModal(null);
+              }}>{uploading ? 'Continuar em segundo plano' : 'Concluir'}</button>
+            </section>
           )}
           {modal === 'class' && (
             <form onSubmit={saveClass}>
@@ -1577,7 +1558,7 @@ export default function TeacherWorkspace({
           {modal === 'generate' && active && (
             <form onSubmit={createExams}>
               <p className="muted">
-                Uma prova por aluno, orientada pelo que ele precisa aprender.
+                {recoveryStudent ? `Uma prova exclusiva para ${recoveryStudent.name}. O aluno permanece na turma de origem.` : 'Uma prova por aluno, orientada pelo que ele precisa aprender.'}
               </p>
               <div className="form-grid">
                 <Field label="Turma">
@@ -1589,6 +1570,7 @@ export default function TeacherWorkspace({
                 <Field label="Título da avaliação">
                   <input
                     name="title"
+                    defaultValue={recoveryStudent ? `Recuperação · ${active.subject}` : undefined}
                     placeholder="Ex.: Frações no cotidiano"
                     required
                     maxLength={120}
@@ -1606,26 +1588,33 @@ export default function TeacherWorkspace({
               </Field>
               <QuestionCounts />
               <Field label="Modelo de referência">
-                <select name="template_choice" defaultValue={classTemplateChoice} aria-describedby="class-template-hint">
+                <select name="template_choice" value={generationChoice}
+                  onChange={event => setGenerationChoice(event.target.value)} aria-describedby="class-template-hint">
                   <option value="inherit">Seguir meu padrão · {teacherTemplateName}</option>
                   <option value="builtin">Modelo Provaai</option>
                   {data.templates.map((t) => (
-                    <option key={t.id} value={t.id} disabled={!demo && t.processing_status !== 'ready'}>
-                      {t.name}{!demo && t.processing_status !== 'ready' ? ' · leitura pendente' : ''}
+                    <option key={t.id} value={t.id} disabled={!templateReady(t.id)}>
+                      {t.name}{!templateReady(t.id) ? ' · leitura pendente' : ''}
                     </option>
+                  ))}
+                  {uploads.active.filter(task => !data.templates.some(t => t.id === task.id)).map(task => (
+                    <option key={task.id} value={task.id} disabled>{task.name} · anexando</option>
                   ))}
                 </select>
               </Field>
               <p className="helper-note" id="class-template-hint">
-                Ao preparar as provas, a escolha fica salva só nesta turma. Selecione “Seguir meu padrão” para acompanhar as mudanças feitas em Modelos.
+                {templateReady(generationTemplate)
+                  ? recoveryStudent ? 'Este modelo será usado nesta prova de recuperação. O padrão da turma permanece o mesmo.' : 'Ao preparar as provas, a escolha fica salva só nesta turma. Selecione “Seguir meu padrão” para acompanhar as mudanças feitas em Modelos.'
+                  : 'O modelo escolhido ainda não está pronto. Aguarde a leitura ou selecione outro modelo.'}
               </p>
               <h3>Quem vai receber a prova?</h3>
               <div className="student-picks" key={current}>
-                {students.map((s) => (
+                {(recoveryStudent ? [recoveryStudent] : students).map((s) => (
                   <label key={s.id}>
                     <input
                       type="checkbox"
                       name="student"
+                      disabled={Boolean(recoveryStudent)}
                       value={s.id}
                       defaultChecked
                     />
@@ -1678,9 +1667,9 @@ export default function TeacherWorkspace({
                 </button>
                 <button
                   className="button primary"
-                  disabled={busy || !students.length}
+                  disabled={busy || generation.busy || !students.length || !templateReady(generationTemplate)}
                 >
-                  {busy ? 'Preparando…' : 'Preparar provas'}
+                  {busy ? 'Preparando…' : recoveryStudent ? 'Preparar recuperação' : 'Preparar provas'}
                   <Sparkles size={17} />
                 </button>
               </div>
@@ -1961,12 +1950,12 @@ export default function TeacherWorkspace({
                 {!demo && !exam.content.questions.length && (
                   <button
                     className="button secondary"
-                    disabled={busy}
+                    disabled={busy || generation.busy || !templateReady(exam.template_id) || Boolean(data.students.find(student => student.id === exam.student_id)?.archived_at)}
+                    title={templateReady(exam.template_id) ? undefined : 'Aguarde a leitura do modelo desta prova.'}
                     onClick={() =>
                       void action(async () => {
-                        setExam(await generateOne(exam));
-                        await load();
-                        setMessage('Rascunho gerado. Revise as questões.');
+                        await generation.start({retry:exam.id});
+                        setModal(null);
                       })
                     }
                   >
@@ -1988,7 +1977,7 @@ export default function TeacherWorkspace({
                       disabled={busy}
                       onClick={() =>
                         void action(async () => {
-                          await downloadExams([exam], 'pdf', true);
+                          await exportExams([exam], 'pdf', true);
                         })
                       }
                     >
@@ -1999,7 +1988,7 @@ export default function TeacherWorkspace({
                       disabled={busy}
                       onClick={() =>
                         void action(async () => {
-                          await downloadExams([exam], 'docx');
+                          await exportExams([exam], 'docx');
                         })
                       }
                     >
@@ -2010,7 +1999,7 @@ export default function TeacherWorkspace({
                       disabled={busy}
                       onClick={() =>
                         void action(async () => {
-                          await downloadExams([exam], 'pdf');
+                          await exportExams([exam], 'pdf');
                         })
                       }
                     >

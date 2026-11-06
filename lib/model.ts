@@ -14,6 +14,7 @@ export type ClassRoom = {
   created_at: string;
 };
 export type Student = {
+  archived_at?: string | null;
   id: string;
   user_id: string;
   class_id: string;
@@ -25,6 +26,7 @@ export type Student = {
   created_at: string;
 };
 export type Exam = {
+  purpose?: 'regular' | 'recovery';
   id: string;
   user_id: string;
   class_id: string;

@@ -6,6 +6,8 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "predev": "node scripts/prepare-office.mjs",
+    "prebuild": "node scripts/prepare-office.mjs",
     "dev": "next dev --hostname 127.0.0.1 --port 3001",
     "build": "next build",
     "start": "next start --port 3001",
@@ -14,6 +16,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "2.95.3",
+    "@xmldom/xmldom": "0.9.12",
     "docx": "9.5.1",
     "jspdf": "3.0.4",
     "jszip": "3.10.1",
@@ -25,6 +28,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",
+    "@matbee/libreoffice-converter": "2.7.2",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",

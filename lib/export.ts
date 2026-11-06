@@ -121,12 +121,13 @@ export async function downloadExams(
   exams: Exam[],
   format: 'pdf' | 'docx',
   answerKey = false,
+  render: typeof examFile = examFile,
 ) {
   if (!exams.length)
     throw new Error('Selecione pelo menos uma prova aprovada.');
   if (exams.length === 1) {
     downloadBlob(
-      await examFile(exams[0], format, answerKey),
+      await render(exams[0], format, answerKey),
       `${answerKey ? 'gabarito' : 'prova'}_${safeName(exams[0].profile_snapshot.code)}.${format}`,
     );
     return;
@@ -136,7 +137,7 @@ export async function downloadExams(
   const manifest = ['id,aluno_codigo,formato,arquivo'];
   for (const e of exams) {
     const file = `${safeName(e.profile_snapshot.code)}_${e.id}.${format}`;
-    zip.file(file, await examFile(e, format, answerKey));
+    zip.file(file, await (await render(e, format, answerKey)).arrayBuffer());
     manifest.push(
       `${e.id},${safeName(e.profile_snapshot.code)},${format},${file}`,
     );

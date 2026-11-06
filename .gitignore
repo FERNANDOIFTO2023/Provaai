@@ -1,4 +1,5 @@
 node_modules/
+.office-runtime/
 .next/
 .vercel/
 .env*

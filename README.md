@@ -1,146 +1,144 @@
-# Provaai
+<p align="center">
+  <a href="https://provaai.vercel.app/">
+    <img src="docs/assets/provaai-cover.gif" alt="Provaai — Cada aluno, uma possibilidade. Mascote com efeito metálico animado e fundo transparente." width="100%" />
+  </a>
+</p>
 
-A Provaai ajuda professores a preparar uma avaliação individual para cada aluno a partir da matéria, dos tópicos da turma e do perfil pedagógico. O professor pode escrever as questões ou pedir um rascunho à IA. Ele revisa o conteúdo e aprova cada prova antes da exportação.
+<p align="center">
+  Avaliações individuais, do perfil do aluno à prova impressa.<br />
+  <strong>O professor orienta, revisa e aprova cada etapa.</strong>
+</p>
 
-**Site publicado** · [provaai.vercel.app](https://provaai.vercel.app/)  
-**Especificação acadêmica** · [Documento da disciplina de Linguagens e Técnicas de Programação III](docs/Especificacao-Provaai.pdf)
+<p align="center">
+  <a href="https://provaai.vercel.app/"><strong>Conheça a Provaai ↗</strong></a>
+  &nbsp; · &nbsp;
+  <a href="#comece-por-aqui">Executar localmente</a>
+  &nbsp; · &nbsp;
+  <a href="docs/GUIA-TECNICO.md">Guia técnico</a>
+  &nbsp; · &nbsp;
+  <a href="docs/Especificacao-Provaai.pdf">Documentação acadêmica</a>
+</p>
 
-## Executar no computador
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-0D1823?style=flat-square&amp;logo=nextdotjs&amp;logoColor=white" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/React-19-0D1823?style=flat-square&amp;logo=react&amp;logoColor=2ADFB8" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-5-5210CE?style=flat-square&amp;logo=typescript&amp;logoColor=white" alt="TypeScript 5" />
+  <img src="https://img.shields.io/badge/Supabase-Auth%20%2B%20Postgres-0D1823?style=flat-square&amp;logo=supabase&amp;logoColor=2ADFB8" alt="Supabase: Auth e Postgres" />
+</p>
 
-Use Node.js 24 e npm. Abra um terminal na pasta que contém este arquivo e execute:
+---
+
+## Uma avaliação que considera cada aluno
+
+A **Provaai** reúne turmas, perfis pedagógicos, modelos e avaliações em um espaço de trabalho para professores. As questões podem ser escritas pelo professor ou preparadas com apoio de IA, a partir da matéria, dos tópicos e das necessidades de cada aluno. Todo rascunho passa por revisão e aprovação antes da exportação.
+
+Para conhecer o fluxo, abra o [site](https://provaai.vercel.app/) e selecione **Explorar demonstração**. Não é necessário criar uma conta; os dados são fictícios e ficam apenas na memória da página.
+
+## O que você encontra
+
+| | Recurso | Como ajuda no trabalho |
+| :---: | --- | --- |
+| **01** | **Turmas e perfis** | Organize alunos, conteúdos, dificuldades e critérios pedagógicos. Arquive e restaure vínculos sem perder o histórico. |
+| **02** | **Seus modelos de prova** | Anexe PDF, DOC ou DOCX, defina um padrão para sua conta e guarde uma escolha diferente por turma. |
+| **03** | **Preparação com IA** | Escolha o total de questões e a divisão entre objetivas e discursivas. Acompanhe a geração em segundo plano. |
+| **04** | **Provas por turma** | Encontre avaliações por aluno, código ou título. Filtre pendências e aprove o conteúdo antes de baixar. |
+| **05** | **Recuperação individual** | Prepare uma prova para um aluno específico, mantendo o vínculo dele com a turma de origem. |
+| **06** | **Arquivos prontos para uso** | Exporte PDF ou DOCX, com gabarito separado, ou reúna provas aprovadas em um ZIP. |
+
+### Da turma à impressão
+
+```mermaid
+flowchart LR
+    A[Cadastre a turma] --> B[Adicione alunos e perfis]
+    B --> C[Escolha modelo e questões]
+    C --> D[Prepare os rascunhos]
+    D --> E[Revise e aprove]
+    E --> F[Exporte as provas]
+    style A fill:#5210ce,color:#ffffff,stroke:#5210ce
+    style B fill:#f5f3f5,color:#0d1823,stroke:#d7d1df
+    style C fill:#f5f3f5,color:#0d1823,stroke:#d7d1df
+    style D fill:#f5f3f5,color:#0d1823,stroke:#d7d1df
+    style E fill:#2adfb8,color:#0d1823,stroke:#2adfb8
+    style F fill:#0d1823,color:#ffffff,stroke:#0d1823
+```
+
+**Os modelos DOCX também orientam a apresentação dos arquivos exportados**, preservando elementos como cabeçalhos, imagens, rodapés e margens. PDF e DOC são referências de conteúdo. Os formatos reconhecidos e os limites de layouts complexos estão no [guia de exportação](docs/GUIA-TECNICO.md#exportação-com-o-modelo-docx).
+
+## Comece por aqui
+
+Use **Node.js 24** e **npm**. Na raiz do projeto:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Abra **http://127.0.0.1:3001**. Em **Explorar demonstração**, os dados são fictícios e ficam na memória da página. Experimente criar uma turma, adicionar um aluno e preparar um rascunho. Recarregar a página encerra a demonstração. Para encerrar o servidor, pressione Ctrl+C.
+Abra [127.0.0.1:3001](http://127.0.0.1:3001) e escolha **Explorar demonstração**. Recarregar a página encerra os dados dessa sessão de demonstração.
 
-A configuração pública incluída aponta para o Supabase usado pelo site publicado. **Entrar com o e-mail de uma conta real acessa os dados dessa conta**, inclusive quando o site está rodando no computador. Para desenvolver com persistência isolada, configure outro projeto conforme as próximas seções.
+> [!IMPORTANT]
+> A configuração pública incluída aponta para o banco do site publicado. Entrar com um e-mail real acessa os dados dessa conta também no ambiente local. Para desenvolver com dados isolados, siga a [configuração de um Supabase separado](docs/GUIA-TECNICO.md#configurar-um-supabase-separado).
 
-| Comando | Para que serve |
+| Comando | Uso |
 | --- | --- |
-| `npm ci` | Instala as versões registradas em `package-lock.json`. |
-| `npm run dev` | Abre o servidor de desenvolvimento na porta 3001. |
-| `npm test` | Executa os testes de regras, integrações simuladas e exportação. |
-| `npm run typecheck` | Gera os tipos de rotas e verifica TypeScript. |
-| `npm run build` | Compila a aplicação e as rotas para produção. |
-| `npm start` | Serve o último build na porta 3001. Encerre o servidor de desenvolvimento antes. |
+| `npm run dev` | Desenvolvimento na porta 3001. |
+| `npm test` | Testes das regras, integrações simuladas e exportação. |
+| `npm run typecheck` | Verificação de tipos e rotas. |
+| `npm run build` | Compilação de produção. |
+| `npm start` | Execução do último build na porta 3001. |
 
-## Do cadastro à prova impressa
+A demonstração permite explorar a interface. Autenticação, persistência, leitura de documentos e geração com IA dependem dos serviços configurados no [guia técnico](docs/GUIA-TECNICO.md).
 
-1. **Acesso.** Informe o e-mail e digite o código recebido para criar ou acessar a conta. O botão **Sair** encerra a sessão neste navegador e volta ao login. O mascote acompanha o ponteiro, reage à validação e aparece durante o carregamento. A interface respeita a preferência de movimento reduzido do sistema.
-2. **Turmas.** Crie a turma com nome, série e matéria. Na turma, cadastre os alunos com um código único naquela turma. O perfil reúne nível, dificuldades e critérios que devem orientar a prova. Não é preciso informar turno.
-3. **Modelos, se desejar.** Em **Modelos**, arraste os arquivos PDF, DOC ou DOCX para a área de envio ou clique nela para selecioná-los. Depois, dê um nome a cada modelo e confira o texto extraído. Após a leitura, use **Definir como padrão**. Ao preparar provas, a turma começa em **Seguir meu padrão**. Escolher outro modelo e confirmar **Preparar provas** guarda a escolha apenas nessa turma. Para voltar a acompanhar o padrão do professor, selecione **Seguir meu padrão** na próxima preparação. Cada prova guarda a referência escolhida no momento da criação. O texto do modelo orienta a IA e a exportação usa a diagramação da Provaai.
-4. **Preparação.** Abra uma turma com alunos e escolha **Preparar provas**. Selecione os alunos, informe título, tópicos e o total de 1 a 30 questões por aluno. Ao ajustar o número de objetivas, a interface calcula o número de discursivas, e vice-versa. Por exemplo, 10 questões com 6 objetivas resultam em 4 discursivas. É possível escolher todas de um único tipo.
-5. **Revisão.** Em **Provas**, abra o rascunho de cada aluno. Confira enunciados, alternativas, resposta esperada, objetivo e pontuação. Questões objetivas têm quatro alternativas, e a resposta deve corresponder a uma delas. Depois da revisão, aprove a prova. Editar o conteúdo de uma prova aprovada exige nova aprovação.
-6. **Entrega.** Exporte em PDF para impressão ou DOCX para edição. A versão do aluno e o gabarito do professor são arquivos separados. Ao selecionar várias provas aprovadas, o download é um ZIP com os arquivos e um manifesto CSV.
+## Por dentro do projeto
 
-### Login no celular
-
-Após o envio, o formulário orienta o professor a conferir a caixa de entrada ou o spam. Durante os 10 minutos seguintes, ele pode usar o mesmo código para entrar mais de uma vez, inclusive em outro dispositivo. Pedir de novo nesse prazo mostra a orientação para usar o código anterior. Um login bem-sucedido zera a contagem de erros e preserva o horário de expiração.
-
-Na quinta tentativa incorreta consecutiva, o servidor invalida o código anterior e solicita outro para o mesmo endereço imediatamente. O novo prazo começa quando o Supabase aceita o envio. Se a entrega for recusada, o professor vê o erro e pode tentar novamente. Cada endereço tem um limite de seis solicitações de envio por hora, incluindo substituições.
-
-A Edge Function `provaai-auth` controla os prazos no banco e usa o SMTP configurado no Supabase. O primeiro login valida o código no Auth. Para permitir novo login, o servidor guarda uma assinatura HMAC vinculada ao endereço e ao código, junto com o identificador do professor. Os acessos seguintes recebem sessões próprias. A tabela e as funções de controle são privadas. Se o Auth bloquear uma substituição pelo intervalo do destinatário, a função libera o relógio de envio apenas para a conta com uma reserva válida e um envio anterior recente. As cotas gerais do provedor continuam valendo.
-
-Em telas de até 760 px de largura, a faixa violeta reúne a marca e o mascote animado. O formulário começa logo abaixo. O botão principal solicita o código e **Explorar demonstração** aparece como ação secundária. Depois do envio, o espaço fica dedicado à digitação do código, ao reenvio e à troca de e-mail. Em telas baixas, o mascote ocupa menos altura. A página permite rolar quando o espaço disponível diminui.
-
-As regras de layout ficam em `app/bloub.css`. O atributo `data-login-stage` de `components/auth-welcome.tsx` identifica as etapas de e-mail e código. [Ver o login em uma tela de 393 px](docs/login-mobile.png).
-
-## Organização do código
-
-| Caminho | Responsabilidade |
-| --- | --- |
-| `app/` | Entrada do Next.js, metadados, carregamento global e estilos. `bloub-tokens.css` centraliza a paleta e `bloub.css` aplica a identidade visual sobre a base de layout. |
-| `components/teacher-app.tsx` | Decide entre login, demonstração e área autenticada. Coordena sessão e transições. |
-| `components/teacher-workspace.tsx` | Navegação entre turmas, alunos, provas, modelos e ajustes. Reúne as operações do professor e o estado das telas. |
-| `components/workspace-ui.tsx` | Diálogos, campos e estados vazios usados nas telas do professor. |
-| `components/auth-welcome.tsx`, `email-login.tsx`, `bloub-mascot.tsx`, `screen-loader.tsx` | Apresentação do login, formulário de código, personagem e tela de espera. |
-| `components/question-counts.tsx` | Campos vinculados de total, objetivas e discursivas. |
-| `lib/` | Cliente Supabase, autenticação, modelo de dados e dados de demonstração, geometria do olhar, exportadores e ponte para as funções remotas. |
-| `app/api/` | Três rotas HTTP do servidor para configuração, geração e leitura de modelos. |
-| `supabase/functions/_shared/` | Validação das questões, distribuição, comunicação com o Gemini e regras de geração compartilhadas com o servidor Next.js. |
-| `supabase/functions/sala-ai/`, `sala-ai-mistral/` | Entradas das Edge Functions e processamento de documentos por provedor. O adaptador Mistral também é usado pela geração compartilhada. |
-| `supabase/templates/acesso-sala.html` | E-mail de autenticação usado no cadastro e no retorno de professores. |
-| `supabase/functions/provaai-auth/`, `supabase/migrations/` | Login por código e regras de prazo, tentativas e envio. |
-| `public/schema.sql` | Esquema inicial de turmas, alunos, provas e modelos. |
-| `public/bloub/`, `public/favicon.svg` | Símbolo e expressões estáticas e animadas do mascote. |
-| `tests/`, `docs/` | Testes automatizados e especificação acadêmica da versão. |
-
-## Banco de dados e arquivos
-
-O navegador usa o cliente do Supabase com a sessão do professor. As políticas de segurança por linha (RLS) associam leitura e escrita ao `user_id` autenticado. Chaves compostas verificam que aluno, turma e prova pertencem ao mesmo professor.
-
-| Recurso | Dados e relações |
-| --- | --- |
-| `auth.users` | Identidade do professor, gerenciada pelo Supabase Auth. |
-| `sala_classes` | Turmas do professor. O campo legado `period` tem valor padrão no banco para compatibilidade com cadastros anteriores. |
-| `sala_students` | Aluno, turma, código e perfil. A combinação de turma e código é única. |
-| `sala_templates` | Nome, caminho do arquivo, orientações, texto extraído e estado de processamento. |
-| `sala_teacher_template_defaults` | Modelo padrão da conta. A turma pode ter uma referência própria em `sala_classes`. As políticas de acesso e as chaves de professor impedem referências a modelos de outras contas. |
-| `sala_exams` | Uma prova por registro, vinculada ao aluno e à turma, com modelo opcional. Guarda o perfil no momento da criação, conteúdo JSON, distribuição solicitada e status `draft` ou `approved`. |
-| `sala_generation_jobs` | Reserva por prova para impedir duas gerações simultâneas do mesmo rascunho. |
-| `sala-templates` | Bucket privado. Cada arquivo fica sob o identificador do professor. |
-
-Os nomes técnicos com prefixo `sala` fazem parte do esquema usado em produção. Uma alteração nesses nomes exige migração coordenada das tabelas, políticas, funções e clientes.
-
-## Configurar um Supabase separado
-
-1. Crie um projeto. No SQL Editor do **novo projeto vazio**, execute `public/schema.sql` uma vez. O script cria tabelas, índices, políticas, trigger de revisão e bucket privado. Em seguida, execute os arquivos SQL de `supabase/migrations/` na ordem do nome. Para um banco existente, compare o esquema e aplique uma migração específica.
-2. Copie `.env.example` para `.env.local`. Preencha **juntas** `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` com a URL e a chave publicável do novo projeto. A chave administrativa dá acesso privilegiado e deve ficar fora do aplicativo.
-3. Em **Authentication**, habilite o provedor de e-mail e o cadastro de usuários. Configure a URL do site e os redirecionamentos para a origem correta do ambiente. Para o servidor local, use `http://127.0.0.1:3001`. No projeto publicado, a origem é `https://provaai.vercel.app`.
-4. Nos modelos **Confirm sign up** e **Magic link or OTP**, cole `supabase/templates/acesso-sala.html`. Use o assunto `{{ .Token }} é seu código de acesso à Provaai`. O marcador `{{ .Token }}` no corpo é substituído pelo Supabase a cada solicitação.
-5. Para entregar códigos em endereços reais, configure no Supabase seu SMTP, endereço de remetente e nome de exibição **Provaai**. A foto do remetente é configurada na conta do serviço de e-mail. Use 600 segundos para a validade e o intervalo normal por destinatário. Publique a função de login antes de publicar o site. A interface aceita códigos numéricos de 6 a 10 dígitos.
-6. Para processar arquivos de modelo ou delegar a geração ao Supabase, publique a função do provedor escolhido. Com a CLI do Supabase instalada, execute na raiz:
-
-```sh
-supabase login
-supabase link --project-ref SEU_PROJECT_REF
-supabase functions deploy provaai-auth
-supabase functions deploy sala-ai
-# Para usar Mistral, publique a função correspondente:
-supabase functions deploy sala-ai-mistral
+```text
+Provaai/
+├── app/                  Páginas, estilos e rotas HTTP
+├── components/           Interface e fluxos do professor
+├── lib/                  Regras, dados, autenticação e exportadores
+├── supabase/
+│   ├── functions/        Autenticação e processamento por provedor
+│   ├── migrations/       Evolução do banco e políticas de acesso
+│   └── templates/        E-mail de acesso
+├── public/               Arquivos públicos, mascote e esquema inicial
+├── scripts/              Preparação do motor de exportação
+├── tests/                Testes automatizados
+└── docs/                 Guia técnico, especificação e imagens
 ```
 
-A configuração em `supabase/config.toml` aponta para o mapa de dependências de cada função. O GET informa disponibilidade. As operações POST validam o token do professor com `auth.getUser` antes de acessar registros. O texto extraído de um modelo deve ter de 20 a 60.000 caracteres. O upload aceita até 20 MiB. No caminho de leitura de PDF pelo Gemini, o limite é 14 MiB.
+O frontend usa **Next.js, React e TypeScript**. O **Supabase** cuida da autenticação, do PostgreSQL e dos arquivos privados. A geração tem adaptadores para **Gemini e Mistral**; a publicação usa **Vercel**. As políticas de acesso vinculam os dados ao professor autenticado.
 
-## Configuração da IA
+<details>
+<summary><strong>Consultar a documentação por assunto</strong></summary>
 
-| Variável | Onde configurar | Efeito |
-| --- | --- | --- |
-| `AI_PROVIDER` | Next.js local/Vercel | `mistral` seleciona Mistral. O padrão é `gemini`. |
-| `GEMINI_API_KEY`, `MISTRAL_API_KEY` | Servidor Next.js ou secrets da Edge Function correspondente | Credencial privada do provedor escolhido. |
-| `GEMINI_MODEL`, `MISTRAL_MODEL` | Ambiente que executa a geração | Sobrescrevem os padrões do código, `gemini-3.5-flash-lite` e `mistral-small-latest`. |
-| `MISTRAL_OCR_MODEL` | Edge Function Mistral | Modelo de leitura de PDF, com padrão `mistral-ocr-latest`. |
+- [Fluxo completo de uso](docs/GUIA-TECNICO.md#do-cadastro-à-prova-impressa)
+- [Turmas, recuperação e saída de alunos](docs/GUIA-TECNICO.md#provas-por-turma-recuperação-e-saída-de-alunos)
+- [Geração em segundo plano](docs/GUIA-TECNICO.md#geração-de-provas-em-segundo-plano)
+- [Login, validade e reutilização dos códigos](docs/GUIA-TECNICO.md#login-no-celular)
+- [Organização do código](docs/GUIA-TECNICO.md#organização-do-código)
+- [Banco de dados e arquivos](docs/GUIA-TECNICO.md#banco-de-dados-e-arquivos)
+- [Configuração da IA e contratos HTTP](docs/GUIA-TECNICO.md#configuração-da-ia)
+- [Exportação com modelo DOCX](docs/GUIA-TECNICO.md#exportação-com-o-modelo-docx)
+- [Publicação, verificação e solução de problemas](docs/GUIA-TECNICO.md#publicação-e-verificação)
+- [Especificação acadêmica em PDF](docs/Especificacao-Provaai.pdf)
 
-Após alterar variáveis locais, reinicie o servidor. Na Vercel, faça um novo deploy. As chaves de IA e a senha SMTP são fornecidas pelo responsável pelo ambiente. Só a URL e a chave **publicável** do Supabase pertencem às variáveis `NEXT_PUBLIC_*`.
+</details>
 
-| Rota | Contrato |
-| --- | --- |
-| `GET /api/config` | Retorna `aiConfigured`, `provider` e `model`. Consulta a função remota se a chave estiver ausente no servidor. |
-| `POST /api/generate` | Recebe token Bearer e JSON com `examId` e `objectiveCount` opcional. Busca a prova do professor. Com chave no Next.js, gera no servidor. Sem ela, delega à função configurada para `generate-with-mix`. |
-| `POST /api/template/process` | Recebe token Bearer e `templateId`. Encaminha ao Supabase para ler o arquivo privado e registrar o texto ou a falha. |
+## Equipe
 
-O contexto da geração contém matéria, tópicos, distribuição, nível, dificuldades, critérios e, quando selecionado, o conteúdo do modelo. Nomes e códigos não são enviados em campos próprios ao gerador. O texto livre e os arquivos enviados para leitura podem conter informações pessoais: use descrições pedagógicas e modelos sem identificação.
+Projeto acadêmico do **IFTO**, desenvolvido na disciplina **Linguagens e Técnicas de Programação III**, com orientação do professor **Marcos Raimundo**.
 
-A aplicação valida a resposta do provedor antes de salvar. Confere a divisão entre questões, o formato das alternativas e a repetição de enunciados após normalizar espaços e maiúsculas. Os rascunhos ficam disponíveis para nova tentativa em caso de falha. Modelos enviados servem de referência de conteúdo e instruções, inclusive quando a exportação final é DOCX.
+| Integrantes |
+| --- |
+| Fernando de Paula Matos |
+| Vinicius Celestino |
+| João Francisco |
+| Gabriel Gutemberg |
 
-## Publicação e verificação
+---
 
-Na Vercel, importe a pasta que contém `package.json` e `vercel.json` como raiz do projeto, selecione o framework **Next.js** e use Node.js 24. Defina as variáveis do ambiente escolhido. A configuração fornecida instala com `npm ci`, compila com Next.js e reserva até 150 segundos para as rotas de geração e processamento, conforme os limites da conta. O banco, o SMTP e as Edge Functions são configurados no Supabase separadamente.
-
-Para conferir uma instalação:
-
-- Rode `npm test`, `npm run typecheck` e `npm run build`. A suíte cobre códigos de acesso, movimento do olhar, distribuição solicitada, erros dos provedores, repetição de questões e exportação com e sem gabarito. As chamadas de autenticação e IA dos testes usam respostas simuladas.
-- Abra a demonstração, navegue pelas quatro seções e use **Sair**. Em uma turma com alunos, prepare um rascunho e verifique a divisão de questões.
-- No ambiente de homologação, entre com um e-mail que você controla. Cadastre dados fictícios, envie um modelo curto e peça uma prova. Confira o texto extraído e revise a prova antes de exportar. Esse teste usa o SMTP e pode consumir cota do provedor.
-
-| Sintoma | O que conferir |
-| --- | --- |
-| Código de acesso não chega | Pasta de spam, endereço, entrega no SMTP, limites de reenvio e os dois modelos de autenticação. |
-| Mensagem sobre configuração do banco | Projeto apontado pela URL e chave pública, execução do SQL e políticas para a conta autenticada. |
-| IA pendente em Ajustes | Provedor selecionado, chave no ambiente correto, função publicada e compatibilidade com a distribuição de questões. |
-| Modelo com erro de leitura | Formato real do arquivo, limites de tamanho/texto e credencial para leitura de PDF. Confira a mensagem do modelo antes de tentar novamente. |
-| Exportação indisponível | Abra o rascunho, confira as questões e aprove. Revisões de conteúdo voltam o status a rascunho. |
+<p align="center">
+  <img src="public/bloub/bloub-symbol.svg" alt="Mascote da Provaai" width="42" /><br />
+  <strong>Provaai</strong><br />
+  Cada aluno, uma possibilidade.
+</p>
 
