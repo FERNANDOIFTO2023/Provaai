@@ -22,7 +22,7 @@ export function Dialog({
     <dialog
       ref={ref}
       className={wide ? 'dialog wide' : 'dialog'}
-      onCancel={onClose}
+      onCancel={event => { event.preventDefault(); onClose(); }}
     >
       <div className="dialog-head">
         <h2>{title}</h2>

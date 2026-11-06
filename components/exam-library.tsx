@@ -25,12 +25,12 @@ export function ExamRows({exams, pending, onReview, selection, onSelect}: {
   </div>)}</div>;
 }
 
-export default function ExamLibrary({classes, exams, pending, busy, generating, onReview, onPrepare, onDownload}: {
+export default function ExamLibrary({classes, exams, pending, busy, generating, onReview, onPrepare, onDownload, roomId, onRoomChange}: {
   classes: ClassRoom[]; exams: Exam[]; pending: string[]; busy: boolean; generating: boolean;
   onReview: (exam: Exam) => void; onPrepare: (room: ClassRoom) => void;
   onDownload: (exams: Exam[], format: 'pdf'|'docx') => void;
+  roomId: string | null; onRoomChange: (id: string | null) => void;
 }) {
-  const [roomId,setRoomId] = useState<string|null>(null);
   const [query,setQuery] = useState('');
   const [status,setStatus] = useState('all');
   const [selection,setSelection] = useState<string[]>([]);
@@ -42,13 +42,13 @@ export default function ExamLibrary({classes, exams, pending, busy, generating, 
     (status === 'all' || exam.status === status));
   const approved = filtered.filter(exam => exam.status === 'approved');
   const selected = approved.filter(exam => selection.includes(exam.id));
-  function changeRoom(id: string|null) {setRoomId(id);setQuery('');setSelection([]);setStatus('all');}
+  function changeRoom(id: string|null) {onRoomChange(id);setQuery('');setSelection([]);setStatus('all');}
   return <section className="exam-library">
     {room && <button className="back-link" onClick={() => changeRoom(null)}><ArrowLeft size={16}/>Todas as turmas</button>}
     <div className="page-heading"><div><span className="eyebrow">PROVAS ORGANIZADAS POR TURMA</span>
       <h1>{room ? room.name : 'Provas coletivas'}<span>.</span></h1>
       <p>{room ? `${room.subject} · ${room.grade}. Revise, aprove e baixe as provas desta turma.` : 'Escolha a turma para preparar avaliações e acompanhar cada revisão.'}</p></div>
-      {room && <button className="button primary" disabled={generating || busy} onClick={() => onPrepare(room)}><Sparkles size={17}/>Preparar provas</button>}
+      {room && <button className="button primary" disabled={generating || busy || Boolean(room.archived_at)} onClick={() => onPrepare(room)}><Sparkles size={17}/>Preparar provas</button>}
     </div>
     <div className="library-filters"><div className="search"><Search size={17}/><input aria-label="Buscar provas"
       placeholder={room ? 'Buscar por aluno, código ou avaliação…' : 'Buscar turma, aluno ou avaliação…'} value={query}
@@ -64,7 +64,7 @@ export default function ExamLibrary({classes, exams, pending, busy, generating, 
         <span className="eyebrow">{item.subject} · {item.grade}</span><h2>{item.name}</h2>
         <div className="class-exam-counts"><span><strong>{list.length}</strong> provas</span><span><strong>{drafts}</strong> em revisão</span><span><strong>{list.length-drafts}</strong> aprovadas</span></div>
         <div className="actions"><button className="button primary" onClick={() => changeRoom(item.id)}>Abrir provas <ArrowRight size={16}/></button>
-          <button className="button secondary" disabled={generating || busy} onClick={() => onPrepare(item)} aria-label={`Preparar provas de ${item.name}`}><PlusIcon/>Preparar</button></div>
+          <button className="button secondary" disabled={generating || busy || Boolean(item.archived_at)} onClick={() => onPrepare(item)} aria-label={`Preparar provas de ${item.name}`}><PlusIcon/>Preparar</button></div>
       </article>;
     })}</div> : <>
       {!!approved.length && <div className="selection-bar"><label><input type="checkbox" checked={selected.length === approved.length}

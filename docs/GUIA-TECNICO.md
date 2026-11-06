@@ -196,6 +196,18 @@ O estado fica em `components/use-exam-download.ts`, separado das ações de salv
 
 ## Publicação e verificação
 
+### Turmas, alunos e cópias entre professores
+
+O histórico do navegador acompanha as abas, os detalhes de turmas, as provas coletivas e os formulários do espaço do professor. Voltar e Avançar restauram a tela correspondente sem desfazer dados já salvos.
+
+Em **Editar turma**, o professor altera nome, série, matéria, turno, cor e ícone. As turmas podem ser filtradas por ativas e inativas. Inativar mantém os dados por um ano de calendário, contado pelo servidor em UTC; reativar antes do vencimento cancela a exclusão. Uma nova inativação inicia outro prazo. A rotina diária exclui turmas vencidas, os alunos ainda vinculados e as provas da turma ou desses alunos. Alunos já transferidos para outra turma permanecem cadastrados. Excluir imediatamente exige motivo de 5 a 1000 caracteres e confirmação do nome na interface; o banco guarda o motivo, o proprietário e a data em `sala_class_deletions`.
+
+A aba **Alunos** reúne os perfis com busca por nome, código, turma e matéria, filtros ativo/inativo e turma, edição e reativação. O status do aluno é independente do status da turma; novas matrículas e provas exigem uma turma ativa.
+
+**Compartilhar cópia** recebe o e-mail do destinatário. O convite aparece na aba **Compartilhamentos** da conta que confirmar esse e-mail; esse fluxo não dispara uma mensagem de e-mail. O destinatário aceita uma turma inteira ou escolhe uma turma ativa própria para receber um aluno. A cópia conserva os perfis e os status dos alunos; uma turma copiada nasce ativa. Provas, arquivos de modelos e preferências de modelos não são copiados. Os dados são fotografados no momento do compartilhamento: edições posteriores no original não alteram a cópia. O recebimento é atômico e idempotente, e os códigos individuais são gerados na turma de destino. O remetente pode cancelar convites pendentes; cópias já recebidas são independentes.
+
+As migrações `20261106181131_class_lifecycle_and_copies.sql` e `20261106181139_schedule_class_cleanup.sql` devem estar aplicadas antes de publicar esta interface. A segunda instala o [Supabase Cron](https://supabase.com/docs/guides/cron/install) e registra `provaai-purge-inactive-classes`, diariamente às 03:15 UTC (00:15 em Brasília). A exclusão acontece na próxima execução após o prazo, não depende de visitas ao site e pode ser acompanhada em `cron.job_run_details`. As políticas de acesso dos dados originais continuam restritas ao proprietário; somente as operações de cópia autorizadas por e-mail verificado criam os novos registros.
+
 Na Vercel, importe a pasta que contém `package.json` e `vercel.json` como raiz do projeto, selecione o framework **Next.js** e use Node.js 24. Defina as variáveis do ambiente escolhido. A configuração fornecida instala com `npm ci`, compila com Next.js e reserva até 150 segundos para as rotas de geração e processamento, conforme os limites da conta. O banco, o SMTP e as Edge Functions são configurados no Supabase separadamente.
 
 Para conferir uma instalação:

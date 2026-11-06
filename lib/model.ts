@@ -2,6 +2,9 @@ import { z } from 'zod';
 import type { ExamContent } from '../supabase/functions/_shared/exam.ts';
 export * from '../supabase/functions/_shared/exam.ts';
 export type ClassRoom = {
+  icon?: 'book' | 'users' | 'graduation' | 'science' | 'sparkles' | 'pencil';
+  archived_at?: string | null;
+  deletion_due_at?: string | null;
   id: string;
   user_id: string;
   name: string;
@@ -71,6 +74,8 @@ export const classSchema = z.object({
   grade: z.string().trim().min(1).max(80),
   subject: z.string().trim().min(2).max(80),
   color: z.enum(['sage', 'peach', 'blue', 'lilac']),
+  period: z.string().trim().max(40).default(''),
+  icon: z.enum(['book', 'users', 'graduation', 'science', 'sparkles', 'pencil']).default('book'),
 });
 export const studentSchema = z.object({
   name: z.string().trim().min(2).max(100),
