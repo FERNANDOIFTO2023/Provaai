@@ -38,13 +38,15 @@ A configuração pública incluída aponta para o Supabase usado pelo site publi
 5. **Revisão.** Em **Provas**, abra o rascunho de cada aluno. Confira enunciados, alternativas, resposta esperada, objetivo e pontuação. Questões objetivas têm quatro alternativas, e a resposta deve corresponder a uma delas. Depois da revisão, aprove a prova. Editar o conteúdo de uma prova aprovada exige nova aprovação.
 6. **Entrega.** Exporte em PDF para impressão ou DOCX para edição. A versão do aluno e o gabarito do professor são arquivos separados. Ao selecionar várias provas aprovadas, o download é um ZIP com os arquivos e um manifesto CSV.
 
-### Provas por turma, recuperação e saída de alunos
+### Provas coletivas, individuais e saída de alunos
 
-**Minhas provas** apresenta uma pasta visual para cada turma, com total de provas, pendências de revisão e aprovações. Abra a turma para buscar por aluno, código ou título e filtrar o estado da revisão. A seleção e o ZIP incluem apenas as provas aprovadas da lista exibida. O botão **Preparar provas** abre a preparação diretamente para aquela turma.
+Os nomes da interface são **Provas coletivas** (antes **Minhas provas**) e **Provas individuais** (antes **Recuperação**). A troca é apenas de apresentação: os fluxos, dados e identificadores internos continuam os mesmos.
 
-**Recuperação** permite buscar um aluno já cadastrado por nome, código ou turma e adicioná-lo ao acompanhamento individual. O atalho **Recuperação**, na lista da turma, faz o mesmo cadastro. Esse vínculo é adicional: o aluno continua na turma de origem. Cada preparação seleciona exatamente um aluno, usa o perfil pedagógico dele e cria uma nova prova, com revisão e exportação próprias. O histórico fica na página Recuperação, separado das avaliações regulares. A escolha de modelo vale para essa prova e não altera a preferência da turma. A IA recebe a finalidade de recuperação e consulta os enunciados anteriores do aluno para evitar repetições exatas. A revisão pedagógica continua sendo responsabilidade do professor.
+A seção **Provas coletivas** apresenta uma pasta visual para cada turma, com total de provas, pendências de revisão e aprovações. Abra a turma para buscar por aluno, código ou título e filtrar o estado da revisão. A seleção e o ZIP incluem apenas as provas aprovadas da lista exibida. O botão **Preparar provas** abre a preparação diretamente para aquela turma.
 
-Na turma, **Retirar** pede confirmação e arquiva o vínculo do aluno. Ele deixa de aparecer nas seleções de novas provas e de recuperação. Provas existentes permanecem disponíveis; o histórico de recuperação de retirados pode ser consultado pelo botão correspondente. Em **Alunos retirados**, use **Restaurar** para reativar o cadastro e seu vínculo anterior com a recuperação. Nenhum desses botões apaga provas ou perfis. Durante um lote em andamento, a interface bloqueia a retirada.
+A seção **Provas individuais** permite buscar um aluno já cadastrado por nome, código ou turma e adicioná-lo ao acompanhamento individual. O atalho **Prova individual**, na lista da turma, faz o mesmo cadastro. Esse vínculo é adicional: o aluno continua na turma de origem. Cada preparação seleciona exatamente um aluno, usa o perfil pedagógico dele e cria uma nova prova, com revisão e exportação próprias. O histórico fica na página Provas individuais, separado das avaliações regulares. A escolha de modelo vale para essa prova e não altera a preferência da turma. A IA recebe a finalidade de recuperação e consulta os enunciados anteriores do aluno para evitar repetições exatas. A revisão pedagógica continua sendo responsabilidade do professor.
+
+Na turma, **Retirar** pede confirmação e arquiva o vínculo do aluno. Ele deixa de aparecer nas seleções de novas provas coletivas e individuais. Provas existentes permanecem disponíveis; o histórico de provas individuais de retirados pode ser consultado pelo botão correspondente. Em **Alunos retirados**, use **Restaurar** para reativar o cadastro e seu vínculo anterior com Provas individuais. Nenhum desses botões apaga provas ou perfis. Durante um lote em andamento, a interface bloqueia a retirada.
 
 A migração `20261105235000_recovery_and_archived_students.sql` adiciona `sala_students.archived_at`, `sala_exams.purpose` (`regular` ou `recovery`) e `sala_recovery_students`. A tabela de vínculos usa RLS e chave composta de aluno/professor. A função `sala_begin_exam_batch` exige um único aluno ativo e cadastrado na recuperação para essa finalidade. Turmas regulares continuam usando o fluxo anterior. Triggers impedem preparar ou gerar novas provas para alunos arquivados, inclusive por chamadas diretas. A recuperação compartilha o bloqueio de geração por professor com as demais provas.
 
@@ -55,6 +57,16 @@ As telas estão em `components/exam-library.tsx` e `components/recovery-workspac
 Ao confirmar o preparo com IA, o servidor salva os rascunhos e reserva um único lote por professor, inclusive entre abas e dispositivos. O painel mostra quantas provas foram processadas. O professor pode navegar e continuar o trabalho nas demais telas. Os rascunhos concluídos ficam disponíveis para revisão em **Provas**. Quando uma prova falha, o lote continua e o rascunho fica disponível para nova tentativa depois da conclusão.
 
 A migração de lotes em `supabase/migrations/` instala a fila e a proteção por conta. A rota `/api/exam-batch` reserva uma prova por chamada. Em produção, o servidor inicia a próxima usando a origem configurada pela Vercel. Se a execução for interrompida ou a sessão expirar, uma aba autenticada retoma o trabalho. Em desenvolvimento, mantenha a aba aberta para avançar o lote. Se o Gemini 3.5 Flash-Lite devolver HTTP 503, o gerador tenta uma vez o Gemini 3.1 Flash-Lite dentro do mesmo prazo.
+
+### Encerramento por inatividade
+
+A interface encerra a sessão depois de 30 minutos sem interação. Aos 28 minutos, apresenta um aviso com contagem regressiva e o botão **Continuar conectado**. Essa confirmação inicia um novo prazo. Renovação automática do token, consultas ao banco, retorno do foco e abertura da página não contam como interação.
+
+O relógio fica em `lib/idle-session.ts` e `components/use-idle-session.ts`. A última atividade é salva por usuário e identificador de sessão; não contém tokens. A marca inicial só é criada depois da verificação bem-sucedida do código de e-mail. Antes de montar o espaço do professor, a aplicação verifica a atividade salva. Sessões antigas sem esse registro exigem novo login uma vez. Com armazenamento bloqueado, o relógio funciona em memória e a reabertura exige login. Abas da mesma origem compartilham as marcas de atividade e encerramento.
+
+Downloads, envios de modelos, geração de provas e operações de salvamento em andamento na aba adiam a saída automática. O aviso informa essa espera. Ao terminar a última operação, a sessão encerra se o prazo já passou e não houve confirmação. Fechar a aba não mantém essa exceção nem reinicia o prazo.
+
+O controle é uma política de inatividade da interface. Ao expirar, ela retira o espaço do professor da tela, marca a sessão como encerrada e solicita a saída local ao Supabase. Não altera a duração dos JWTs no servidor nem substitui autenticação e RLS. Mesmo sem rede, a marca local impede a restauração automática da conta. O prazo do código enviado por e-mail continua sendo de 10 minutos, independente da sessão.
 
 ### Login no celular
 
@@ -181,7 +193,7 @@ Na Vercel, importe a pasta que contém `package.json` e `vercel.json` como raiz 
 Para conferir uma instalação:
 
 - Rode `npm test`, `npm run typecheck` e `npm run build`. A suíte cobre códigos de acesso, movimento do olhar, distribuição solicitada, erros dos provedores, repetição de questões e exportação com e sem gabarito. As chamadas de autenticação e IA dos testes usam respostas simuladas.
-- Abra a demonstração, navegue por Turmas, Provas, Recuperação, Modelos e Ajustes e use **Sair**. Em uma turma com alunos, prepare um rascunho e verifique a divisão de questões.
+- Abra a demonstração, navegue por Turmas, Provas coletivas, Provas individuais, Modelos e Ajustes e use **Sair**. Em uma turma com alunos, prepare um rascunho e verifique a divisão de questões.
 - No ambiente de homologação, entre com um e-mail que você controla. Cadastre dados fictícios, envie um modelo curto e peça uma prova. Confira o texto extraído e revise a prova antes de exportar. Esse teste usa o SMTP e pode consumir cota do provedor.
 
 | Sintoma | O que conferir |

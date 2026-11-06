@@ -5,7 +5,7 @@ import { ArrowUpRight, Sparkles } from './animated-icons';
 import EmailLogin from './email-login';
 import BloubMascot, { type MascotHandle } from './bloub-mascot';
 
-export default function AuthWelcome({ onDemo }: { onDemo: () => void }) {
+export default function AuthWelcome({ onDemo, sessionExpired = false }: { onDemo: () => void; sessionExpired?: boolean }) {
   const [stage, setStage] = useState<'email' | 'code'>('email');
   const mascot = useRef<MascotHandle>(null);
   return (
@@ -44,6 +44,7 @@ export default function AuthWelcome({ onDemo }: { onDemo: () => void }) {
       </section>
       <section className="auth-side" aria-label="Acesso do professor">
         <div className="auth-form">
+          {sessionExpired && <p className="session-expired-note" role="status">Sua sessão foi encerrada por inatividade. Entre novamente com seu e-mail.</p>}
           <EmailLogin
             onStageChange={setStage}
             onRejected={() => mascot.current?.shakeHead()}

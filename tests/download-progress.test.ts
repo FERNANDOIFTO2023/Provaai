@@ -15,7 +15,7 @@ test('ZIP informa progresso após cada arquivo e não inicia download se um dele
   Object.defineProperty(globalThis, 'document', { configurable: true, value: {
     createElement: () => ({ href: '', download: '', click: () => { clicked++; } }),
   } });
-  URL.createObjectURL = blob => { files.push(blob); return 'blob:test'; };
+  URL.createObjectURL = blob => { assert.ok(blob instanceof Blob); files.push(blob); return 'blob:test'; };
   try {
     const progress: number[] = [];
     await downloadExams(exams, 'pdf', false, async exam => new Blob([exam.id]), n => progress.push(n));

@@ -76,8 +76,8 @@ const initials = (name: string) =>
 export type Teacher = { id: string; email?: string };
 const sections = [
   { id: 'classes', short: 'Turmas', name: 'Minhas turmas', icon: LayoutGrid },
-  { id: 'exams', short: 'Provas', name: 'Minhas provas', icon: FileText },
-  { id: 'recovery', short: 'Recuperação', name: 'Recuperação', icon: GraduationCap },
+  { id: 'exams', short: 'Provas coletivas', name: 'Provas coletivas', icon: FileText },
+  { id: 'recovery', short: 'Provas individuais', name: 'Provas individuais', icon: GraduationCap },
   {
     id: 'templates',
     short: 'Modelos',
@@ -92,12 +92,14 @@ export default function TeacherWorkspace({
   demo,
   leaveDemo,
   onPendingChange,
+  onWorkChange,
   startNavigation,
 }: {
   user: Teacher | null;
   demo: boolean;
   leaveDemo: () => void;
   onPendingChange: (pending: boolean) => void;
+  onWorkChange: (working: boolean) => void;
   startNavigation: (change: () => void) => void;
 }) {
   const [data, setData] = useState<DataSet>(() => (demo ? demoData() : empty)),
@@ -235,6 +237,9 @@ export default function TeacherWorkspace({
     if (error) throw error;
     setData(previous => ({...previous,exams:exams as Exam[]}));
   });
+  const workInProgress = busy || uploading || downloads.busy || generation.busy;
+  useEffect(() => { onWorkChange(workInProgress); }, [workInProgress, onWorkChange]);
+  useEffect(() => () => onWorkChange(false), [onWorkChange]);
   useEffect(() => {
     if (!userId || demo) return;
     let mounted = true;
@@ -407,7 +412,7 @@ export default function TeacherWorkspace({
         throw new Error('Abra uma turma para preparar as provas.');
       const ids = new Set(recoveryStudent ? [recoveryStudent.id] : f.getAll('student').map(String));
       const purpose = recoveryStudent ? 'recovery' : 'regular';
-      if (recoveryStudent && !recoveryMembers.includes(recoveryStudent.id)) throw new Error('Adicione o aluno à recuperação primeiro.');
+      if (recoveryStudent && !recoveryMembers.includes(recoveryStudent.id)) throw new Error('Adicione o aluno a Provas individuais primeiro.');
       const selected = students.filter((student) => ids.has(student.id));
       if (!selected.length || selected.length !== ids.size)
         throw new Error('Selecione pelo menos um aluno desta turma.');
@@ -692,7 +697,7 @@ export default function TeacherWorkspace({
       }
       setRecoveryMembers(ids => ids.includes(student.id) ? ids : [...ids,student.id]);
       if (goToPage) navigate('recovery');
-      setMessage(student.name + ' adicionado à recuperação. O vínculo com a turma foi mantido.');
+      setMessage(student.name + ' adicionado a Provas individuais. O vínculo com a turma foi mantido.');
     });
   }
   async function archiveStudent(student: Student, restore = false) {
@@ -1212,8 +1217,8 @@ export default function TeacherWorkspace({
                                 <Pencil size={17} />
                               </button>
                               {!s.archived_at && <button className="button secondary small-button" disabled={busy || recoveryMembers.includes(s.id)}
-                                onClick={() => void addRecovery(s,true)} aria-label={`Encaminhar ${s.name} à recuperação`}>
-                                {recoveryMembers.includes(s.id) ? 'Na recuperação' : 'Recuperação'}
+                                onClick={() => void addRecovery(s,true)} aria-label={`Adicionar ${s.name} a Provas individuais`}>
+                                {recoveryMembers.includes(s.id) ? 'Em Provas individuais' : 'Prova individual'}
                               </button>}
                               <button className="button secondary small-button" disabled={busy || generation.busy}
                                 onClick={() => void archiveStudent(s,Boolean(s.archived_at))} aria-label={`${s.archived_at ? 'Restaurar' : 'Retirar'} ${s.name} ${s.archived_at ? 'na' : 'da'} turma`}>
@@ -1455,7 +1460,7 @@ export default function TeacherWorkspace({
                   ? 'Perfil do aluno'
                   : 'Conheça mais um aluno'
                 : modal === 'generate'
-                  ? recoveryStudent ? 'Preparar recuperação individual' : 'Preparar provas individuais'
+                  ? recoveryStudent ? 'Preparar prova individual' : 'Preparar provas coletivas'
                   : modal === 'downloads' ? 'Download de provas'
                   : modal === 'uploads' ? 'Envio de modelos'
                   : modal === 'template'
@@ -1644,7 +1649,7 @@ export default function TeacherWorkspace({
                 <Field label="Título da avaliação">
                   <input
                     name="title"
-                    defaultValue={recoveryStudent ? `Recuperação · ${active.subject}` : undefined}
+                    defaultValue={recoveryStudent ? `Prova individual · ${active.subject}` : undefined}
                     placeholder="Ex.: Frações no cotidiano"
                     required
                     maxLength={120}
@@ -1678,7 +1683,7 @@ export default function TeacherWorkspace({
               </Field>
               <p className="helper-note" id="class-template-hint">
                 {templateReady(generationTemplate)
-                  ? recoveryStudent ? 'Este modelo será usado nesta prova de recuperação. O padrão da turma permanece o mesmo.' : 'Ao preparar as provas, a escolha fica salva só nesta turma. Selecione “Seguir meu padrão” para acompanhar as mudanças feitas em Modelos.'
+                  ? recoveryStudent ? 'Este modelo será usado nesta prova individual. O padrão da turma permanece o mesmo.' : 'Ao preparar as provas, a escolha fica salva só nesta turma. Selecione “Seguir meu padrão” para acompanhar as mudanças feitas em Modelos.'
                   : 'O modelo escolhido ainda não está pronto. Aguarde a leitura ou selecione outro modelo.'}
               </p>
               <h3>Quem vai receber a prova?</h3>
@@ -1743,7 +1748,7 @@ export default function TeacherWorkspace({
                   className="button primary"
                   disabled={busy || downloads.busy || generation.busy || !students.length || !templateReady(generationTemplate)}
                 >
-                  {busy ? 'Preparando…' : recoveryStudent ? 'Preparar recuperação' : 'Preparar provas'}
+                  {busy ? 'Preparando…' : recoveryStudent ? 'Preparar prova individual' : 'Preparar provas'}
                   <Sparkles size={17} />
                 </button>
               </div>

@@ -41,9 +41,10 @@ Para conhecer o fluxo, abra o [site](https://provaai.vercel.app/) e selecione **
 | **01** | **Turmas e perfis** | Organize alunos, conteúdos, dificuldades e critérios pedagógicos. Arquive e restaure vínculos sem perder o histórico. |
 | **02** | **Seus modelos de prova** | Anexe PDF, DOC ou DOCX, defina um padrão para sua conta e guarde uma escolha diferente por turma. |
 | **03** | **Preparação com IA** | Escolha o total de questões e a divisão entre objetivas e discursivas. Acompanhe a geração em segundo plano. |
-| **04** | **Provas por turma** | Encontre avaliações por aluno, código ou título. Filtre pendências e aprove o conteúdo antes de baixar. |
-| **05** | **Recuperação individual** | Prepare uma prova para um aluno específico, mantendo o vínculo dele com a turma de origem. |
+| **04** | **Provas coletivas** | Encontre avaliações por aluno, código ou título. Filtre pendências e aprove o conteúdo antes de baixar. |
+| **05** | **Provas individuais** | Prepare uma prova para um aluno específico, mantendo o vínculo dele com a turma de origem. |
 | **06** | **Arquivos prontos para uso** | Exporte PDF ou DOCX, com gabarito separado, ou reúna provas aprovadas em um ZIP. |
+| **07** | **Sessão com prazo de inatividade** | Receba um aviso antes de sair após 30 minutos sem interação e confirme quando quiser continuar conectado. |
 
 ### Da turma à impressão
 
@@ -111,7 +112,7 @@ O frontend usa **Next.js, React e TypeScript**. O **Supabase** cuida da autentic
 <summary><strong>Consultar a documentação por assunto</strong></summary>
 
 - [Fluxo completo de uso](docs/GUIA-TECNICO.md#do-cadastro-à-prova-impressa)
-- [Turmas, recuperação e saída de alunos](docs/GUIA-TECNICO.md#provas-por-turma-recuperação-e-saída-de-alunos)
+- [Provas coletivas, individuais e saída de alunos](docs/GUIA-TECNICO.md#provas-coletivas-individuais-e-saída-de-alunos)
 - [Geração em segundo plano](docs/GUIA-TECNICO.md#geração-de-provas-em-segundo-plano)
 - [Login, validade e reutilização dos códigos](docs/GUIA-TECNICO.md#login-no-celular)
 - [Organização do código](docs/GUIA-TECNICO.md#organização-do-código)

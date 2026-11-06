@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowRight, Loader2 } from './animated-icons';
 import { supabase } from '@/lib/supabase';
+import { beginVerifiedSession } from '@/lib/idle-session';
 import {
   emailAuthError,
   isRejectedCode,
@@ -116,6 +117,7 @@ export default function EmailLogin({
         return;
       }
       if (!result.session) throw new Error('Não foi possível iniciar sua sessão.');
+      beginVerifiedSession(result.session.access_token);
       const { error } = await supabase.auth.setSession(result.session);
       if (error) throw error;
     }, true);

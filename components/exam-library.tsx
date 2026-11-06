@@ -46,7 +46,7 @@ export default function ExamLibrary({classes, exams, pending, busy, generating, 
   return <section className="exam-library">
     {room && <button className="back-link" onClick={() => changeRoom(null)}><ArrowLeft size={16}/>Todas as turmas</button>}
     <div className="page-heading"><div><span className="eyebrow">PROVAS ORGANIZADAS POR TURMA</span>
-      <h1>{room ? room.name : 'Minhas provas'}<span>.</span></h1>
+      <h1>{room ? room.name : 'Provas coletivas'}<span>.</span></h1>
       <p>{room ? `${room.subject} · ${room.grade}. Revise, aprove e baixe as provas desta turma.` : 'Escolha a turma para preparar avaliações e acompanhar cada revisão.'}</p></div>
       {room && <button className="button primary" disabled={generating || busy} onClick={() => onPrepare(room)}><Sparkles size={17}/>Preparar provas</button>}
     </div>
