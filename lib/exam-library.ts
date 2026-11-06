@@ -13,3 +13,11 @@ export function searchStudents(students: Student[], classes: ClassRoom[], query:
     `${student.name} ${student.code} ${rooms.get(student.class_id)?.name ?? ''} ${rooms.get(student.class_id)?.subject ?? ''}`,query,
   ));
 }
+
+export function individualStudents(students: Student[], classes: ClassRoom[], members: string[], inactive: boolean, query: string) {
+  const rooms = new Map(classes.map(room => [room.id, room]));
+  const enrolled = new Set(members);
+  return students.filter(student => (inactive ? Boolean(student.archived_at) : !student.archived_at && enrolled.has(student.id)) && matchesSearch(
+    `${student.name} ${student.code} ${rooms.get(student.class_id)?.name ?? ''} ${rooms.get(student.class_id)?.subject ?? ''}`, query,
+  ));
+}

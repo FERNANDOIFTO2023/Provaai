@@ -38,7 +38,7 @@ Para conhecer o fluxo, abra o [site](https://provaai.vercel.app/) e selecione **
 
 | | Recurso | Como ajuda no trabalho |
 | :---: | --- | --- |
-| **01** | **Turmas e perfis** | Organize alunos, conteúdos, dificuldades e critérios pedagógicos. Arquive e restaure vínculos sem perder o histórico. |
+| **01** | **Turmas e perfis** | Organize alunos, conteúdos, dificuldades e critérios pedagógicos. Filtre ativos e inativos; reative alunos escolhendo a turma, sem perder o histórico. |
 | **02** | **Seus modelos de prova** | Anexe PDF, DOC ou DOCX, defina um padrão para sua conta e guarde uma escolha diferente por turma. |
 | **03** | **Preparação com IA** | Escolha o total de questões e a divisão entre objetivas e discursivas. Acompanhe a geração em segundo plano. |
 | **04** | **Provas coletivas** | Encontre avaliações por aluno, código ou título. Filtre pendências e aprove o conteúdo antes de baixar. |

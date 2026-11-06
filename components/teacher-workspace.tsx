@@ -712,6 +712,30 @@ export default function TeacherWorkspace({
       setMessage(restore ? 'Aluno restaurado na turma.' : 'Aluno retirado. O histórico foi preservado.');
     });
   }
+  async function reactivateStudent(student: Student, classId: string) {
+    if (busy || generation.busy || downloads.running.current) throw new Error('Aguarde a operação em andamento terminar.');
+    const currentStudent = data.students.find(item => item.id === student.id);
+    const room = data.classes.find(item => item.id === classId);
+    if (!currentStudent?.archived_at) throw new Error('Este aluno já está ativo. Atualize a lista.');
+    if (!room) throw new Error('Escolha uma turma da sua conta.');
+    setBusy(true);
+    try {
+      let restored: Student;
+      if (demo) {
+        restored = {...currentStudent,class_id:classId,archived_at:null,
+          code:classId === currentStudent.class_id ? currentStudent.code
+            : nextStudentCode(data.students.filter(item => item.class_id === classId).map(item => item.code))};
+      } else {
+        const {data: saved,error} = await supabase.rpc('sala_reactivate_student',{p_student:student.id,p_class:classId});
+        if (error) throw new Error(cleanError(error));
+        restored = saved as Student;
+        if (!restored?.id) throw new Error('Não foi possível confirmar a reativação. Atualize a lista.');
+      }
+      setData(previous => ({...previous,students:previous.students.map(item => item.id === restored.id ? restored : item)}));
+      setRecoveryMembers(ids => ids.includes(restored.id) ? ids : [...ids,restored.id]);
+      setMessage(`${restored.name} reativado em ${room.name}. Código: ${restored.code}.`);
+    } finally {setBusy(false);}
+  }
   const pendingExamIds = generation.batch?.exam_ids.slice(generation.batch.completed) ?? [];
   return (
     <div className="app-shell">
@@ -1238,7 +1262,7 @@ export default function TeacherWorkspace({
             onDownload={startDownload}/>}
           {view === 'recovery' && <RecoveryWorkspace classes={data.classes} students={data.students}
             exams={data.exams} members={recoveryMembers} pending={pendingExamIds} busy={busy} generating={generation.busy || downloads.busy}
-            onReview={reviewExam} onAdd={student => void addRecovery(student)} onPrepare={student => {
+            onReview={reviewExam} onReactivate={reactivateStudent} onAdd={student => void addRecovery(student)} onPrepare={student => {
               const room=data.classes.find(item => item.id === student.class_id);
               if (room) prepareForClass(room,student);
             }}/>}
@@ -2029,7 +2053,7 @@ export default function TeacherWorkspace({
                 {!demo && !exam.content.questions.length && (
                   <button
                     className="button secondary"
-                    disabled={busy || downloads.busy || generation.busy || !templateReady(exam.template_id) || Boolean(data.students.find(student => student.id === exam.student_id)?.archived_at)}
+                    disabled={busy || downloads.busy || generation.busy || !templateReady(exam.template_id) || !data.students.some(student => student.id === exam.student_id && !student.archived_at && student.class_id === exam.class_id)}
                     title={templateReady(exam.template_id) ? undefined : 'Aguarde a leitura do modelo desta prova.'}
                     onClick={() =>
                       void action(async () => {
