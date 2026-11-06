@@ -21,18 +21,35 @@ async function unpack() {
   return folder;
 }
 
-// Uma conversão por instância limita o uso de memória. Cada documento tem um worker isolado.
+type Converter = { convert: (input: Uint8Array, options: { outputFormat: string }) => Promise<{ data: Uint8Array }>; destroy: () => Promise<void> };
+let converter: Converter | undefined;
+let idle: ReturnType<typeof setTimeout> | undefined;
+// Um worker por instância, com conversões sequenciais e descarte após um minuto ocioso.
 let previous: Promise<unknown> = Promise.resolve();
 export function officePdf(docx: Uint8Array): Promise<Uint8Array> {
+  if (idle) clearTimeout(idle);
   const task=previous.then(async()=>{
+    if (idle) clearTimeout(idle);
     const folder=await (runtime ??= unpack().catch(err=>{runtime=undefined;throw err;}));
     const requireRuntime=createRequire(join(folder,'converter.cjs'));
     const {createWorkerConverter}=requireRuntime('./dist/server.cjs');
-    const converter=await createWorkerConverter();
+    converter ??= await createWorkerConverter();
     try {
-      const result=await converter.convert(docx,{outputFormat:'pdf'});
+      const result=await converter!.convert(docx,{outputFormat:'pdf'});
       return result.data as Uint8Array;
-    } finally { await converter.destroy(); }
+    } catch (error) {
+      const failed = converter;
+      converter = undefined;
+      await failed?.destroy();
+      throw error;
+    } finally {
+      idle = setTimeout(() => {
+        const retired = converter;
+        converter = undefined;
+        previous = previous.then(() => retired?.destroy()).catch(() => undefined);
+      }, 60_000);
+      idle.unref();
+    }
   });
   previous=task.then(()=>undefined,()=>undefined);
   return task;

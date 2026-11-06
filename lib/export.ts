@@ -122,12 +122,15 @@ export async function downloadExams(
   format: 'pdf' | 'docx',
   answerKey = false,
   render: typeof examFile = examFile,
+  report: (completed: number) => void = () => {},
 ) {
   if (!exams.length)
     throw new Error('Selecione pelo menos uma prova aprovada.');
   if (exams.length === 1) {
+    const blob = await render(exams[0], format, answerKey);
+    report(1);
     downloadBlob(
-      await render(exams[0], format, answerKey),
+      blob,
       `${answerKey ? 'gabarito' : 'prova'}_${safeName(exams[0].profile_snapshot.code)}.${format}`,
     );
     return;
@@ -141,6 +144,7 @@ export async function downloadExams(
     manifest.push(
       `${e.id},${safeName(e.profile_snapshot.code)},${format},${file}`,
     );
+    report(manifest.length - 1);
   }
   zip.file('manifesto.csv', manifest.join('\n'));
   downloadBlob(

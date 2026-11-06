@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Upload, X } from './animated-icons';
 import { Field } from './workspace-ui';
 
 function fileKey(file: File) {

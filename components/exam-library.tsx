@@ -1,6 +1,6 @@
 'use client';
 import {useState} from 'react';
-import {ArrowLeft, ArrowRight, CheckCircle2, Clock, Download, FileText, Search, Sparkles} from 'lucide-react';
+import {ArrowLeft, ArrowRight, CheckCircle2, Clock, Download, FileText, Search, Sparkles} from './animated-icons';
 import type {ClassRoom, Exam} from '@/lib/model';
 import {matchesSearch, regularExams} from '@/lib/exam-library';
 import {Empty} from './workspace-ui';

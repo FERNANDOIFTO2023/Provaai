@@ -1,0 +1,20 @@
+/* Heroicons Animated renders its SVG inside a small wrapper. */
+.app-icon,
+.app-icon > div {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  line-height: 0;
+}
+.app-icon svg { display: block; flex-shrink: 0; }
+.auth-form .button.primary > .app-icon:last-child,
+.demo-button > .app-icon:last-child { margin-left: auto; }
+.auth-security > .app-icon { margin-top: 2px; color: var(--color-action); }
+.helper-note > .app-icon,
+.notice > .app-icon,
+.toast > .app-icon { flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .app-icon.spin { animation: none; }
+}

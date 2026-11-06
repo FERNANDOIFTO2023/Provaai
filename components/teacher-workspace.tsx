@@ -35,14 +35,16 @@ import {
   AlertCircle,
   Pencil,
   Trash2,
-} from 'lucide-react';
+} from './animated-icons';
 import { supabase } from '@/lib/supabase';
+import { nextStudentCode, saveWithStudentCode } from '@/lib/student-code';
 import ExamLibrary from './exam-library';
 import RecoveryWorkspace from './recovery-workspace';
 import QuestionCounts from './question-counts';
 import TemplateFilePicker from './template-file-picker';
 import { useTemplateQueue } from './use-template-queue';
 import { useExamBatch } from './use-exam-batch';
+import { useExamDownload } from './use-exam-download';
 import { questionMix } from '@/supabase/functions/_shared/question-mix';
 import { BloubMood } from './motion';
 import {
@@ -60,7 +62,7 @@ import {
 } from '@/lib/model';
 import { downloadExams } from '@/lib/export';
 import { Dialog, Field, Empty } from './workspace-ui';
-type Modal = 'class' | 'student' | 'generate' | 'template' | 'uploads' | 'exam' | null;
+type Modal = 'class' | 'student' | 'generate' | 'template' | 'uploads' | 'downloads' | 'exam' | null;
 const uploadStages = { queued: 'Na fila', uploading: 'Enviando arquivo', reading: 'Lendo conteúdo', ready: 'Pronto', failed: 'Não concluído' };
 const empty: DataSet = { classes: [], students: [], exams: [], templates: [] };
 const initials = (name: string) =>
@@ -105,6 +107,8 @@ export default function TeacherWorkspace({
     [search, setSearch] = useState(''),
     [modal, setModal] = useState<Modal>(null),
     [editing, setEditing] = useState<Student | null>(null),
+    [generatedStudentCode, setGeneratedStudentCode] = useState(''),
+    [studentCodePending, setStudentCodePending] = useState(false),
     [exam, setExam] = useState<Exam | null>(null),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(''),
@@ -125,6 +129,30 @@ export default function TeacherWorkspace({
       (s) => !s.archived_at && (s.difficulties || s.criteria),
     ).length;
   const classListHeading = useRef<HTMLHeadingElement>(null);
+  async function readStudentCodes(classId: string): Promise<string[]> {
+    if (demo) return data.students.filter(student => student.class_id === classId).map(student => student.code);
+    if (!user) throw new Error('Entre novamente para cadastrar o aluno.');
+    const codes: string[] = [];
+    for (let offset = 0; ; offset += 1000) {
+      const { data: rows, error } = await supabase.from('sala_students')
+        .select('code').eq('class_id', classId).eq('user_id', user.id)
+        .order('id').range(offset, offset + 999);
+      if (error) throw error;
+      codes.push(...rows.map(row => row.code as string));
+      if (rows.length < 1000) return codes;
+    }
+  }
+  useEffect(() => {
+    if (modal !== 'student' || editing || !current) return;
+    let cancelled = false;
+    setStudentCodePending(true);
+    readStudentCodes(current).then(codes => {
+      if (!cancelled) setGeneratedStudentCode(nextStudentCode(codes));
+    }).catch(error => {
+      if (!cancelled) { setGeneratedStudentCode(''); setError(cleanError(error)); }
+    }).finally(() => { if (!cancelled) setStudentCodePending(false); });
+    return () => { cancelled = true; };
+  }, [modal, current, editing?.id, user?.id, demo]);
   const [initialLoad, setInitialLoad] = useState(!demo);
   const [configPending, setConfigPending] = useState(true);
   const screenPending = initialLoad || (view === 'settings' && configPending);
@@ -132,6 +160,7 @@ export default function TeacherWorkspace({
     onPendingChange(screenPending);
     return () => onPendingChange(false);
   }, [screenPending, onPendingChange]);
+  const downloads = useExamDownload();
   const uploads = useTemplateQueue();
   const uploading = uploads.active.length > 0;
   const uploadFailed = uploads.tasks.some(task => task.stage === 'failed');
@@ -142,20 +171,30 @@ export default function TeacherWorkspace({
     uploads.dismiss();
   }, [uploads.tasks, uploading, uploadFailed]);
   const approved = data.exams.filter((e) => e.status === 'approved');
-  async function exportExams(exams: Exam[], format: 'pdf'|'docx', answerKey=false) {
-    if (demo) return downloadExams(exams,format,answerKey);
+  async function exportExams(exams: Exam[], format: 'pdf'|'docx', answerKey=false, report: (completed: number) => void = () => {}) {
+    if (demo) return downloadExams(exams,format,answerKey,undefined,report);
     const {data:{session}}=await supabase.auth.getSession();
     if (!session) throw new Error('Entre novamente para exportar a prova.');
     await downloadExams(exams,format,answerKey,async (exam,format,answerKey)=>{
       const response=await fetch('/api/export/exam',{method:'POST',headers:{
         authorization:'Bearer '+session.access_token,'content-type':'application/json',
-      },body:JSON.stringify({id:exam.id,format,answerKey})});
+      },body:JSON.stringify({id:exam.id,format,answerKey}), signal: AbortSignal.timeout(160_000)}).catch(error => {
+        if (error?.name === 'TimeoutError') throw new Error('O download demorou mais que o esperado. Tente novamente ou baixe em DOCX.');
+        throw error;
+      });
       if (!response.ok) {
         const body=await response.json().catch(()=>({}));
         throw new Error(body.error || 'Não foi possível baixar a prova. Tente novamente.');
       }
       return response.blob();
-    });
+    },report);
+  }
+  function startDownload(items: Exam[], format: 'pdf'|'docx', answerKey = false) {
+    if (busy || downloads.running.current || generation.busy) return;
+    const snapshot = structuredClone(items);
+    setError('');
+    setModal('downloads');
+    void downloads.start(snapshot.length, report => exportExams(snapshot, format, answerKey, report));
   }
   async function load(includeTemplates = false) {
     if (!user) return;
@@ -227,6 +266,11 @@ export default function TeacherWorkspace({
   }
   function open(m: Modal) {
     setError('');
+    if (m === 'student') {
+      setGeneratedStudentCode(nextStudentCode(data.students.filter(student => student.class_id === current).map(student => student.code)));
+      setStudentCodePending(!demo);
+    }
+    if (m === 'generate' && downloads.running.current) return;
     if (m === 'generate') {setGenerationChoice(classTemplateChoice);setRecoveryStudent(null);}
     setModal(m);
   }
@@ -320,32 +364,38 @@ export default function TeacherWorkspace({
     e.preventDefault();
     const form = Object.fromEntries(new FormData(e.currentTarget));
     await action(async () => {
-      const parsed = studentSchema.safeParse(form);
+      if (!current) throw new Error('Abra uma turma para cadastrar o aluno.');
+      if (!editing && (studentCodePending || !generatedStudentCode)) {
+        throw new Error('Aguarde a confirmação do código automático.');
+      }
+      const parsed = studentSchema.safeParse({ ...form, code: editing?.code || generatedStudentCode });
       if (!parsed.success)
         throw new Error('Confira os campos do aluno e o tamanho dos textos.');
-      if (
-        data.students.some(
-          (s) =>
-            s.class_id === current &&
-            s.code === parsed.data.code &&
-            s.id !== editing?.id,
-        )
-      )
-        throw new Error('Já existe um aluno com esse código nesta turma.');
-      await persist(
-        'students',
-        'sala_students',
-        {
+      const record = {
           ...parsed.data,
           id: editing?.id || crypto.randomUUID(),
           class_id: current,
           user_id: uid,
           created_at: editing?.created_at || now(),
-        },
-        !!editing,
-      );
+      };
+      let savedCode = editing?.code;
+      if (editing) {
+        await persist('students', 'sala_students', record, true);
+      } else {
+        const saved = await saveWithStudentCode(generatedStudentCode,
+          () => readStudentCodes(record.class_id),
+          async code => {
+            if (demo) return { ...record, code };
+            const { data: student, error } = await supabase.from('sala_students')
+              .insert({ ...record, code }).select().single();
+            if (error) throw error;
+            return student as Student;
+          });
+        savedCode = saved.code;
+        setData(previous => ({ ...previous, students: [saved.student as Student, ...previous.students] }));
+      }
       setModal(null);
-      setMessage('Perfil do aluno salvo.');
+      setMessage(editing ? 'Perfil do aluno salvo.' : `Aluno cadastrado com o código ${savedCode}.`);
     });
   }
   async function createExams(e: FormEvent<HTMLFormElement>) {
@@ -382,6 +432,7 @@ export default function TeacherWorkspace({
       if (!templateReady(templateId))
         throw new Error('Escolha um modelo com leitura concluída antes de preparar as provas.');
       if (generation.busy) throw new Error('Aguarde o lote de provas em andamento.');
+      if (downloads.running.current) throw new Error('Aguarde o download terminar antes de gerar outras provas.');
       if (aiMode) {
         await generation.start({classId:room.id,students:[...ids],title,topics,count,objectiveCount,choice,purpose});
         if (!recoveryStudent) setData(d => ({...d,classes:d.classes.map(c => c.id===room.id ? {...c,
@@ -611,6 +662,7 @@ export default function TeacherWorkspace({
     }
   }
   async function signout() {
+    if (downloads.running.current) { setModal('downloads'); return; }
     if (busy) return;
     if (demo) {
       leaveDemo();
@@ -622,6 +674,7 @@ export default function TeacherWorkspace({
     });
   }
   function prepareForClass(room: ClassRoom, student: Student | null = null) {
+    if (downloads.running.current) return;
     setCurrent(room.id);
     setRecoveryStudent(student);
     setGenerationChoice(room.template_override_id ?? (room.use_provaai_template ? 'builtin' : 'inherit'));
@@ -760,6 +813,13 @@ export default function TeacherWorkspace({
           </div>
         </header>
         <main className="main-content" key={view === 'classes' ? view + String(current) : view}>
+          {(downloads.busy || downloads.notice || downloads.error) && <div className="generation-notice download-notice" role="status">
+            <BloubMood mood={downloads.error ? 'frustrado' : downloads.busy ? 'sonolento' : 'feliz'} />
+            <div><strong>{downloads.busy ? 'Preparando seu download em segundo plano…' : downloads.error || downloads.notice}</strong>
+              {downloads.status && <p>{downloads.status.completed} de {downloads.status.total} arquivos preparados. Você pode navegar; novas provas e downloads serão liberados ao terminar.</p>}</div>
+            {downloads.busy ? <button className="text-button" onClick={() => setModal('downloads')}>Acompanhar</button>
+              : <button className="icon-button" aria-label="Fechar aviso de download" onClick={downloads.dismiss}><X size={16}/></button>}
+          </div>}
           {generation.busy && <div className="generation-notice" role="status">
             <BloubMood mood="curioso" />
             <div><strong>Gerando provas com IA em segundo plano…</strong>
@@ -925,7 +985,7 @@ export default function TeacherWorkspace({
                       >
                         <div className={`class-cover ${c.color}`}>
                           <span className="class-symbol">
-                            <BookOpen size={28} strokeWidth={1.4} />
+                            <BookOpen size={28} />
                           </span>
                           <span className="cover-decoration" aria-hidden="true">
                             {c.subject.toLowerCase().includes('mat')
@@ -1025,7 +1085,7 @@ export default function TeacherWorkspace({
                   </button>
                   <button
                     className="button primary"
-                    disabled={!students.length || generation.busy}
+                    disabled={!students.length || generation.busy || downloads.busy}
                     title={
                       !students.length
                         ? 'Adicione um aluno à turma primeiro'
@@ -1169,10 +1229,10 @@ export default function TeacherWorkspace({
             </>
           )}
           {view === 'exams' && <ExamLibrary classes={data.classes} exams={data.exams} pending={pendingExamIds}
-            busy={busy} generating={generation.busy} onReview={reviewExam} onPrepare={prepareForClass}
-            onDownload={(items,format) => void action(async () => {await exportExams(items,format);setMessage('Download preparado.');})}/>}
+            busy={busy || downloads.busy || generation.busy} generating={generation.busy || downloads.busy} onReview={reviewExam} onPrepare={prepareForClass}
+            onDownload={startDownload}/>}
           {view === 'recovery' && <RecoveryWorkspace classes={data.classes} students={data.students}
-            exams={data.exams} members={recoveryMembers} pending={pendingExamIds} busy={busy} generating={generation.busy}
+            exams={data.exams} members={recoveryMembers} pending={pendingExamIds} busy={busy} generating={generation.busy || downloads.busy}
             onReview={reviewExam} onAdd={student => void addRecovery(student)} onPrepare={student => {
               const room=data.classes.find(item => item.id === student.class_id);
               if (room) prepareForClass(room,student);
@@ -1396,6 +1456,7 @@ export default function TeacherWorkspace({
                   : 'Conheça mais um aluno'
                 : modal === 'generate'
                   ? recoveryStudent ? 'Preparar recuperação individual' : 'Preparar provas individuais'
+                  : modal === 'downloads' ? 'Download de provas'
                   : modal === 'uploads' ? 'Envio de modelos'
                   : modal === 'template'
                     ? 'Adicionar modelos de referência'
@@ -1411,6 +1472,15 @@ export default function TeacherWorkspace({
               {error}
             </p>
           )}
+          {modal === 'downloads' && <section className="upload-wait">
+            <BloubMood mood={downloads.error ? 'frustrado' : downloads.busy ? 'sonolento' : 'feliz'} />
+            <h3 role="status">{downloads.busy ? 'Preparando suas provas! Aguarde um pouquinho.' : downloads.error ? 'Não foi possível concluir o download.' : 'Arquivo pronto!'}</h3>
+            <p>{downloads.error || (downloads.busy ? 'Você pode continuar explorando o site. Mantenha esta aba aberta até o download terminar.' : downloads.notice)}</p>
+            {downloads.status && <p role="status">{downloads.status.completed < downloads.status.total
+              ? 'Preparando arquivo ' + (downloads.status.completed + 1) + ' de ' + downloads.status.total + '…'
+              : 'Finalizando o arquivo para download…'}</p>}
+            <button className="button primary" onClick={() => setModal(null)}>{downloads.busy ? 'Continuar navegando' : 'Concluir'}</button>
+          </section>}
           {modal === 'uploads' && (
             <section className="upload-wait">
               <BloubMood mood={uploading ? 'sonolento' : 'curioso'} />
@@ -1501,11 +1571,15 @@ export default function TeacherWorkspace({
                 <Field label="Código na turma">
                   <input
                     name="code"
-                    defaultValue={editing?.code}
-                    placeholder="Ex.: A008"
+                    value={editing?.code || generatedStudentCode}
+                    readOnly
+                    aria-describedby="student-code-help"
                     required
                     maxLength={30}
                   />
+                  <small id="student-code-help" className="muted">
+                    {editing ? 'Código vinculado a este aluno.' : studentCodePending ? 'Confirmando código disponível…' : 'Gerado automaticamente e confirmado ao salvar.'}
+                  </small>
                 </Field>
                 <Field label="Nível atual">
                   <select
@@ -1548,7 +1622,7 @@ export default function TeacherWorkspace({
                 >
                   Cancelar
                 </button>
-                <button className="button primary" disabled={busy}>
+                <button className="button primary" disabled={busy || (!editing && (studentCodePending || !generatedStudentCode))}>
                   {busy ? 'Salvando…' : 'Salvar perfil'}
                   <Check size={17} />
                 </button>
@@ -1667,7 +1741,7 @@ export default function TeacherWorkspace({
                 </button>
                 <button
                   className="button primary"
-                  disabled={busy || generation.busy || !students.length || !templateReady(generationTemplate)}
+                  disabled={busy || downloads.busy || generation.busy || !students.length || !templateReady(generationTemplate)}
                 >
                   {busy ? 'Preparando…' : recoveryStudent ? 'Preparar recuperação' : 'Preparar provas'}
                   <Sparkles size={17} />
@@ -1950,10 +2024,11 @@ export default function TeacherWorkspace({
                 {!demo && !exam.content.questions.length && (
                   <button
                     className="button secondary"
-                    disabled={busy || generation.busy || !templateReady(exam.template_id) || Boolean(data.students.find(student => student.id === exam.student_id)?.archived_at)}
+                    disabled={busy || downloads.busy || generation.busy || !templateReady(exam.template_id) || Boolean(data.students.find(student => student.id === exam.student_id)?.archived_at)}
                     title={templateReady(exam.template_id) ? undefined : 'Aguarde a leitura do modelo desta prova.'}
                     onClick={() =>
                       void action(async () => {
+                        if (downloads.running.current) return;
                         await generation.start({retry:exam.id});
                         setModal(null);
                       })
@@ -1974,34 +2049,22 @@ export default function TeacherWorkspace({
                   <>
                     <button
                       className="button secondary"
-                      disabled={busy}
-                      onClick={() =>
-                        void action(async () => {
-                          await exportExams([exam], 'pdf', true);
-                        })
-                      }
+                      disabled={busy || downloads.busy || generation.busy}
+                      onClick={() => startDownload([exam], 'pdf', true)}
                     >
                       Gabarito
                     </button>
                     <button
                       className="button secondary"
-                      disabled={busy}
-                      onClick={() =>
-                        void action(async () => {
-                          await exportExams([exam], 'docx');
-                        })
-                      }
+                      disabled={busy || downloads.busy || generation.busy}
+                      onClick={() => startDownload([exam], 'docx')}
                     >
                       DOCX <Download size={16} />
                     </button>
                     <button
                       className="button primary"
-                      disabled={busy}
-                      onClick={() =>
-                        void action(async () => {
-                          await exportExams([exam], 'pdf');
-                        })
-                      }
+                      disabled={busy || downloads.busy || generation.busy}
+                      onClick={() => startDownload([exam], 'pdf')}
                     >
                       Baixar PDF <Download size={16} />
                     </button>

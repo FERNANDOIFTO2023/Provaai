@@ -1,0 +1,14 @@
+node_modules
+.next
+.office-runtime
+.git
+.vercel
+supabase/.temp
+supabase/.branches
+.env*
+*.tsbuildinfo
+docs
+tests
+README.md
+pnpm-lock.yaml
+pnpm-workspace.yaml

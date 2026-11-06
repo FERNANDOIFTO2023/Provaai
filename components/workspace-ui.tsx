@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { X } from './animated-icons';
 import { BloubMood } from './motion';
 
 export function Dialog({

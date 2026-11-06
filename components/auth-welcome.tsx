@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { ArrowUpRight, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Sparkles } from './animated-icons';
 import EmailLogin from './email-login';
 import BloubMascot, { type MascotHandle } from './bloub-mascot';
 

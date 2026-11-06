@@ -32,7 +32,7 @@ A configuração pública incluída aponta para o Supabase usado pelo site publi
 ## Do cadastro à prova impressa
 
 1. **Acesso.** Informe o e-mail e digite o código recebido para criar ou acessar a conta. O botão **Sair** encerra a sessão neste navegador e volta ao login. O mascote acompanha o ponteiro, reage à validação e aparece durante o carregamento. A interface respeita a preferência de movimento reduzido do sistema.
-2. **Turmas.** Crie a turma com nome, série e matéria. Na turma, cadastre os alunos com um código único naquela turma. O perfil reúne nível, dificuldades e critérios que devem orientar a prova. Não é preciso informar turno.
+2. **Turmas.** Crie a turma com nome, série e matéria. Na turma, cadastre os alunos. O campo de código já vem preenchido automaticamente (A001, A002 e assim por diante) e é somente para leitura. Ao salvar, o sistema consulta os códigos da turma, inclusive os de alunos retirados, e confirma a exclusividade no banco. Se outro cadastro ocupar o código durante o preenchimento, o próximo disponível é atribuído automaticamente e informado na confirmação. Editar o perfil mantém o código já vinculado ao aluno. O perfil reúne nível, dificuldades e critérios que devem orientar a prova. Não é preciso informar turno.
 3. **Modelos, se desejar.** Em **Modelos**, arraste os arquivos PDF, DOC ou DOCX para a área de envio ou clique nela para selecioná-los. Depois, dê um nome a cada modelo e confira o texto extraído. Acompanhe o envio e a leitura no painel ou selecione **Continuar em segundo plano** para trabalhar em outra tela da Provaai. Mantenha a aba aberta. Cada modelo fica disponível para gerar provas assim que sua leitura termina. Em caso de erro de leitura, use **Ler arquivo novamente** no arquivo já salvo. Após a leitura, use **Definir como padrão**. Ao preparar provas, a turma começa em **Seguir meu padrão**. Escolher outro modelo e confirmar **Preparar provas** guarda a escolha apenas nessa turma. Para voltar a acompanhar o padrão do professor, selecione **Seguir meu padrão** na próxima preparação. Cada prova guarda a referência escolhida no momento da criação. O texto do modelo orienta a IA. Modelos DOCX também fornecem o cabeçalho, logotipos, rodapés e configuração de página da exportação. PDF e DOC servem como referência de conteúdo e usam a diagramação padrão na saída.
 4. **Preparação.** Abra uma turma com alunos e escolha **Preparar provas**. Selecione os alunos, informe título, tópicos e o total de 1 a 30 questões por aluno. Ao ajustar o número de objetivas, a interface calcula o número de discursivas, e vice-versa. Por exemplo, 10 questões com 6 objetivas resultam em 4 discursivas. É possível escolher todas de um único tipo.
 5. **Revisão.** Em **Provas**, abra o rascunho de cada aluno. Confira enunciados, alternativas, resposta esperada, objetivo e pontuação. Questões objetivas têm quatro alternativas, e a resposta deve corresponder a uma delas. Depois da revisão, aprove a prova. Editar o conteúdo de uma prova aprovada exige nova aprovação.
@@ -69,6 +69,12 @@ Em telas de até 760 px de largura, a faixa violeta reúne a marca e o mascote a
 As regras de layout ficam em `app/bloub.css`. O atributo `data-login-stage` de `components/auth-welcome.tsx` identifica as etapas de e-mail e código. [Ver o login em uma tela de 393 px](login-mobile.png).
 
 ## Organização do código
+
+### Movimento dos ícones
+
+Os ícones usam [Heroicons Animated](https://github.com/heroicons-animated/heroicons-animated), com Motion 12, conforme a compatibilidade declarada pela biblioteca. `components/animated-icons.tsx` importa cada desenho individualmente e aciona sua animação original quando o mouse entra no botão ou campo, ou quando o controle recebe foco pelo teclado. Ao sair, o ícone retorna ao estado normal. Os eventos são removidos ao desmontar o componente. Botões desabilitados não acionam efeitos; indicadores de carregamento mantêm seu giro separado. A preferência de movimento reduzido desativa as animações. `app/icon-motion.css` cuida apenas das dimensões e do alinhamento dos novos ícones.
+
+Use Motion 12 para manter a compatibilidade com Heroicons Animated. Para instalar o projeto com pnpm, execute `pnpm install --frozen-lockfile`. O `package-lock.json` atende ao fluxo de `npm ci` na Vercel. Ao alterar dependências com pnpm, sincronize esse arquivo com `npm install --package-lock-only --ignore-scripts`.
 
 | Caminho | Responsabilidade |
 | --- | --- |
@@ -154,11 +160,19 @@ A rota `POST /api/export/exam` recebe token Bearer e `{id, format: "pdf" | "docx
 
 Prepare preferencialmente um modelo com cabeçalho e campos vazios, seguido de `Tema`. Campos já preenchidos, caixas de texto, tabelas complexas de atividades e formulários arbitrários não são mapeados automaticamente. Sem campos reconhecidos, o corpo é substituído pelo conteúdo da prova, mantendo cabeçalho, rodapé e configuração da página. Um cabeçalho diferente na primeira página continua diferente nas páginas seguintes, conforme o arquivo enviado. PDF e DOC não fornecem diagramação editável nesta versão.
 
-Para PDF, `lib/office-pdf.ts` converte esse mesmo DOCX com LibreOffice WebAssembly, preservando os símbolos Unicode em vez de desenhar texto com a fonte básica do jsPDF. A demonstração offline mantém o exportador simples. Fontes ausentes no motor podem ser substituídas por equivalentes. O conversor roda em worker e limita as conversões a uma por instância. ZIPs são preparados sequencialmente. A primeira conversão pode levar alguns segundos para abrir o motor.
+Para PDF, `lib/office-pdf.ts` converte esse mesmo DOCX com LibreOffice WebAssembly, preservando os símbolos Unicode em vez de desenhar texto com a fonte básica do jsPDF. A demonstração offline mantém o exportador simples. Fontes ausentes no motor podem ser substituídas por equivalentes. O conversor roda em worker e limita as conversões a uma por instância. O mesmo worker atende aos próximos documentos e é descartado após um minuto sem uso, evitando inicializar o LibreOffice para cada prova do ZIP. A primeira conversão ainda precisa abrir o motor. ZIPs são preparados sequencialmente.
 
-`npm run dev` e `npm run build` executam `scripts/prepare-office.mjs`, que prepara os arquivos compactados em `.office-runtime/`. O build inclui esses arquivos na função de exportação; não coloque essa pasta gerada no Git. O servidor descompacta o motor na pasta temporária da instância. Não exige uma instalação local do LibreOffice. A rota tem prazo de 120 segundos. O pacote `@matbee/libreoffice-converter` e o LibreOffice mantêm suas licenças de terceiros, disponíveis nos respectivos pacotes/fontes.
+`npm run dev` e `npm run build` executam `scripts/prepare-office.mjs`, que prepara os arquivos compactados em `.office-runtime/`. O build inclui esses arquivos na função de exportação; não coloque essa pasta gerada no Git. O servidor descompacta o motor na pasta temporária da instância. Não exige uma instalação local do LibreOffice. A rota tem prazo de 150 segundos; o navegador encerra a espera após 160 segundos por arquivo e apresenta uma mensagem para tentar novamente. O pacote `@matbee/libreoffice-converter` e o LibreOffice mantêm suas licenças de terceiros, disponíveis nos respectivos pacotes/fontes.
 
 Provas existentes que guardaram o `template_id` de um DOCX passam a usar o modelo no próximo download; não é necessário gerar o conteúdo novamente. Se a prova foi criada sem esse vínculo, escolher um novo padrão da turma não altera a prova antiga. Arquivos já baixados também não mudam.
+
+### Downloads em segundo plano
+
+O botão de download abre um acompanhamento com o mascote e a opção **Continuar navegando**. O processo permanece no espaço do professor ao trocar de seção ou fechar o modal. Um aviso mostra quantos arquivos foram preparados. Geração de novas provas, novos downloads e saída da conta aguardam a conclusão; as outras telas continuam disponíveis. Mantenha a aba aberta: o processo não é retomado após fechar ou recarregar a página. O navegador avisa se houver uma tentativa de saída durante a preparação.
+
+O estado fica em `components/use-exam-download.ts`, separado das ações de salvar. O bloqueio imediato evita cliques repetidos antes da atualização da interface. Em caso de falha, os controles são liberados e a mensagem permanece disponível. O progresso conta documentos concluídos; não estima uma porcentagem interna da conversão.
+
+`lib/export-cache.ts` reutiliza arquivos prontos por até cinco minutos na mesma instância, com limite total de 24 MiB. A rota autentica o professor e verifica a propriedade e a aprovação antes de consultar o cache. A chave contém o professor, os dados completos da prova, o formato, a opção de gabarito, os campos preenchidos e os bytes atuais do modelo. Alterações nesses dados exigem nova renderização. Requisições simultâneas idênticas compartilham o trabalho; falhas não ficam no cache. Não há URLs públicas para esses arquivos. Instâncias novas ou cache expirado ainda precisam converter o documento.
 
 ## Publicação e verificação
 
@@ -177,5 +191,3 @@ Para conferir uma instalação:
 | IA pendente em Ajustes | Provedor selecionado, chave no ambiente correto, função publicada e compatibilidade com a distribuição de questões. |
 | Modelo com erro de leitura | Formato real do arquivo, limites de tamanho/texto e credencial para leitura de PDF. Confira a mensagem do modelo antes de tentar novamente. |
 | Exportação indisponível | Abra o rascunho, confira as questões e aprove. Revisões de conteúdo voltam o status a rascunho. |
-
-

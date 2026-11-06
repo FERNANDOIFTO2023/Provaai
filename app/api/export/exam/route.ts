@@ -4,8 +4,11 @@ import { fillDocxLayout } from '@/lib/docx-layout';
 import { examFile } from '@/lib/export';
 import { officePdf } from '@/lib/office-pdf';
 import type { Exam } from '@/lib/model';
+import { createHash } from 'node:crypto';
+import { createExportCache } from '@/lib/export-cache';
 
-export const maxDuration=120;
+const cachedExport = createExportCache();
+export const maxDuration=150;
 export async function POST(req: Request) {
   const bearer=req.headers.get('authorization');
   if (!bearer?.startsWith('Bearer ')) return new Response(null,{status:401});
@@ -21,7 +24,8 @@ export async function POST(req: Request) {
   if (exam.status!=='approved') return fail('Aprove a prova antes de exportar.',409);
   const key=input.answerKey===true;
   try {
-    let document: Uint8Array | undefined;
+    let template: Uint8Array | undefined;
+    let className = '';
     if (exam.template_id) {
       const {data:t}=await db.from('sala_templates').select('filename,path').eq('id',exam.template_id).eq('user_id',user.id).single();
       if (!t) return fail('O modelo vinculado não está disponível.',409);
@@ -31,13 +35,20 @@ export async function POST(req: Request) {
           db.from('sala_classes').select('name').eq('id',exam.class_id).eq('user_id',user.id).single(),
         ]);
         if (!file || !room) return fail('Não foi possível abrir o modelo ou a turma. Tente novamente.',409);
-        document=await fillDocxLayout(new Uint8Array(await file.arrayBuffer()),exam as Exam,room.name,
-          typeof user.user_metadata?.full_name==='string'?user.user_metadata.full_name:'',key);
+        template = new Uint8Array(await file.arrayBuffer());
+        className = room.name;
       }
     }
-    document ??= new Uint8Array(await (await examFile(exam as Exam,'docx',key)).arrayBuffer());
     const pdf=input.format==='pdf';
-    const bytes=pdf?await officePdf(document):document;
+    const teacherName = typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : '';
+    const digest = createHash('sha256').update(JSON.stringify({userId:user.id,exam,format:input.format,key,className,teacherName}));
+    if (template) digest.update(template);
+    const bytes = await cachedExport(digest.digest('hex'), async () => {
+      const document = template
+        ? await fillDocxLayout(template, exam as Exam, className, teacherName, key)
+        : new Uint8Array(await (await examFile(exam as Exam,'docx',key)).arrayBuffer());
+      return pdf ? officePdf(document) : document;
+    });
     return new Response(new Uint8Array(bytes),{headers:{'Cache-Control':'private, no-store',
       'Content-Type':pdf?'application/pdf':'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}});
   } catch {

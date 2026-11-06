@@ -1,6 +1,6 @@
 'use client';
 import {useState} from 'react';
-import {Plus, Search, Sparkles, GraduationCap} from 'lucide-react';
+import {Plus, Search, Sparkles, GraduationCap} from './animated-icons';
 import type {ClassRoom, Exam, Student} from '@/lib/model';
 import {searchStudents, matchesSearch} from '@/lib/exam-library';
 import {ExamRows} from './exam-library';
