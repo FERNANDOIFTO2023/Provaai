@@ -30,7 +30,6 @@ import {
   FolderOpen,
   Printer,
   Loader2,
-  Menu,
   Leaf,
   AlertCircle,
   Pencil,
@@ -67,6 +66,7 @@ import CopySharing, { ShareCopyForm } from './copy-sharing';
 import { ClassIcon } from './class-icon';
 import { ClassCover } from './class-cover';
 import ClassSettings, { type BannerDraft } from './class-settings';
+import WorkspaceHeader from './workspace-header';
 import { classColor } from '@/lib/class-appearance';
 import { useWorkspaceHistory } from './use-workspace-history';
 import { classExpired, deletionDate, type CopyInvitation, type ShareTarget } from '@/lib/classroom';
@@ -882,7 +882,7 @@ export default function TeacherWorkspace({
   }
   return (
     <div className="app-shell">
-      <aside className={`sidebar ${mobile ? 'is-open' : ''}`}>
+      <aside id="teacher-sidebar" className={`sidebar ${mobile ? 'is-open' : ''}`}>
         <button
           type="button"
           className="brand brand-button"
@@ -947,43 +947,9 @@ export default function TeacherWorkspace({
         </button>
       </aside>
       <div className="app-body">
-        <header className="topbar">
-          <button
-            type="button"
-            className="icon-button mobile-menu"
-            onClick={() => setMobile(!mobile)}
-            aria-label="Abrir menu"
-            aria-expanded={mobile}
-          >
-            <Menu />
-          </button>
-          <nav className="section-nav" aria-label="Telas do professor">
-            {sections.map((section) => (
-              <button
-                type="button"
-                key={section.id}
-                aria-current={view === section.id ? 'page' : undefined}
-                onClick={() => navigate(section.id)}
-              >
-                {section.short}
-              </button>
-            ))}
-          </nav>
-          <div className="topbar-right">
-            <span className="session-label">
-              {demo ? 'Demonstração' : user?.email}
-            </span>
-            <button
-              type="button"
-              className="session-exit"
-              disabled={busy}
-              onClick={() => void signout()}
-            >
-              <LogOut size={16} aria-hidden="true" />
-              Sair
-            </button>
-          </div>
-        </header>
+        <WorkspaceHeader sections={sections} view={view} className={active?.name}
+          email={user?.email} demo={demo} busy={busy} menuOpen={mobile}
+          onMenu={() => setMobile(!mobile)} onNavigate={navigate} onSignOut={() => void signout()} />
         <main className="main-content" key={view === 'classes' ? view + String(current) : view}>
           {(downloads.busy || downloads.notice || downloads.error) && <div className="generation-notice download-notice" role="status">
             <BloubMood mood={downloads.error ? 'frustrado' : downloads.busy ? 'sonolento' : 'feliz'} />

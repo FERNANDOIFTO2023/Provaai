@@ -3,6 +3,7 @@ import './sala.css';
 import './bloub.css';
 import './icon-motion.css';
 import './class-appearance.css';
+import './workspace-header.css';
 
 export const metadata: Metadata = {
   applicationName: 'Provaai',
