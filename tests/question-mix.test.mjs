@@ -55,6 +55,12 @@ for (const [provider, requested, returned, status] of [
           ? body.contents[0].parts[0].text
           : body.messages[1].content,
       );
+      if (context.questions) {
+        const text = JSON.stringify({aligned:true,offTopicQuestions:[],missingTopics:[]});
+        return Response.json(provider === 'gemini'
+          ? {candidates:[{content:{parts:[{text}]}}]}
+          : {choices:[{message:{content:text}}]});
+      }
       assert.deepEqual(context.distribution, {
         objective: requested,
         essay: 4 - requested,
@@ -83,7 +89,7 @@ for (const [provider, requested, returned, status] of [
       { ...settings, provider },
     );
     assert.equal(response.status, status, await response.text());
-    assert.equal(calls, status === 422 ? 0 : 1);
+    assert.equal(calls, status === 422 ? 0 : status === 200 ? 2 : 1);
     if (status === 200) assert.equal(saved.objectiveCount, requested);
     else assert.equal(saved, undefined);
     if (status === 502) assert.equal(released, true);

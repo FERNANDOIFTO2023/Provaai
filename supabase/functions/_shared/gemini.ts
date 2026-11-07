@@ -3,8 +3,9 @@ export async function geminiQuestions(
   model: string,
   instruction: string,
   context: unknown,
+  options: { signal?: AbortSignal; maxOutputTokens?: number; temperature?: number } = {},
 ) {
-  const deadline = AbortSignal.timeout(90000);
+  const deadline = options.signal ?? AbortSignal.timeout(90000);
   const request = (selected: string) => fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selected)}:generateContent`,
     {
@@ -15,7 +16,8 @@ export async function geminiQuestions(
         contents: [{ parts: [{ text: JSON.stringify(context) }] }],
         generationConfig: {
           responseMimeType: 'application/json',
-          maxOutputTokens: 12000,
+          maxOutputTokens: options.maxOutputTokens ?? 12000,
+          ...(options.temperature === undefined ? {} : { temperature: options.temperature }),
         },
       }),
       signal: deadline,

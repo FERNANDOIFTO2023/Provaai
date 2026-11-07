@@ -44,7 +44,7 @@ function animatedIcon(Icon: LibraryIcon, name: string) {
     useEffect(() => {
       const node = host.current;
       if (!node) return;
-      const control = node.closest<HTMLElement>('button, a[href], .search, .field, .template-dropzone, .stats > div') || node;
+      const control = node.closest<HTMLElement>('button, a[href], .class-icon-picker label, .search, .field, .template-dropzone, .stats > div') || node;
       let hovered = false;
       let focused = false;
       let active = false;

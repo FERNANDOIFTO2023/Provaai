@@ -124,6 +124,14 @@ O frontend usa **Next.js, React e TypeScript**. O **Supabase** cuida da autentic
 
 </details>
 
+### Turmas com a sua identidade
+
+Edite pelo lápis do cartão ou por **Editar turma**. Escolha entre **10 cores e 10 ícones**, adicione uma foto opcional e ajuste o recorte com arraste, zoom e controles de posição. A prévia mostra as escolhas antes de salvar.
+
+### Matéria e conteúdos por avaliação
+
+Ao preparar provas coletivas ou individuais, informe a **Matéria desta prova** e os **Conteúdos e objetivos desta prova**. Cada avaliação guarda seu próprio pedido. O perfil do aluno e o modelo de referência são adaptados a ele; provas anteriores de outros assuntos ficam fora do contexto. Antes de salvar as questões, uma conferência automática verifica a correspondência com o pedido. Revise o rascunho antes de aprovar. Veja os detalhes no [guia técnico](docs/GUIA-TECNICO.md).
+
 ## Equipe
 
 Projeto acadêmico do **IFTO**, desenvolvido na disciplina **Linguagens e Técnicas de Programação III**, com orientação do professor **Marcos Raimundo**.
@@ -142,4 +150,3 @@ Projeto acadêmico do **IFTO**, desenvolvido na disciplina **Linguagens e Técni
   <strong>Provaai</strong><br />
   Cada aluno, uma possibilidade.
 </p>
-

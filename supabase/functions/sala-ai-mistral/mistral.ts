@@ -4,6 +4,7 @@ async function requestMistral(
   key: string,
   body: unknown,
   fetcher: typeof fetch,
+  signal = AbortSignal.timeout(90000),
 ) {
   if (!key) throw new Error('Configure MISTRAL_API_KEY no servidor.');
   const response = await fetcher(`https://api.mistral.ai/v1/${path}`, {
@@ -13,7 +14,7 @@ async function requestMistral(
       Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(90000),
+    signal,
   });
   if (!response.ok) {
     if (response.status === 429)
@@ -41,6 +42,7 @@ export async function mistralQuestions(
   instruction: string,
   context: unknown,
   fetcher: typeof fetch = fetch,
+  options: { signal?: AbortSignal; maxOutputTokens?: number; temperature?: number } = {},
 ) {
   const result = await requestMistral(
     'chat/completions',
@@ -52,10 +54,11 @@ export async function mistralQuestions(
         { role: 'user', content: JSON.stringify(context) },
       ],
       response_format: { type: 'json_object' },
-      temperature: 0.7,
-      max_tokens: 12000,
+      temperature: options.temperature ?? 0.7,
+      max_tokens: options.maxOutputTokens ?? 12000,
     },
     fetcher,
+    options.signal,
   );
   const choice = result.choices?.[0];
   if (choice?.finish_reason === 'length')

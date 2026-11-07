@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './sala.css';
 import './bloub.css';
 import './icon-motion.css';
+import './class-appearance.css';
 
 export const metadata: Metadata = {
   applicationName: 'Provaai',

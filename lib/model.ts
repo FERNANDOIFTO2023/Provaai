@@ -1,8 +1,11 @@
 import { z } from 'zod';
+import { classColorValues, classIconValues, type BannerCrop } from './class-appearance.ts';
 import type { ExamContent } from '../supabase/functions/_shared/exam.ts';
 export * from '../supabase/functions/_shared/exam.ts';
 export type ClassRoom = {
-  icon?: 'book' | 'users' | 'graduation' | 'science' | 'sparkles' | 'pencil';
+  icon?: typeof classIconValues[number];
+  banner_path?: string | null;
+  banner_crop?: BannerCrop;
   archived_at?: string | null;
   deletion_due_at?: string | null;
   id: string;
@@ -73,9 +76,9 @@ export const classSchema = z.object({
   name: z.string().trim().min(2).max(80),
   grade: z.string().trim().min(1).max(80),
   subject: z.string().trim().min(2).max(80),
-  color: z.enum(['sage', 'peach', 'blue', 'lilac']),
+  color: z.enum(classColorValues),
   period: z.string().trim().max(40).default(''),
-  icon: z.enum(['book', 'users', 'graduation', 'science', 'sparkles', 'pencil']).default('book'),
+  icon: z.enum(classIconValues).default('book'),
 });
 export const studentSchema = z.object({
   name: z.string().trim().min(2).max(100),

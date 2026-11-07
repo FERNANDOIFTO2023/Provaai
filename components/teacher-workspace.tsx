@@ -64,7 +64,10 @@ import { downloadExams } from '@/lib/export';
 import { Dialog, Field, Empty } from './workspace-ui';
 import StudentsWorkspace from './students-workspace';
 import CopySharing, { ShareCopyForm } from './copy-sharing';
-import { ClassIcon, ClassIconPicker } from './class-icon';
+import { ClassIcon } from './class-icon';
+import { ClassCover } from './class-cover';
+import ClassSettings, { type BannerDraft } from './class-settings';
+import { classColor } from '@/lib/class-appearance';
 import { useWorkspaceHistory } from './use-workspace-history';
 import { classExpired, deletionDate, type CopyInvitation, type ShareTarget } from '@/lib/classroom';
 type Modal = 'class' | 'edit-class' | 'delete-class' | 'reactivate' | 'share' | 'student' | 'generate' | 'template' | 'uploads' | 'downloads' | 'exam' | null;
@@ -389,9 +392,7 @@ export default function TeacherWorkspace({
     return <button type="button" className="button secondary" disabled={busy || !ready}
       onClick={() => void action(() => setDefaultTemplate(id))}>Definir como padrão</button>;
   }
-  async function saveClass(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = Object.fromEntries(new FormData(e.currentTarget));
+  async function saveClass(form: Record<string, FormDataEntryValue>, banner: BannerDraft) {
     await action(async () => {
       const parsed = classSchema.safeParse(form);
       if (!parsed.success)
@@ -399,12 +400,40 @@ export default function TeacherWorkspace({
       const updating = modal === 'edit-class';
       if (updating && !active) throw new Error('Turma não encontrada.');
       const id = updating ? active!.id : crypto.randomUUID();
-      await persist('classes', 'sala_classes', {
-        ...parsed.data,
-        id,
-        user_id: uid,
-        created_at: updating ? active!.created_at : now(),
-      }, updating);
+      let bannerPath = banner.path;
+      let uploadedPath: string | null = null;
+      if (banner.file) {
+        if (demo) {
+          bannerPath = await new Promise<string>((resolve,reject)=>{
+            const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('Não foi possível preparar a foto.'));reader.readAsDataURL(banner.file!);
+          });
+        } else {
+          uploadedPath = `${uid}/${id}/${crypto.randomUUID()}.jpg`;
+          const {error}=await supabase.storage.from('class-banners').upload(uploadedPath,banner.file,{contentType:'image/jpeg',upsert:false});
+          if(error)throw new Error('Não foi possível enviar a foto. Tente novamente.');
+          bannerPath=uploadedPath;
+        }
+      }
+      const appearance={...parsed.data,banner_path:bannerPath,banner_crop:banner.crop};
+      let saved: ClassRoom;
+      try {
+        if(demo) saved={...(updating?active!:{}),...appearance,id,user_id:uid!,created_at:updating?active!.created_at:now()};
+        else {
+          const query=updating
+            ? supabase.from('sala_classes').update(appearance).eq('id',id).eq('user_id',uid!)
+            : supabase.from('sala_classes').insert({...appearance,id,user_id:uid});
+          const {data:result,error}=await query.select().single();
+          if(error)throw error;saved=result as ClassRoom;
+        }
+      } catch(error) {
+        if(uploadedPath)await supabase.storage.from('class-banners').remove([uploadedPath]);
+        throw error;
+      }
+      setData(previous=>({...previous,classes:updating?previous.classes.map(room=>room.id===id?saved:room):[saved,...previous.classes]}));
+      if(!demo&&active?.banner_path&&active.banner_path!==bannerPath&&updating) {
+        // Uma falha de limpeza não invalida a turma que já foi salva.
+        void supabase.storage.from('class-banners').remove([active.banner_path]).catch(()=>{});
+      }
       navigate('classes');
       setCurrent(id);
       setModal(null);
@@ -465,10 +494,11 @@ export default function TeacherWorkspace({
       if (!selected.length || selected.length !== ids.size)
         throw new Error('Selecione pelo menos um aluno desta turma.');
       const title = String(f.get('title')).trim(),
+        subject = String(f.get('subject') ?? '').trim(),
         topics = String(f.get('topics')).trim(),
         count = Number(f.get('count'));
-      if (!title || !topics || count < 1 || count > 30)
-        throw new Error('Informe título, tópicos e de 1 a 30 questões.');
+      if (!title || !subject || subject.length > 80 || !topics || count < 1 || count > 30)
+        throw new Error('Informe título, matéria, tópicos e de 1 a 30 questões.');
       const objectiveCount = questionMix(
         count,
         Number(f.get('objectiveCount')),
@@ -487,7 +517,7 @@ export default function TeacherWorkspace({
       if (generation.busy) throw new Error('Aguarde o lote de provas em andamento.');
       if (downloads.running.current) throw new Error('Aguarde o download terminar antes de gerar outras provas.');
       if (aiMode) {
-        await generation.start({classId:room.id,students:[...ids],title,topics,count,objectiveCount,choice,purpose});
+        await generation.start({classId:room.id,students:[...ids],title,subject,topics,count,objectiveCount,choice,purpose});
         if (!recoveryStudent) setData(d => ({...d,classes:d.classes.map(c => c.id===room.id ? {...c,
           template_override_id:choice==='inherit'||choice==='builtin'?null:choice,
           use_provaai_template:choice==='builtin'} : c)}));
@@ -516,7 +546,7 @@ export default function TeacherWorkspace({
           student_id: s.id,
           purpose,
           title,
-          subject: room.subject,
+          subject,
           topics,
           question_count: count,
           template_id: templateId,
@@ -1119,9 +1149,8 @@ export default function TeacherWorkspace({
                         (s) => s.criteria || s.difficulties,
                       ).length;
                     return (
-                      <button
-                        key={c.id}
-                        className="class-card"
+                      <article key={c.id} className="class-card" style={{borderColor:classColor(c.color)}}>
+                      <button type="button" className="class-card-open" aria-label={`Abrir turma ${c.name}`}
                         onClick={() =>
                           startNavigation(() => {
                             setCurrent(c.id);
@@ -1129,16 +1158,7 @@ export default function TeacherWorkspace({
                           })
                         }
                       >
-                        <div className={`class-cover ${c.color}`}>
-                          <span className="class-symbol">
-                            <ClassIcon icon={c.icon} />
-                          </span>
-                          <span className="cover-decoration" aria-hidden="true">
-                            {c.subject.toLowerCase().includes('mat')
-                              ? '÷'
-                              : '✳'}
-                          </span>
-                        </div>
+                        <ClassCover room={c}/>
                         <div className="class-content">
                           <span className="class-subject">{c.subject}</span>
                           <h3>{c.name}</h3>
@@ -1173,6 +1193,9 @@ export default function TeacherWorkspace({
                           </div>
                         </div>
                       </button>
+                      <button type="button" className="class-card-edit" title="Editar turma" aria-label={`Editar turma ${c.name}`}
+                        disabled={busy} onClick={()=>{setCurrent(c.id);setError('');setModal('edit-class');}}><Pencil size={19}/></button>
+                      </article>
                     );
                   })}
                 <button
@@ -1201,6 +1224,7 @@ export default function TeacherWorkspace({
           )}
           {view === 'classes' && active && (
             <>
+              <div className="class-page-cover"><ClassCover room={active}/></div>
               <button
                 className="back-link"
                 onClick={() => startNavigation(() => setCurrent(null))}
@@ -1220,7 +1244,7 @@ export default function TeacherWorkspace({
                   </p>
                 </div>
                 <div className="actions">
-                  <button className="button secondary" disabled={busy} onClick={() => open('edit-class')}><Settings size={17} />Editar turma</button>
+                  <button className="button secondary" disabled={busy} onClick={() => open('edit-class')}><Pencil size={17} />Editar turma</button>
                   <button className="button secondary" disabled={busy} onClick={() => share('class', active)}>Compartilhar cópia</button>
                   <button
                     className="button secondary"
@@ -1631,7 +1655,7 @@ export default function TeacherWorkspace({
                     ? 'Adicionar modelos de referência'
                     : 'Revisar prova'
           }
-          wide={modal === 'exam' || modal === 'generate'}
+          wide={modal === 'exam' || modal === 'generate' || modal === 'class' || modal === 'edit-class'}
           onClose={() => {
             if (!busy) setModal(null);
           }}
@@ -1686,62 +1710,8 @@ export default function TeacherWorkspace({
             </select></Field><div className="dialog-actions"><button type="button" className="button secondary" disabled={busy} onClick={() => setModal(null)}>Cancelar</button>
               <button className="button primary" disabled={busy || generation.busy}>{busy ? 'Reativando…' : 'Reativar aluno'}</button></div></form>}
           {(modal === 'class' || modal === 'edit-class') && (
-            <form onSubmit={saveClass} key={modal === 'edit-class' ? active?.id : 'new'}>
-              <p className="muted">
-                Comece pela turma. Depois, cada aluno ganha seu espaço.
-              </p>
-              <Field label="Nome da turma">
-                <input
-                  name="name"
-                  defaultValue={modal === 'edit-class' ? active?.name : ''}
-                  placeholder="Ex.: 7º ano A"
-                  required
-                  maxLength={80}
-                />
-              </Field>
-              <div className="form-grid">
-                <Field label="Série / etapa">
-                  <input
-                    name="grade"
-                    defaultValue={modal === 'edit-class' ? active?.grade : ''}
-                    placeholder="Ex.: 7º ano"
-                    required
-                    maxLength={80}
-                  />
-                </Field>
-                <Field label="Matéria">
-                  <input
-                    name="subject"
-                    defaultValue={modal === 'edit-class' ? active?.subject : ''}
-                    placeholder="Ex.: Matemática"
-                    required
-                    maxLength={80}
-                  />
-                </Field>
-                <Field label="Cor da turma">
-                  <select name="color" defaultValue={modal === 'edit-class' ? active?.color : 'sage'}>
-                    <option value="sage">Verde sálvia</option>
-                    <option value="peach">Pêssego</option>
-                    <option value="blue">Azul</option>
-                    <option value="lilac">Lilás</option>
-                  </select>
-                </Field>
-                <Field label="Turno"><input name="period" maxLength={40} placeholder="Ex.: Manhã" defaultValue={modal === 'edit-class' ? active?.period : ''} /></Field>
-              </div>
-              <ClassIconPicker value={modal === 'edit-class' ? active?.icon : 'book'} />
-              <div className="dialog-actions">
-                <button
-                  type="button"
-                  className="button secondary"
-                  onClick={() => setModal(null)}
-                >
-                  Cancelar
-                </button>
-                <button className="button primary" disabled={busy}>
-                  {busy ? 'Salvando…' : modal === 'edit-class' ? 'Salvar alterações' : 'Criar turma'}
-                  <Plus size={17} />
-                </button>
-              </div>
+            <ClassSettings key={modal === 'edit-class' ? active?.id : 'new'} room={modal === 'edit-class' ? active ?? undefined : undefined}
+              busy={busy} onSave={saveClass} onCancel={() => setModal(null)}>
               {modal === 'edit-class' && active && <section className="class-lifecycle">
                 <h3>Status da turma: {active.archived_at ? 'inativa' : 'ativa'}</h3>
                 <p className="helper-note">Inativar preserva os dados por um ano. Você pode reativar nesse período. Ao completar um ano de inatividade, a turma, os alunos vinculados e suas provas serão excluídos pela rotina automática diária.</p>
@@ -1749,7 +1719,7 @@ export default function TeacherWorkspace({
                   {active.archived_at ? 'Reativar turma' : 'Inativar turma'}</button>
                   <button type="button" className="button danger" disabled={busy || generation.busy} onClick={() => open('delete-class')}><Trash2 size={16} />Excluir turma</button></div>
               </section>}
-            </form>
+            </ClassSettings>
           )}
           {modal === 'student' && (
             <form onSubmit={saveStudent}>
@@ -1850,7 +1820,12 @@ export default function TeacherWorkspace({
                   />
                 </Field>
               </div>
-              <Field label="Matérias, tópicos e objetivos">
+              <Field label="Matéria desta prova">
+                <input name="subject" defaultValue={active.subject} required maxLength={80}
+                  placeholder="Ex.: Matemática" aria-describedby="exam-subject-help" />
+                <small id="exam-subject-help" className="muted">Vale para esta avaliação. Você pode escolher uma matéria diferente da turma.</small>
+              </Field>
+              <Field label="Conteúdos e objetivos desta prova">
                 <textarea
                   name="topics"
                   rows={2}
@@ -1859,6 +1834,7 @@ export default function TeacherWorkspace({
                   maxLength={3000}
                 />
               </Field>
+              <p className="helper-note">A matéria e os conteúdos acima orientam esta prova. O perfil do aluno e o modelo escolhido serão adaptados a esse pedido.</p>
               <QuestionCounts />
               <Field label="Modelo de referência">
                 <select name="template_choice" value={generationChoice}

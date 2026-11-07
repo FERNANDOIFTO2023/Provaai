@@ -2,6 +2,8 @@ import { edgeProxy } from '@/lib/edge-proxy';
 import { supabaseUrl, supabaseKey } from '@/lib/supabase';
 import { generate } from '@/supabase/functions/_shared/generate';
 
+export const maxDuration = 150;
+
 export function POST(req: Request) {
   const provider = process.env.AI_PROVIDER === 'mistral' ? 'mistral' : 'gemini';
   const apiKey =
