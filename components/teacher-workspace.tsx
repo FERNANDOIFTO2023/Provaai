@@ -947,7 +947,7 @@ export default function TeacherWorkspace({
         </button>
       </aside>
       <div className="app-body">
-        <WorkspaceHeader sections={sections} view={view} className={active?.name}
+        <WorkspaceHeader sections={sections} view={view}
           email={user?.email} demo={demo} busy={busy} menuOpen={mobile}
           onMenu={() => setMobile(!mobile)} onNavigate={navigate} onSignOut={() => void signout()} />
         <main className="main-content" key={view === 'classes' ? view + String(current) : view}>

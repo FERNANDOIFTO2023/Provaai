@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useRef, type ComponentType } from "react";
-import { LogOut, Menu, X } from "./animated-icons";
+import { useEffect, useId, useRef } from "react";
+import { motion, useReducedMotion } from "motion/react";
 
 type Section = {
   id: string;
   short: string;
   name: string;
-  icon: ComponentType<{ size?: number }>;
 };
 
 export default function WorkspaceHeader({
   sections,
   view,
-  className,
   email,
   demo,
   busy,
@@ -24,7 +22,6 @@ export default function WorkspaceHeader({
 }: {
   sections: Section[];
   view: string;
-  className?: string;
   email?: string;
   demo: boolean;
   busy: boolean;
@@ -33,110 +30,119 @@ export default function WorkspaceHeader({
   onNavigate: (view: string) => void;
   onSignOut: () => void;
 }) {
-  const navigation = useRef<HTMLElement>(null);
-  const current = sections.find((section) => section.id === view);
-  const account = demo
-    ? "Professor visitante"
-    : email?.split("@")[0] || "Professor";
-  const initials = account
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+  const more = useRef<HTMLDetailsElement>(null);
+  const indicatorId = useId();
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    const nav = navigation.current;
-    const selected = nav?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!nav || !selected) return;
-    // Move somente a faixa de navegação, sem deslocar a página do professor.
-    const left = selected.offsetLeft - nav.offsetLeft;
-    if (left < nav.scrollLeft) nav.scrollLeft = Math.max(0, left - 8);
-    else if (left + selected.offsetWidth > nav.scrollLeft + nav.clientWidth)
-      nav.scrollLeft = left + selected.offsetWidth - nav.clientWidth + 8;
+    if (more.current) more.current.open = false;
   }, [view]);
+
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !more.current?.contains(event.target) &&
+        more.current
+      )
+        more.current.open = false;
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, []);
 
   return (
     <header className="topbar workspace-header">
-      <div className="workspace-header-row">
-        <div className="workspace-header-location">
-          <button
-            type="button"
-            className="icon-button mobile-menu"
-            onClick={onMenu}
-            aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
-            aria-expanded={menuOpen}
-            aria-controls="teacher-sidebar"
-          >
-            {menuOpen ? <X size={21} /> : <Menu size={21} />}
-          </button>
-          <span className="header-location-mark" aria-hidden="true">
-            <img src="/bloub/bloub-symbol.svg" width="25" height="25" alt="" />
-          </span>
-          <div className="header-location-copy">
-            <span className="header-eyebrow">Seu espaço de ensino</span>
-            <div className="header-breadcrumb">
-              <span>{current?.name || "Meu espaço"}</span>
-              {className && view === "classes" && (
-                <>
-                  <span
-                    className="header-breadcrumb-divider"
-                    aria-hidden="true"
-                  >
-                    /
-                  </span>
-                  <strong title={className}>{className}</strong>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="workspace-header-account">
-          <div
-            className="header-account"
-            title={demo ? "Modo demonstração" : email}
-          >
-            <span className="header-account-avatar" aria-hidden="true">
-              {initials}
-            </span>
-            <span className="header-account-copy">
-              <strong>{account}</strong>
-              <small>{demo ? "Demonstração" : "Conta do professor"}</small>
-            </span>
-          </div>
-          <button
-            type="button"
-            className="header-signout"
-            disabled={busy}
-            onClick={onSignOut}
-            aria-label="Sair da conta"
-            title="Sair da conta"
-          >
-            <LogOut size={17} />
-            <span>Sair</span>
-          </button>
-        </div>
-      </div>
-      <nav
-        ref={navigation}
-        className="workspace-header-nav"
-        aria-label="Telas do professor"
+      <button
+        type="button"
+        className="icon-button mobile-menu"
+        onClick={onMenu}
+        aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+        aria-expanded={menuOpen}
+        aria-controls="teacher-sidebar"
       >
-        {sections.map((section) => (
+        {menuOpen ? "Fechar" : "Menu"}
+      </button>
+      <nav className="workspace-header-nav" aria-label="Telas do professor">
+        {sections.map((section, index) => (
           <button
+            className={
+              index < 2 ? "header-primary-link" : "header-overflow-link"
+            }
             type="button"
             key={section.id}
             aria-current={view === section.id ? "page" : undefined}
             onClick={() => onNavigate(section.id)}
           >
-            <section.icon size={17} />
-            <span>{section.short}</span>
-            <span className="header-active-dot" aria-hidden="true" />
+            {view === section.id && (
+              <motion.span
+                className="header-active-indicator"
+                layoutId={indicatorId}
+                transition={
+                  reducedMotion
+                    ? { duration: 0 }
+                    : { duration: 0.2, ease: "easeOut" }
+                }
+                aria-hidden="true"
+              />
+            )}
+            <span className="header-nav-label">{section.short}</span>
           </button>
         ))}
+        <details
+          ref={more}
+          className="header-more"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.currentTarget.open = false;
+              event.currentTarget.querySelector("summary")?.focus();
+            }
+          }}
+        >
+          <summary
+            className={
+              sections.slice(2).some((section) => section.id === view)
+                ? "is-active"
+                : undefined
+            }
+          >
+            Mais
+          </summary>
+          <div className="header-more-pages">
+            {sections.slice(2).map((section) => (
+              <button
+                type="button"
+                key={section.id}
+                aria-current={view === section.id ? "page" : undefined}
+                onClick={() => {
+                  if (more.current) more.current.open = false;
+                  onNavigate(section.id);
+                }}
+              >
+                {section.short}
+              </button>
+            ))}
+          </div>
+        </details>
       </nav>
+      <div className="workspace-header-account">
+        <span
+          className="header-session-label"
+          title={demo ? "Demonstração" : email}
+        >
+          {demo ? "Demonstração" : email}
+        </span>
+        <button
+          type="button"
+          className="header-signout"
+          disabled={busy}
+          onClick={onSignOut}
+          aria-label="Sair da conta"
+          title="Sair da conta"
+        >
+          <span>Sair</span>
+        </button>
+      </div>
     </header>
   );
 }
