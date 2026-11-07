@@ -78,7 +78,7 @@ Em **Preparar provas**, o campo **Matéria desta prova** começa com a matéria 
 
 O gerador compartilhado prioriza esse pedido sobre o perfil pedagógico e o modelo anexado. Dificuldades de outra matéria não devem mudar o assunto. O modelo mantém seu papel de referência de estrutura e atividades: textos e dados só entram quando compatíveis com o pedido ou expressamente solicitados. A diagramação DOCX continua sendo aplicada na exportação.
 
-A consulta de enunciados anteriores filtra a mesma matéria e os mesmos tópicos. Após validar formato, distribuição e duplicatas, uma segunda chamada ao provedor confere as questões contra o pedido salvo, sem receber modelo, perfil ou histórico. Essa conferência tem limite de 25 segundos, acrescenta uma chamada de IA por prova e pode aumentar o tempo e o consumo de geração. Respostas fora do assunto, conferência inválida ou indisponível não são salvas como geração concluída; o rascunho fica disponível para nova tentativa. A conferência automatizada não substitui a revisão pedagógica do professor.
+A consulta de enunciados anteriores filtra a mesma matéria e os mesmos tópicos. Após validar formato, distribuição e duplicatas, uma segunda chamada ao provedor confere as questões contra o pedido salvo, sem receber modelo, perfil ou histórico. Sem reserva, essa conferência tem limite de 25 segundos. Com Groq configurada, os prazos e a retomada por etapa seguem a seção de configuração da IA. A conferência acrescenta consumo de IA por prova. Respostas fora do assunto, conferência inválida ou indisponível não são salvas como geração concluída; o rascunho fica disponível para nova tentativa. A conferência automatizada não substitui a revisão pedagógica do professor.
 
 `tests/exam-scope.test.mjs` cobre a sequência A → B para o mesmo aluno, mudança apenas de tópicos, os dois fluxos e provedores com respostas simuladas, rejeição de desvio de assunto e persistência dos pedidos em Postgres local.
 
@@ -179,15 +179,26 @@ A configuração em `supabase/config.toml` aponta para o mapa de dependências d
 | --- | --- | --- |
 | `AI_PROVIDER` | Next.js local/Vercel | `mistral` seleciona Mistral. O padrão é `gemini`. |
 | `GEMINI_API_KEY`, `MISTRAL_API_KEY` | Servidor Next.js ou secrets da Edge Function correspondente | Credencial privada do provedor escolhido. |
+| `GROQ_API_KEY` | Supabase > Edge Functions > Secrets | Ativa a reserva do Gemini com `openai/gpt-oss-120b`. A chave nunca é enviada ao navegador. |
 | `GEMINI_MODEL`, `MISTRAL_MODEL` | Ambiente que executa a geração | Sobrescrevem os padrões do código, `gemini-3.5-flash-lite` e `mistral-small-latest`. |
 | `MISTRAL_OCR_MODEL` | Edge Function Mistral | Modelo de leitura de PDF, com padrão `mistral-ocr-latest`. |
 
 Após alterar variáveis locais, reinicie o servidor. Na Vercel, faça um novo deploy. As chaves de IA e a senha SMTP são fornecidas pelo responsável pelo ambiente. Só a URL e a chave **publicável** do Supabase pertencem às variáveis `NEXT_PUBLIC_*`.
 
+### Reserva automática do Gemini
+
+Publique `sala-ai` com `GROQ_API_KEY` cadastrada nos secrets do Supabase. A geração passa sempre pela Edge Function, mesmo quando existe uma chave Gemini no Next.js. O Gemini continua como primeira opção. Em falhas de conexão, tempo excedido, cota, indisponibilidade, credencial ou modelo, a etapa é tentada uma vez na Groq com as mesmas instruções e o mesmo contexto. Não se transferem raciocínios internos entre modelos.
+
+Com a reserva configurada, a geração tem até 35 segundos no Gemini e 40 na Groq. A conferência tem até 10 segundos no Gemini e 15 na Groq. Se a geração já mudou para Groq, a conferência continua nela. Se somente a conferência falhar, reutiliza as questões completas geradas pelo Gemini na mesma requisição, sem gerar outra prova. Se ambos falharem, o rascunho permanece disponível, mas uma nova tentativa do usuário reinicia a geração: ainda não há armazenamento intermediário das questões não conferidas.
+
+Formato, quantidade, distribuição, duplicatas e pertinência ao pedido continuam validados. Recusas de conteúdo e pedidos inválidos não acionam outro provedor. A reserva atende geração e conferência de questões; a leitura de PDF continua no provedor original. Nenhum plano pago é ativado pelo código. A gratuidade depende do plano e da cota da conta Groq; referências extensas podem exceder o limite gratuito e não são cortadas silenciosamente para caber.
+
+`GET /functions/v1/sala-ai` informa apenas se a chave de reserva está configurada e qual modelo será usado; não testa sua validade nem revela seu valor. Os logs de troca registram somente provedor e etapa.
+
 | Rota | Contrato |
 | --- | --- |
 | `GET /api/config` | Retorna `aiConfigured`, `provider` e `model`. Consulta a função remota se a chave estiver ausente no servidor. |
-| `POST /api/generate` | Recebe token Bearer e JSON com `examId` e `objectiveCount` opcional. Busca a prova do professor. Com chave no Next.js, gera no servidor. Sem ela, delega à função configurada para `generate-with-mix`. |
+| `POST /api/generate` | Recebe token Bearer e JSON com `examId` e `objectiveCount` opcional. Valida a sessão e delega à Edge Function configurada para `generate-with-mix`, que busca somente a prova do professor. |
 | `POST /api/template/process` | Recebe token Bearer e `templateId`. Encaminha ao Supabase para ler o arquivo privado e registrar o texto ou a falha. |
 
 O contexto da geração contém matéria, tópicos, distribuição, nível, dificuldades, critérios e, quando selecionado, o conteúdo do modelo. Nomes e códigos não são enviados em campos próprios ao gerador. O texto livre e os arquivos enviados para leitura podem conter informações pessoais: use descrições pedagógicas e modelos sem identificação.

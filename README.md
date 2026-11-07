@@ -106,7 +106,7 @@ Provaai/
 └── docs/                 Guia técnico, especificação e imagens
 ```
 
-O frontend usa **Next.js, React e TypeScript**. O **Supabase** cuida da autenticação, do PostgreSQL e dos arquivos privados. A geração tem adaptadores para **Gemini e Mistral**; a publicação usa **Vercel**. As políticas de acesso vinculam os dados ao professor autenticado.
+O frontend usa **Next.js, React e TypeScript**. O **Supabase** cuida da autenticação, do PostgreSQL e dos arquivos privados. A geração usa **Gemini com Groq como reserva automática**, além do adaptador opcional Mistral; a publicação usa **Vercel**. As políticas de acesso vinculam os dados ao professor autenticado.
 
 <details>
 <summary><strong>Consultar a documentação por assunto</strong></summary>

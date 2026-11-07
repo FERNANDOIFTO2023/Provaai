@@ -7,5 +7,6 @@ export function generate(req: Request) {
     provider: 'gemini',
     model: Deno.env.get('GEMINI_MODEL') || 'gemini-3.5-flash-lite',
     apiKey: Deno.env.get('GEMINI_API_KEY') || req.headers.get('x-gemini-key'),
+    groqApiKey: Deno.env.get('GROQ_API_KEY'),
   });
 }

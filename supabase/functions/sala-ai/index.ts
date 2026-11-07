@@ -9,7 +9,10 @@ Deno.serve(async (req: Request) => {
     return json({
       provider: 'gemini',
       questionMix: true,
-      aiConfigured: !!Deno.env.get('GEMINI_API_KEY'),
+      aiConfigured: !!(Deno.env.get('GEMINI_API_KEY') || Deno.env.get('GROQ_API_KEY')),
+      fallbackProvider: 'groq',
+      fallbackModel: 'openai/gpt-oss-120b',
+      fallbackConfigured: !!Deno.env.get('GROQ_API_KEY'),
     });
   if (req.method !== 'POST')
     return json({ error: { message: 'Método não permitido.' } }, 405);

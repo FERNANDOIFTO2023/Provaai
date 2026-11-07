@@ -5,7 +5,7 @@ import {
   generationSchema,
 } from './exam.ts';
 import { checkQuestionMix, questionMix } from './question-mix.ts';
-import { geminiQuestions } from './gemini.ts';
+import { examAi } from './ai-fallback.ts';
 import { mistralQuestions } from '../sala-ai-mistral/mistral.ts';
 import { generationInstruction, scopeReviewInstruction, checkExamScope } from './exam-scope.ts';
 const fail = (message: string, status: number) =>
@@ -16,10 +16,11 @@ type Settings = {
   provider: 'gemini' | 'mistral';
   model: string;
   apiKey?: string | null;
+  groqApiKey?: string | null;
 };
 export async function generate(
   req: Request,
-  { url, anonKey, provider, model, apiKey }: Settings,
+  { url, anonKey, provider, model, apiKey, groqApiKey }: Settings,
 ) {
   if (req.method !== 'POST') return fail('Método não permitido.', 405);
   if (Number(req.headers.get('content-length')) > 4096)
@@ -37,7 +38,7 @@ export async function generate(
   } = await db.auth.getUser(bearer.slice(7));
   if (authError || !user)
     return fail('Sua sessão expirou. Entre novamente.', 401);
-  if (!apiKey)
+  if (!apiKey && !(provider === 'gemini' && groqApiKey))
     return fail(
       'A geração por IA aguarda a configuração da chave de IA no servidor. Você pode criar e revisar questões manualmente.',
       503,
@@ -132,10 +133,11 @@ export async function generate(
         )
         .slice(-100),
     };
+    const ask = examAi({ apiKey, model, groqApiKey });
     const raw =
       provider === 'mistral'
-        ? await mistralQuestions(apiKey, model, generationInstruction, context)
-        : await geminiQuestions(apiKey, model, generationInstruction, context);
+        ? await mistralQuestions(apiKey!, model, generationInstruction, context)
+        : await ask(generationInstruction, context, 'generation');
     const content = examContentSchema.parse(JSON.parse(raw));
     checkQuestionMix(content.questions, mix);
     content.objectiveCount = mix.objective;
@@ -153,8 +155,8 @@ export async function generate(
     };
     const reviewOptions = { signal: AbortSignal.timeout(25000), maxOutputTokens: 2048, temperature: 0 };
     const review = provider === 'mistral'
-      ? await mistralQuestions(apiKey, model, scopeReviewInstruction, reviewContext, fetch, reviewOptions)
-      : await geminiQuestions(apiKey, model, scopeReviewInstruction, reviewContext, reviewOptions);
+      ? await mistralQuestions(apiKey!, model, scopeReviewInstruction, reviewContext, fetch, reviewOptions)
+      : await ask(scopeReviewInstruction, reviewContext, 'review');
     checkExamScope(review, content.questions.length);
     const { data: saved, error: saveError } = await db
       .from('sala_exams')
