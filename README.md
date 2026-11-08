@@ -120,6 +120,7 @@ O frontend usa **Next.js, React e TypeScript**. O **Supabase** cuida da autentic
 - [Configuração da IA e contratos HTTP](docs/GUIA-TECNICO.md#configuração-da-ia)
 - [Exportação com modelo DOCX](docs/GUIA-TECNICO.md#exportação-com-o-modelo-docx)
 - [Publicação, verificação e solução de problemas](docs/GUIA-TECNICO.md#publicação-e-verificação)
+- [Revisão de segurança e soluções propostas](docs/SEGURANCA.md)
 - [Especificação acadêmica em PDF](docs/Especificacao-Provaai.pdf)
 
 </details>
@@ -131,6 +132,10 @@ Edite pelo lápis do cartão ou por **Editar turma**. Escolha entre **10 cores e
 ### Matéria e conteúdos por avaliação
 
 Ao preparar provas coletivas ou individuais, informe a **Matéria desta prova** e os **Conteúdos e objetivos desta prova**. Cada avaliação guarda seu próprio pedido. O perfil do aluno e o modelo de referência são adaptados a ele; provas anteriores de outros assuntos ficam fora do contexto. Antes de salvar as questões, uma conferência automática verifica a correspondência com o pedido. Revise o rascunho antes de aprovar. Veja os detalhes no [guia técnico](docs/GUIA-TECNICO.md).
+
+## Segurança e manutenção
+
+A [revisão de segurança](docs/SEGURANCA.md) registra os controles observados no código, o ponto pendente sobre a expansão de arquivos DOCX e sua solução proposta. A revisão é parcial: os testes isolados e a conferência das configurações publicadas ainda estão pendentes. As correções propostas não foram aplicadas.
 
 ## Equipe
 

@@ -227,6 +227,12 @@ O estado fica em `components/use-exam-download.ts`, separado das ações de salv
 
 `lib/export-cache.ts` reutiliza arquivos prontos por até cinco minutos na mesma instância, com limite total de 24 MiB. A rota autentica o professor e verifica a propriedade e a aprovação antes de consultar o cache. A chave contém o professor, os dados completos da prova, o formato, a opção de gabarito, os campos preenchidos e os bytes atuais do modelo. Alterações nesses dados exigem nova renderização. Requisições simultâneas idênticas compartilham o trabalho; falhas não ficam no cache. Não há URLs públicas para esses arquivos. Instâncias novas ou cache expirado ainda precisam converter o documento.
 
+## Revisão de segurança
+
+A revisão de 8 de novembro de 2026 está em [SEGURANCA.md](SEGURANCA.md), com escopo, evidências, soluções propostas e limitações. O principal ponto pendente é limitar os bytes realmente produzidos durante a descompactação de DOCX: o limite do upload, a soma dos tamanhos declarados pelo ZIP e a conferência do texto final são controles diferentes.
+
+As propostas ainda não foram implementadas. Os testes de segurança exigem ambiente isolado, dados fictícios e serviços simulados; o servidor local usa a configuração pública do projeto quando não há substituição explícita das variáveis. A revisão não realizou chamadas ao site publicado nem alterou banco ou configuração de hospedagem.
+
 ## Publicação e verificação
 
 ### Turmas, alunos e cópias entre professores
