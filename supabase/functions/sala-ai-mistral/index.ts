@@ -1,4 +1,3 @@
-import { mistralPdf } from './mistral.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.95.3';
 import WordExtractor from 'npm:word-extractor@1.0.4';
 import { Buffer } from 'node:buffer';
@@ -57,16 +56,7 @@ Deno.serve(async (req: Request) => {
     const ext = t.path.split('.').pop();
     let text = '';
     if (ext === 'pdf') {
-      if (bytes.subarray(0, 5).toString() !== '%PDF-')
-        throw new Error('PDF inválido.');
-      const key =
-        Deno.env.get('MISTRAL_API_KEY') || req.headers.get('x-mistral-key');
-      if (!key) throw new Error('Configure MISTRAL_API_KEY no servidor.');
-      text = await mistralPdf(
-        key,
-        Deno.env.get('MISTRAL_OCR_MODEL') || 'mistral-ocr-latest',
-        bytes.toString('base64'),
-      );
+      throw new Error('PDF é um modelo visual. Use Validar PDF novamente no site para configurar o cabeçalho.');
     } else if (ext === 'doc' || ext === 'docx') {
       const valid =
         ext === 'doc'

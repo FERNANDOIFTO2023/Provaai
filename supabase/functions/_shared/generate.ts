@@ -90,12 +90,14 @@ export async function generate(
     if (exam.template_id) {
       const { data: t, error: te } = await db
         .from('sala_templates')
-        .select('reference_text,extracted_text,processing_status')
+        .select('filename,reference_text,extracted_text,processing_status')
         .eq('id', exam.template_id)
         .single();
       if (te || !t || t.processing_status !== 'ready')
         throw new Error('Processe e revise o modelo antes de gerar a prova.');
-      reference =
+      // PDF define apenas a aparência na exportação. Nunca reutilizar perguntas
+      // ou transcrições de PDFs antigos no contexto enviado aos provedores.
+      reference = /\.pdf$/i.test(t.filename ?? '') ? '' :
         'Orientações do professor: ' + (t.reference_text || '') +
         '\nAtividade de referência: ' + (t.extracted_text || '');
     }

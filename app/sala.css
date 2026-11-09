@@ -932,6 +932,9 @@ input[type='checkbox'] {
   height: 15px;
   flex-shrink: 0;
 }
+.exam-months { display: grid; gap: 24px; }
+.exam-month-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin: 12px 0; font-size: 18px; text-transform: capitalize; }
+.exam-month-heading span { font-size: 13px; font-weight: 400; text-transform: none; color: #655c70; }
 .exam-list {
   display: grid;
   gap: 10px;

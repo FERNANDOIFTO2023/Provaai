@@ -1,4 +1,5 @@
 'use client';
+import PdfHeaderSettings from './pdf-header-settings';
 import {
   useEffect,
   useLayoutEffect,
@@ -1451,7 +1452,7 @@ export default function TeacherWorkspace({
                     {defaultControl(t.id, templateReady(t.id))}
                     <p>
                       {uploads.active.some(task => task.id === t.id) ? 'Anexando modelo…' : t.processing_status === 'ready'
-                        ? 'Leitura concluída'
+                        ? /\.pdf$/i.test(t.filename) ? 'Modelo visual pronto' : 'Leitura concluída'
                         : t.processing_error || 'Leitura pendente'}
                     </p>
                     {!demo && (
@@ -1466,10 +1467,11 @@ export default function TeacherWorkspace({
                           open('uploads');
                         }}
                       >
-                        Ler arquivo novamente
+                        {/\.pdf$/i.test(t.filename) ? 'Validar PDF novamente' : 'Ler arquivo novamente'}
                       </button>
                     )}
-                    {t.extracted_text && (
+                    {!demo && /\.pdf$/i.test(t.filename) && <PdfHeaderSettings template={t} onSaved={mergeTemplate}/>}
+                    {t.extracted_text && !/\.pdf$/i.test(t.filename) && (
                       <details>
                         <summary>Revisar texto extraído</summary>
                         <form
@@ -1903,8 +1905,8 @@ export default function TeacherWorkspace({
                 />
               </Field>
               <p className="helper-note">
-                Remova dados pessoais antes de enviar. Os PDFs são lidos pela IA.
-                Confira o texto extraído em Modelos.
+                PDF: usamos somente o cabeçalho e o tamanho da página, sem enviar seu conteúdo à IA.
+                Após salvar, ajuste e confira o recorte em Modelos. DOC e DOCX: confira o texto extraído.
               </p>
               <div className="dialog-actions">
                 <button className="button primary" disabled={busy || !templateFiles.length}>

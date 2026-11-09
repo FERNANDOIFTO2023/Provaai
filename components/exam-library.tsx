@@ -2,27 +2,29 @@
 import {useState} from 'react';
 import {ArrowLeft, ArrowRight, CheckCircle2, Clock, Download, FileText, Search, Sparkles} from './animated-icons';
 import type {ClassRoom, Exam} from '@/lib/model';
-import {matchesSearch, regularExams} from '@/lib/exam-library';
+import {matchesSearch, regularExams, examMonths, examDate} from '@/lib/exam-library';
 import {Empty} from './workspace-ui';
 
 export function ExamRows({exams, pending, onReview, selection, onSelect}: {
   exams: Exam[]; pending: string[]; onReview: (exam: Exam) => void;
   selection?: string[]; onSelect?: (id: string, checked: boolean) => void;
 }) {
-  return <div className="exam-list">{exams.map(exam => <div className="exam-row" key={exam.id}>
+  return <div className="exam-months">{examMonths(exams).map(group => <section className="exam-month" key={group.key} aria-label={group.label}>
+    <h2 className="exam-month-heading">{group.label}<span>{group.exams.length} {group.exams.length === 1 ? 'prova' : 'provas'}</span></h2>
+    <div className="exam-list">{group.exams.map(exam => <div className="exam-row" key={exam.id}>
     {onSelect && <input type="checkbox" aria-label={`Selecionar ${exam.title} de ${exam.profile_snapshot.name}`}
       disabled={exam.status !== 'approved'} checked={selection?.includes(exam.id) ?? false}
       onChange={event => onSelect(exam.id,event.target.checked)} />}
     <span className="file-icon"><FileText size={22}/></span>
     <div className="exam-row-info"><h3>{exam.title}</h3><p>{exam.profile_snapshot.name} · {exam.profile_snapshot.code}</p>
-      <small>{new Date(exam.created_at).toLocaleDateString('pt-BR')} · {exam.content.questions.length} questões</small></div>
+      <small>{examDate(exam.created_at)} · {exam.content.questions.length} questões</small></div>
     <span className={`status ${exam.status === 'approved' ? 'good' : 'pending'}`}>
       {exam.status === 'approved' ? <CheckCircle2 size={14}/> : <Clock size={14}/>}
       {pending.includes(exam.id) ? 'Gerando…' : exam.status === 'approved' ? 'Aprovada' : 'Em revisão'}
     </span>
     <button className="button secondary small-button" disabled={pending.includes(exam.id)}
       onClick={() => onReview(exam)}>Revisar <ArrowRight size={15}/></button>
-  </div>)}</div>;
+  </div>)}</div></section>)}</div>;
 }
 
 export default function ExamLibrary({classes, exams, pending, busy, generating, onReview, onPrepare, onDownload, roomId, onRoomChange}: {

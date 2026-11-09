@@ -55,6 +55,7 @@ export type Exam = {
   template_id?: string | null;
 };
 export type Template = {
+  pdf_header_ratio?: number;
   id: string;
   user_id: string;
   name: string;

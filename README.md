@@ -63,7 +63,7 @@ flowchart LR
     style F fill:#0d1823,color:#ffffff,stroke:#0d1823
 ```
 
-**Os modelos DOCX também orientam a apresentação dos arquivos exportados**, preservando elementos como cabeçalhos, imagens, rodapés e margens. PDF e DOC são referências de conteúdo. Os formatos reconhecidos e os limites de layouts complexos estão no [guia de exportação](docs/GUIA-TECNICO.md#exportação-com-o-modelo-docx).
+**Os modelos DOCX também orientam a apresentação dos arquivos exportados**, preservando elementos como cabeçalhos, imagens, rodapés e margens. PDF preserva o recorte do cabeçalho e o tamanho da página, sem enviar suas questões à IA; DOC é referência de conteúdo. Veja [modelos PDF e organização por mês](docs/PDF-E-ARQUIVOS.md). Os formatos reconhecidos e os limites de layouts complexos estão no [guia de exportação](docs/GUIA-TECNICO.md#exportação-com-o-modelo-docx).
 
 ## Comece por aqui
 

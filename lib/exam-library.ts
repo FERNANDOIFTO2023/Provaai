@@ -1,5 +1,25 @@
 import type {ClassRoom, Exam, Student} from './model.ts';
 
+export const EXAM_TIME_ZONE = 'America/Sao_Paulo';
+export function examDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Data não informada' : date.toLocaleDateString('pt-BR', {timeZone: EXAM_TIME_ZONE});
+}
+export function examMonths(exams: Exam[]) {
+  const groups = new Map<string, {key: string; label: string; exams: Exam[]}>();
+  const parts = new Intl.DateTimeFormat('en', {timeZone: EXAM_TIME_ZONE, year: 'numeric', month: '2-digit'});
+  for (const exam of [...exams].sort((a,b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0))) {
+    const date = new Date(exam.created_at);
+    const valid = Number.isFinite(date.getTime());
+    const fields = valid ? parts.formatToParts(date) : [];
+    const key = valid ? `${fields.find(p=>p.type==='year')!.value}-${fields.find(p=>p.type==='month')!.value}` : 'unknown';
+    const label = valid ? date.toLocaleDateString('pt-BR', {timeZone: EXAM_TIME_ZONE, month:'long',year:'numeric'}) : 'Data não informada';
+    if (!groups.has(key)) groups.set(key, {key, label, exams: []});
+    groups.get(key)!.exams.push(exam);
+  }
+  return [...groups.values()];
+}
+
 export const matchesSearch = (text: string, query: string) => {
   const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
   return normalize(text).includes(normalize(query.trim()));

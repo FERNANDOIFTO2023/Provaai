@@ -1,4 +1,5 @@
 import type { Exam } from './model.ts';
+import type { PdfHeader } from './pdf-header.ts';
 export const safeName = (s: string) =>
   s
     .normalize('NFD')
@@ -9,6 +10,7 @@ export async function examFile(
   exam: Exam,
   format: 'pdf' | 'docx',
   answerKey = false,
+  header?: PdfHeader,
 ): Promise<Blob> {
   if (exam.status !== 'approved')
     throw new Error('Revise e aprove a prova antes de baixar.');
@@ -19,7 +21,7 @@ export async function examFile(
     exam.content.instructions,
   ];
   if (format === 'docx') {
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import(
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, Header, ImageRun } = await import(
       'docx'
     );
     const children = lines.map(
@@ -62,9 +64,12 @@ export async function examFile(
           {
             properties: {
               page: {
-                margin: { top: 1000, right: 1000, bottom: 1000, left: 1000 },
+                ...(header ? {size:{width:Math.round(header.width*1440/25.4),height:Math.round(header.height*1440/25.4)}} : {}),
+                margin: { top: header ? Math.round((header.headerHeight+12)*1440/25.4) : 1000, right: 1000, bottom: 1000, left: 1000, header: 0 },
               },
             },
+            ...(header ? {headers:{default:new Header({children:[new Paragraph({indent:{left:-1000},children:[new ImageRun({type:'png',data:header.image,
+              transformation:{width:header.width*96/25.4,height:header.headerHeight*96/25.4}})]})]})}} : {}),
             children,
           },
         ],
@@ -72,14 +77,19 @@ export async function examFile(
     );
   }
   const { jsPDF } = await import('jspdf');
-  const pdf = new jsPDF();
-  let y = 20;
+  const pdf = new jsPDF(header ? {orientation: header.width > header.height ? 'landscape' : 'portrait', format:[header.width, header.height]} : {});
+  const width = pdf.internal.pageSize.getWidth(), height = pdf.internal.pageSize.getHeight();
+  const start = header ? header.headerHeight + 10 : 20;
+  const drawHeader = () => { if (header) pdf.addImage(header.image,'PNG',0,0,header.width,header.headerHeight); };
+  drawHeader();
+  let y = start;
   const write = (s: string, size = 11) => {
     pdf.setFontSize(size);
-    for (const row of pdf.splitTextToSize(s, 170)) {
-      if (y > 275) {
+    for (const row of pdf.splitTextToSize(s, width - 40)) {
+      if (y > height - 22) {
         pdf.addPage();
-        y = 20;
+        drawHeader();
+        y = start;
       }
       pdf.text(row, 20, y);
       y += size * 0.48;
@@ -105,7 +115,7 @@ export async function examFile(
   for (let i = 1; i <= pdf.getNumberOfPages(); i++) {
     pdf.setPage(i);
     pdf.setFontSize(9);
-    pdf.text(`${i} / ${pdf.getNumberOfPages()}`, 180, 290);
+    pdf.text(`${i} / ${pdf.getNumberOfPages()}`, width - 20, height - 10, {align:'right'});
   }
   return pdf.output('blob');
 }

@@ -6,6 +6,7 @@ import { officePdf } from '@/lib/office-pdf';
 import type { Exam } from '@/lib/model';
 import { createHash } from 'node:crypto';
 import { createExportCache } from '@/lib/export-cache';
+import { pdfHeader } from '@/lib/pdf-header';
 
 const cachedExport = createExportCache();
 export const maxDuration=150;
@@ -25,10 +26,18 @@ export async function POST(req: Request) {
   const key=input.answerKey===true;
   try {
     let template: Uint8Array | undefined;
+    let pdfTemplate: Uint8Array | undefined;
+    let pdfRatio = 0.25;
     let className = '';
     if (exam.template_id) {
-      const {data:t}=await db.from('sala_templates').select('filename,path').eq('id',exam.template_id).eq('user_id',user.id).single();
+      const {data:t}=await db.from('sala_templates').select('filename,path,pdf_header_ratio').eq('id',exam.template_id).eq('user_id',user.id).single();
       if (!t) return fail('O modelo vinculado não está disponível.',409);
+      if (/\.pdf$/i.test(t.filename)) {
+        const {data:file} = await db.storage.from('sala-templates').download(t.path);
+        if (!file) return fail('Não foi possível abrir o cabeçalho PDF.',409);
+        pdfTemplate = new Uint8Array(await file.arrayBuffer());
+        pdfRatio = t.pdf_header_ratio ?? 0.25;
+      }
       if (/\.docx$/i.test(t.filename)) {
         const [{data:file},{data:room}]=await Promise.all([
           db.storage.from('sala-templates').download(t.path),
@@ -41,9 +50,15 @@ export async function POST(req: Request) {
     }
     const pdf=input.format==='pdf';
     const teacherName = typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : '';
-    const digest = createHash('sha256').update(JSON.stringify({userId:user.id,exam,format:input.format,key,className,teacherName}));
+    const digest = createHash('sha256').update(JSON.stringify({userId:user.id,exam,format:input.format,key,className,teacherName,pdfRatio}));
     if (template) digest.update(template);
+    if (pdfTemplate) digest.update(pdfTemplate);
     const bytes = await cachedExport(digest.digest('hex'), async () => {
+      if (pdfTemplate) {
+        const header = await pdfHeader(pdfTemplate,pdfRatio);
+        const document = new Uint8Array(await (await examFile(exam as Exam,'docx',key,header)).arrayBuffer());
+        return pdf ? officePdf(document) : document;
+      }
       const document = template
         ? await fillDocxLayout(template, exam as Exam, className, teacherName, key)
         : new Uint8Array(await (await examFile(exam as Exam,'docx',key)).arrayBuffer());
@@ -52,6 +67,6 @@ export async function POST(req: Request) {
     return new Response(new Uint8Array(bytes),{headers:{'Cache-Control':'private, no-store',
       'Content-Type':pdf?'application/pdf':'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}});
   } catch {
-    return fail('Não foi possível exportar a prova. Confira se o modelo abre no Word e tente novamente.',422);
+    return fail('Não foi possível exportar a prova. Confira se o modelo abre corretamente, sem senha, e tente novamente.',422);
   }
 }
