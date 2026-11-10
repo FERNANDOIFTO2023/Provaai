@@ -8,3 +8,14 @@ node_modules/
 next-env.d.ts
 supabase/.temp/
 supabase/.branches/
+
+/vendor/
+/public/build/
+/public/hot
+/storage/*.key
+/bootstrap/cache/*.php
+/database/*.sqlite*
+.phpunit.result.cache
+
+/backups/
+.phpunit.cache/

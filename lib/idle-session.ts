@@ -7,7 +7,7 @@ export type ActivityStorage = Pick<Storage, 'getItem' | 'setItem'>;
 const memory = new Map<string, string>();
 const storageFailed = new Set<string>();
 
-// A identidade apenas associa o relógio à sessão. A autenticação continua no Supabase.
+// A identidade apenas associa o relógio à sessão. A autenticação é feita pelo cookie HttpOnly do Laravel.
 export function activityKey(accessToken: string): string | null {
   try {
     const segment = accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');

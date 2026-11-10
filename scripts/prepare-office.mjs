@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { gzipSync } from 'node:zlib';
 
-// Vercel empacota a função com os arquivos compactados. O motor só é aberto ao exportar PDF.
+// O artefato Laravel inclui o motor compactado, aberto pelo conversor ao exportar PDF.
 const require = createRequire(import.meta.url);
 const source = dirname(require.resolve('@matbee/libreoffice-converter/package.json'));
 const files = ['dist/server.cjs','dist/node.worker.cjs','wasm/loader.cjs','wasm/soffice.cjs',

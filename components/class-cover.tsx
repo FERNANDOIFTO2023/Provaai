@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type CSSProperties } from "react";
-import { supabase } from "@/lib/supabase";
+import { apiClient } from "@/lib/api-client";
 import {
   bannerGeometry,
   classColor,
@@ -20,7 +20,7 @@ export function useBannerUrl(path?: string | null) {
     let expires = 0;
     const refresh = async () => {
       if (expires > Date.now()) return;
-      const { data } = await supabase.storage
+      const { data } = await apiClient.storage
         .from("class-banners")
         .createSignedUrl(path, 3600);
       if (mounted && data) {

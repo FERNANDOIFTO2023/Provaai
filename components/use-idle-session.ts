@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import type { User } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 import { activityKey, idleStatus, readActivity, writeActivity } from '@/lib/idle-session';
 
 export function useIdleSession() {
@@ -37,7 +37,7 @@ export function useIdleSession() {
       // O callback de autenticação é síncrono: sair fora dele evita o lock do SDK.
       clearTimeout(logoutTimer);
       logoutTimer = setTimeout(() => {
-        if (!keyRef.current) void supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+        if (!keyRef.current) void apiClient.auth.signOut({ scope: 'local' }).catch(() => {});
       }, 0);
     }
 
@@ -68,7 +68,7 @@ export function useIdleSession() {
 
     checkRef.current = check;
     renewRef.current = () => renew(true);
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = apiClient.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       if (!session) {
         const key = keyRef.current;

@@ -1,4 +1,4 @@
-import { supabaseKey, supabaseUrl } from './supabase';
+import { apiFetch } from './api-client';
 
 type CodeResult = {
   reused?: boolean;
@@ -8,9 +8,9 @@ type CodeResult = {
 };
 
 export async function emailCodeRequest(action: 'request' | 'verify', email: string, code?: string): Promise<CodeResult> {
-  const response = await fetch(`${supabaseUrl}/functions/v1/provaai-auth`, {
+  const response = await apiFetch('/api/auth/code', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: supabaseKey },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action, email: email.trim().toLowerCase(), code }),
     signal: AbortSignal.timeout(60000),
   });

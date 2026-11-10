@@ -1,6 +1,7 @@
 'use client';
+import { apiFetch } from '@/lib/api-client';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { apiClient } from '@/lib/api-client';
 import type { Template } from '@/lib/model';
 
 export default function PdfHeaderSettings({template,onSaved}: {template:Template;onSaved:(template:Template)=>void}) {
@@ -12,9 +13,9 @@ export default function PdfHeaderSettings({template,onSaved}: {template:Template
   async function submit(previewOnly: boolean) {
     setBusy(true);setMessage('');
     try {
-      const {data:{session}} = await supabase.auth.getSession();
+      const {data:{session}} = await apiClient.auth.getSession();
       if (!session) throw new Error('Entre novamente para continuar.');
-      const response = await fetch('/api/template/process',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},
+      const response = await apiFetch('/api/template/process',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},
         body:JSON.stringify({templateId:template.id,headerRatio:ratio,preview:previewOnly})});
       if (!response.ok) { const data=await response.json();throw new Error(data.error?.message || 'Não foi possível preparar o cabeçalho.'); }
       if (previewOnly) setPreview(URL.createObjectURL(await response.blob()));

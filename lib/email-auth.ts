@@ -1,6 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-type EmailAuth = Pick<SupabaseClient['auth'], 'signInWithOtp' | 'verifyOtp'>;
+type EmailAuth = { signInWithOtp: (input: any) => Promise<any>; verifyOtp: (input: any) => Promise<any> };
 
 export async function requestEmailCode(auth: EmailAuth, email: string) {
   const address = email.trim().toLowerCase();

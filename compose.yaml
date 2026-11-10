@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      SESSION_SECURE_COOKIE: "true"
+      QUEUE_CONNECTION: database
+      DB_QUEUE_RETRY_AFTER: "180"
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+    volumes:
+      - documents:/var/www/html/storage/app/private
+    ports:
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  documents:

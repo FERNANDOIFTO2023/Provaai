@@ -1,85 +1,34 @@
-# Revisão de segurança
+# Segurança — versão Laravel
 
-**Data:** 8 de novembro de 2026 · **Base revisada:** `fac0d9e93a4e90db1ef6864ebd509814e705144e`
+Atualizado em 10/11/2026. Este documento registra controles e testes locais; não certifica segurança nem conclui a auditoria formal anterior. A [revisão histórica](SEGURANCA-LEGADO.md) foi preservada com suas limitações.
 
-Esta é uma revisão parcial do código, com conferência independente dos pontos levantados. Não houve teste de exploração, acesso a contas reais, alteração do banco ou publicação. Nenhuma vulnerabilidade foi confirmada por execução; isso não significa que o sistema esteja livre de falhas.
+## Controles e correções
 
-O principal ponto pendente é o controle de recursos durante a descompactação de modelos DOCX. A causa observada e a solução proposta estão abaixo. **As mudanças de código propostas neste documento ainda não foram implementadas nem testadas.**
-
-## Escopo e resultado
-
-| Área | O que foi observado no código |
-| --- | --- |
-| Login por e-mail | Verificação inicial pelo Auth; reutilização vinculada ao e-mail, código, identidade e prazo original. Estado privilegiado restrito ao serviço de autenticação. |
-| Dados de professores | Políticas RLS, chaves compostas e verificações de proprietário nas operações revisadas. |
-| Compartilhamento | Envio exige propriedade; aceitação usa o e-mail confirmado do destinatário. Cópias aceitas ficam independentes. |
-| Exportação | Exige sessão, propriedade e aprovação. A chave do cache inclui o professor e o conteúdo; a resposta é privada e não deve ser armazenada pelo cache HTTP. |
-| Geração com IA | Contexto consultado com a identidade do professor; saída validada e salva como rascunho. Não há execução de ferramentas escolhidas pelo modelo. |
-| Interface | Os caminhos revisados renderizam texto por React ou APIs de texto; não foi identificado um caminho de execução de HTML não confiável. |
-| Preparação da publicação | `npm ci`, dependências resolvidas no lockfile e exclusão de arquivos de ambiente. A chave publicável do Supabase não é uma credencial administrativa. |
-
-Esses resultados descrevem os arquivos revisados. Não comprovam que as mesmas políticas, versões e configurações estejam aplicadas no ambiente publicado. A revisão também não examinou todo o histórico do Git nem consultou uma base atualizada de vulnerabilidades de dependências.
-
-## Ponto pendente: tamanho real de expansão do DOCX
-
-**Situação:** hipótese sustentada pelo código, ainda dependente de validação. Sem classificação de severidade enquanto o comportamento e o impacto não forem demonstrados.
-
-### Causa observada
-
-Um DOCX é um pacote compactado. O limite de **20 MiB do arquivo enviado** não limita, por si só, os dados produzidos durante sua abertura.
-
-Na exportação, [lib/docx-layout.ts](../lib/docx-layout.ts#L18) soma os tamanhos descompactados **declarados pelo ZIP** e rejeita uma soma acima de 80 MiB. Em seguida, lê o XML com `async('string')`. Na versão local inspecionada do JSZip, os blocos produzidos são acumulados e a divergência entre tamanho declarado e real só é verificada ao final da descompactação.
-
-Na leitura inicial, os adaptadores [Gemini](../supabase/functions/sala-ai/index.ts#L120) e [Mistral](../supabase/functions/sala-ai-mistral/index.ts#L76) chamam `WordExtractor.extract` antes de conferir o limite de 60 mil caracteres. Os controles internos dessa dependência não estavam disponíveis para inspeção local.
-
-Assim, existe uma diferença entre limitar o arquivo enviado, conferir seus metadados e limitar o trabalho real do descompactador. Um documento fora dos limites pode consumir recursos antes da rejeição. Não foi demonstrado que isso afete outros professores ou derrube o serviço.
-
-### Controles que já existem
-
-- Autenticação, propriedade do modelo e bucket privado com limite de envio.
-- Aprovação da prova antes da exportação e verificação de propriedade das referências.
-- Rejeição de determinados objetos incorporados e remoção de relacionamentos externos no exportador DOCX.
-- Tratamento de falhas da exportação, cache de resultados com limite e prazo configurado para a função.
-
-Esses controles devem ser preservados. Eles não substituem a contagem dos bytes efetivamente produzidos durante a descompactação.
-
-### Solução proposta
-
-1. Aplicar um orçamento de **bytes efetivamente emitidos**, por entrada e por documento, interrompendo a leitura antes de acumular o excedente. Manter a verificação dos metadados apenas como rejeição antecipada.
-2. Limitar a quantidade de entradas e o tamanho dos XMLs, evitando confiar somente no tamanho final do texto extraído.
-3. Aplicar proteção equivalente na leitura inicial e na exportação. Para extratores sem interrupção confiável, usar um processo isolado com memória e tempo limitados.
-4. Verificar os limites reais do ambiente e a recuperação após uma tarefa rejeitada, sem testes de sobrecarga no site publicado.
-
-### Como validar a correção
-
-Em ambiente descartável, sem rede externa e com dados fictícios, reduzir o orçamento de uma cópia de teste para 32 KiB. Comparar um documento normal com pequenos arquivos que produzam 48 e 64 KiB, incluindo metadados inconsistentes. Medir os bytes emitidos e verificar a interrupção no limite, sem esgotar a memória. Repetir os testes nos dois adaptadores e na exportação, preservando os casos de cabeçalhos, imagens, caracteres especiais e gabarito.
-
-O teste com orçamento reduzido comprova a regra local; não demonstra, sozinho, impacto sobre a disponibilidade em produção. O relatório formal mantém este ponto como `needs_validation`.
-
-## Melhorias preventivas recomendadas
-
-Estas recomendações não são vulnerabilidades confirmadas:
-
-| Tema | Situação atual | Melhoria sugerida |
+| Tema | Solução | Evidência local |
 | --- | --- | --- |
-| Corpos das requisições | Algumas rotas leem o corpo inteiro antes de conferir seu tamanho; os adaptadores de modelos usam leitura JSON sem o mesmo limite do proxy. | Compartilhar um leitor com limite em bytes durante a leitura e prazo máximo, incluindo as chamadas diretas às funções. |
-| Fila de exportação | Resultados prontos têm limite de cache, mas trabalhos distintos pendentes não têm uma admissão agregada explícita. | Limitar trabalhos pendentes e conectar cancelamento à fila. O conversor já possui timeout interno; não foi comprovada espera indefinida. |
-| Troca de conta durante download | Uma exportação já solicitada pode continuar após a desmontagem da tela. A saída normal aguarda a conclusão. | Considerar cancelamento na mudança de identidade para consistência do fluxo. Não foi demonstrado acesso indevido entre contas: concluir um download autorizado no mesmo perfil do navegador não constitui, sozinho, uma violação. |
-| Incorporação em outros sites | Os cabeçalhos efetivamente publicados não foram verificados. | Conferir a política de enquadramento, como `frame-ancestors`, antes de decidir por alterações. A ausência no arquivo local não comprova clickjacking. |
+| Sessão ausente/forjada | Cookie Laravel; marcador de atividade não concede acesso. | Requisições anônimas/forjadas recebem 401. |
+| Acesso cruzado | Escopo de proprietário em registros, referências, arquivos, geração e cópias. | Testes com professores distintos recusam acessos cruzados. |
+| Chaves no cliente | SDK/configuração Supabase removidos; IA chamada pelo servidor com variáveis privadas. | Build sem configuração de chaves no cliente; `.env` ignorado. |
+| Sessão e CSRF | HttpOnly, SameSite, regeneração de sessão e middleware CSRF. | Login/logout automatizados e fluxo local no navegador. HTTPS/Secure dependem do deploy. |
+| Códigos | HMAC, prazo, limite de envios/tentativas, sem renovar validade no reaproveitamento. | Testes com Mail simulado. |
+| Arquivos | Propriedade, assinatura básica, limite de 20 MiB, rotas autenticadas e cache privado. | Isolamento e conversões reais testados. |
+| Aprovação | Edição relevante revoga aprovação; exportação exige aprovação e propriedade. | Testes de edição e exportação recusada. |
+| Cópias/duplicatas | Cópia independente, aceitação idempotente, códigos alocados sob transação e validação de questões no servidor. | Testes de cópias de turma/aluno e duplicatas manuais. |
+| PDF após renomear turma | Nome da turma incluído na chave de cache. | Correção implementada; conversor coberto na suíte. |
+| Importação | Banco vazio, referências do mesmo proprietário e hashes. | Validação sem gravação e recusa de referências cruzadas testadas. |
 
-## Próximas verificações
+O relato anterior de acesso a turmas/alunos no Supabase não foi reproduzido nem diagnosticado em produção nesta migração. Não se afirma que o ambiente antigo foi corrigido. Uma chave publicável não é segredo administrativo; o isolamento depende das permissões/políticas efetivas.
 
-A revisão de cobertura identificou dois temas que ficaram para uma nova rodada:
+## Pendência: expansão de DOCX
 
-- **Consumo dos provedores:** comparar reservas, repetição de leitura de PDF, novas gerações e permissões diretas sobre tarefas. Definir o orçamento por professor antes de avaliar abuso de quota.
-- **Dependências das Edge Functions:** conferir a resolução e a integridade das dependências transitivas do Deno separadamente do `package-lock.json` usado pelo Next.js. Versões principais fixadas são um controle; a ausência de um `deno.lock` não é, isoladamente, uma vulnerabilidade.
+O limite de upload e os tamanhos declarados no ZIP não limitam necessariamente os bytes realmente descompactados. A conversão agora é um processo separado com timeout de 120 segundos, mas ainda não há contagem interrompível de todos os bytes expandidos nem isolamento completo de memória/rede. A hipótese de consumo excessivo segue pendente de validação; não foi demonstrado ataque contra produção.
 
-Também permanecem pendentes a correspondência entre migrações e banco publicado, os limites do Auth, as políticas efetivas do Storage e o isolamento dos workers.
+Solução proposta: limitar bytes efetivamente emitidos por entrada/documento, número de entradas e XMLs; interromper antes de acumular excedentes; proteger extração e exportação igualmente. Para dependências sem interrupção confiável, usar worker com limites de CPU/memória e rede bloqueada. Validar com arquivos pequenos e orçamento reduzido em ambiente isolado. O Dockerfile sozinho não comprova essa proteção.
 
-## Limitações da execução
+## Operação e limites
 
-A metodologia utilizada exige isolamento de sistema operacional, bloqueio de rede externa, ambiente sem credenciais, escrita apenas em área temporária e limites de recursos para executar código sob auditoria. Esses controles não estavam disponíveis nesta sessão. Por isso, os testes existentes foram lidos, mas não executados, e não foram feitas requisições de auditoria ao site ou ao banco.
+No Supabase, não exponha as tabelas Laravel pela Data API. Use schema privado fora dos schemas expostos ou desabilite essa API em projeto dedicado. Confira permissões, TLS, backups e limites dos workers antes do corte. O banco publicado não foi alterado aqui.
 
-Os validadores formais também recusaram a execução neste Windows por falta das primitivas de leitura protegida exigidas (`no-follow` e `nonblocking`). A execução formal está registrada como **incompleta**, com a revisão estática e as pendências preservadas. Não há certificado de segurança ou aprovação para produção.
+Testes funcionais não substituem auditoria atualizada de dependências ou carga. Docker, PostgreSQL hospedado, SMTP e cotas/latências reais de IA precisam de homologação. Use `APP_DEBUG=false` em produção. O mailer `log` serve somente ao desenvolvimento, pois grava códigos no disco.
 
-A ferramenta de auditoria e seus arquivos operacionais foram instalados e mantidos fora do repositório. Esta revisão alterou somente a documentação do projeto.
+As ferramentas de auditoria e seus arquivos operacionais ficam fora do repositório. Não foram adicionadas skills ou instruções de agentes ao projeto.

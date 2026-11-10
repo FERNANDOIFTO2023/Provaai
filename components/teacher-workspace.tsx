@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api-client';
 import PdfHeaderSettings from './pdf-header-settings';
 import {
   useEffect,
@@ -36,7 +37,7 @@ import {
   Pencil,
   Trash2,
 } from './animated-icons';
-import { supabase } from '@/lib/supabase';
+import { apiClient } from '@/lib/api-client';
 import { nextStudentCode, saveWithStudentCode } from '@/lib/student-code';
 import ExamLibrary from './exam-library';
 import RecoveryWorkspace from './recovery-workspace';
@@ -45,7 +46,7 @@ import TemplateFilePicker from './template-file-picker';
 import { useTemplateQueue } from './use-template-queue';
 import { useExamBatch } from './use-exam-batch';
 import { useExamDownload } from './use-exam-download';
-import { questionMix } from '@/supabase/functions/_shared/question-mix';
+import { questionMix } from '@/lib/question-mix';
 import { BloubMood } from './motion';
 import {
   classSchema,
@@ -150,11 +151,11 @@ export default function TeacherWorkspace({
     if (!user) throw new Error('Entre novamente para cadastrar o aluno.');
     const codes: string[] = [];
     for (let offset = 0; ; offset += 1000) {
-      const { data: rows, error } = await supabase.from('sala_students')
+      const { data: rows, error } = await apiClient.from('sala_students')
         .select('code').eq('class_id', classId).eq('user_id', user.id)
         .order('id').range(offset, offset + 999);
       if (error) throw error;
-      codes.push(...rows.map(row => row.code as string));
+      codes.push(...rows.map((row: {code:string}) => row.code));
       if (rows.length < 1000) return codes;
     }
   }
@@ -210,10 +211,10 @@ export default function TeacherWorkspace({
   const approved = data.exams.filter((e) => e.status === 'approved');
   async function exportExams(exams: Exam[], format: 'pdf'|'docx', answerKey=false, report: (completed: number) => void = () => {}) {
     if (demo) return downloadExams(exams,format,answerKey,undefined,report);
-    const {data:{session}}=await supabase.auth.getSession();
+    const {data:{session}}=await apiClient.auth.getSession();
     if (!session) throw new Error('Entre novamente para exportar a prova.');
     await downloadExams(exams,format,answerKey,async (exam,format,answerKey)=>{
-      const response=await fetch('/api/export/exam',{method:'POST',headers:{
+      const response=await apiFetch('/api/export/exam',{method:'POST',headers:{
         authorization:'Bearer '+session.access_token,'content-type':'application/json',
       },body:JSON.stringify({id:exam.id,format,answerKey}), signal: AbortSignal.timeout(160_000)}).catch(error => {
         if (error?.name === 'TimeoutError') throw new Error('O download demorou mais que o esperado. Tente novamente ou baixe em DOCX.');
@@ -238,9 +239,9 @@ export default function TeacherWorkspace({
     const tables = ['sala_classes', 'sala_students', 'sala_exams', 'sala_recovery_students'];
     if (includeTemplates) tables.push('sala_templates');
     const [results, preference] = await Promise.all([
-      Promise.all(tables.map(table => supabase.from(table).select('*')
+      Promise.all(tables.map(table => apiClient.from(table).select('*')
         .order('created_at', { ascending: false }).limit(1000))),
-      supabase.from('sala_teacher_template_defaults').select('template_id')
+      apiClient.from('sala_teacher_template_defaults').select('template_id')
         .eq('user_id', user.id).maybeSingle(),
     ]);
     const failed = [preference, ...results].find((r) => r.error);
@@ -261,7 +262,7 @@ export default function TeacherWorkspace({
   }
   async function loadInvitations() {
     if (!user || demo) return;
-    const { data: rows, error } = await supabase.from('sala_copy_invitations')
+    const { data: rows, error } = await apiClient.from('sala_copy_invitations')
       .select('id,owner_id,sender_email,recipient_email,kind,resource_name,student_count,created_at,accepted_at,revoked_at')
       .order('created_at', { ascending: false }).limit(1000);
     if (error) throw error;
@@ -271,7 +272,7 @@ export default function TeacherWorkspace({
     if (view === 'sharing' && user && !demo) void loadInvitations().catch(error => setError(cleanError(error)));
   }, [view, user?.id, demo]);
   useEffect(() => {
-    fetch('/api/config')
+    apiFetch('/api/config')
       .then((r) => r.json() as Promise<{ aiConfigured: boolean }>)
       .then((v) => setAi(v.aiConfigured))
       .catch(() => {})
@@ -279,7 +280,7 @@ export default function TeacherWorkspace({
   }, []);
   const userId = user?.id;
   const generation = useExamBatch(userId, async () => {
-    const {data: exams,error} = await supabase.from('sala_exams').select('*')
+    const {data: exams,error} = await apiClient.from('sala_exams').select('*')
       .order('created_at',{ascending:false}).limit(1000);
     if (error) throw error;
     setData(previous => ({...previous,exams:exams as Exam[]}));
@@ -358,8 +359,8 @@ export default function TeacherWorkspace({
       return value;
     }
     let query = update
-      ? supabase.from(table).update(Object.fromEntries(Object.entries(value).filter(([key]) => !['id','user_id','created_at'].includes(key)))).eq('id', value.id)
-      : supabase.from(table).insert(value);
+      ? apiClient.from(table).update(Object.fromEntries(Object.entries(value).filter(([key]) => !['id','user_id','created_at'].includes(key)))).eq('id', value.id)
+      : apiClient.from(table).insert(value);
     const { data: saved, error } = await query.select().single();
     if (error) throw error;
     await load();
@@ -380,7 +381,7 @@ export default function TeacherWorkspace({
 
   async function setDefaultTemplate(id: string | null) {
     if (!demo) {
-      const { error } = await supabase.from('sala_teacher_template_defaults')
+      const { error } = await apiClient.from('sala_teacher_template_defaults')
         .upsert({ user_id: uid, template_id: id }, { onConflict: 'user_id' });
       if (error) throw error;
     }
@@ -410,7 +411,7 @@ export default function TeacherWorkspace({
           });
         } else {
           uploadedPath = `${uid}/${id}/${crypto.randomUUID()}.jpg`;
-          const {error}=await supabase.storage.from('class-banners').upload(uploadedPath,banner.file,{contentType:'image/jpeg',upsert:false});
+          const {error}=await apiClient.storage.from('class-banners').upload(uploadedPath,banner.file,{contentType:'image/jpeg',upsert:false});
           if(error)throw new Error('Não foi possível enviar a foto. Tente novamente.');
           bannerPath=uploadedPath;
         }
@@ -421,19 +422,19 @@ export default function TeacherWorkspace({
         if(demo) saved={...(updating?active!:{}),...appearance,id,user_id:uid!,created_at:updating?active!.created_at:now()};
         else {
           const query=updating
-            ? supabase.from('sala_classes').update(appearance).eq('id',id).eq('user_id',uid!)
-            : supabase.from('sala_classes').insert({...appearance,id,user_id:uid});
+            ? apiClient.from('sala_classes').update(appearance).eq('id',id).eq('user_id',uid!)
+            : apiClient.from('sala_classes').insert({...appearance,id,user_id:uid});
           const {data:result,error}=await query.select().single();
           if(error)throw error;saved=result as ClassRoom;
         }
       } catch(error) {
-        if(uploadedPath)await supabase.storage.from('class-banners').remove([uploadedPath]);
+        if(uploadedPath)await apiClient.storage.from('class-banners').remove([uploadedPath]);
         throw error;
       }
       setData(previous=>({...previous,classes:updating?previous.classes.map(room=>room.id===id?saved:room):[saved,...previous.classes]}));
       if(!demo&&active?.banner_path&&active.banner_path!==bannerPath&&updating) {
         // Uma falha de limpeza não invalida a turma que já foi salva.
-        void supabase.storage.from('class-banners').remove([active.banner_path]).catch(()=>{});
+        void apiClient.storage.from('class-banners').remove([active.banner_path]).catch(()=>{});
       }
       navigate('classes');
       setCurrent(id);
@@ -469,7 +470,7 @@ export default function TeacherWorkspace({
           () => readStudentCodes(record.class_id),
           async code => {
             if (demo) return { ...record, code };
-            const { data: student, error } = await supabase.from('sala_students')
+            const { data: student, error } = await apiClient.from('sala_students')
               .insert({ ...record, code }).select().single();
             if (error) throw error;
             return student as Student;
@@ -531,7 +532,7 @@ export default function TeacherWorkspace({
           use_provaai_template: choice === 'builtin',
         };
         if (!demo) {
-          const { error } = await supabase.from('sala_classes').update(preference)
+          const { error } = await apiClient.from('sala_classes').update(preference)
             .eq('id', room.id).eq('user_id', uid).select('id').single();
           if (error) throw error;
         }
@@ -636,10 +637,10 @@ export default function TeacherWorkspace({
   async function processTemplate(id: string, signal: AbortSignal) {
     const {
       data: { session },
-    } = await supabase.auth.getSession();
+    } = await apiClient.auth.getSession();
     signal.throwIfAborted();
     if (!session || session.user.id !== uid) throw new Error('Entre novamente para ler o arquivo.');
-    const r = await fetch('/api/template/process', {
+    const r = await apiFetch('/api/template/process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -711,7 +712,7 @@ export default function TeacherWorkspace({
     const ext = file.name.split('.').pop()!.toLowerCase();
     const path = `${uid}/${id}.${ext}`;
     if (!demo) {
-      const { error } = await supabase.storage
+      const { error } = await apiClient.storage
         .from('sala-templates')
         .upload(path, file, {
           contentType:
@@ -736,12 +737,12 @@ export default function TeacherWorkspace({
         created_at: now(),
       };
       if (!demo) {
-        const { error } = await supabase.from('sala_templates').insert(template);
+        const { error } = await apiClient.from('sala_templates').insert(template);
         if (error) throw error;
       }
       mergeTemplate(template);
     } catch (e) {
-      if (!demo) await supabase.storage.from('sala-templates').remove([path]);
+      if (!demo) await apiClient.storage.from('sala-templates').remove([path]);
       throw e;
     }
   }
@@ -753,7 +754,7 @@ export default function TeacherWorkspace({
       return;
     }
     await action(async () => {
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      const { error } = await apiClient.auth.signOut({ scope: 'local' });
       if (error) throw error;
     });
   }
@@ -771,7 +772,7 @@ export default function TeacherWorkspace({
     await action(async () => {
       if (student.archived_at) throw new Error('Restaure o aluno na turma antes de adicioná-lo.');
       if (!demo) {
-        const {error} = await supabase.from('sala_recovery_students').upsert(
+        const {error} = await apiClient.from('sala_recovery_students').upsert(
           {user_id:uid,student_id:student.id},{onConflict:'user_id,student_id',ignoreDuplicates:true});
         if (error) throw error;
       }
@@ -785,7 +786,7 @@ export default function TeacherWorkspace({
     await action(async () => {
       const archived_at = restore ? null : now();
       if (!demo) {
-        const {error} = await supabase.from('sala_students').update({archived_at}).eq('id',student.id).eq('user_id',uid).select('id').single();
+        const {error} = await apiClient.from('sala_students').update({archived_at}).eq('id',student.id).eq('user_id',uid).select('id').single();
         if (error) throw error;
       }
       setData(previous => ({...previous,students:previous.students.map(item => item.id === student.id ? {...item,archived_at} : item)}));
@@ -806,7 +807,7 @@ export default function TeacherWorkspace({
           code:classId === currentStudent.class_id ? currentStudent.code
             : nextStudentCode(data.students.filter(item => item.class_id === classId).map(item => item.code))};
       } else {
-        const {data: saved,error} = await supabase.rpc('sala_reactivate_student',{p_student:student.id,p_class:classId});
+        const {data: saved,error} = await apiClient.rpc('sala_reactivate_student',{p_student:student.id,p_class:classId});
         if (error) throw new Error(cleanError(error));
         restored = saved as Student;
         if (!restored?.id) throw new Error('Não foi possível confirmar a reativação. Atualize a lista.');
@@ -824,7 +825,7 @@ export default function TeacherWorkspace({
   async function sendCopy(id: string, email: string) {
     await action(async () => {
       if (!shareTarget || demo) throw new Error('Entre na sua conta para compartilhar.');
-      const { error } = await supabase.rpc('sala_send_copy', { p_id: id, p_kind: shareTarget.kind, p_resource: shareTarget.id, p_email: email });
+      const { error } = await apiClient.rpc('sala_send_copy', { p_id: id, p_kind: shareTarget.kind, p_resource: shareTarget.id, p_email: email });
       if (error) throw error;
       await loadInvitations();
       setModal(null);
@@ -833,7 +834,7 @@ export default function TeacherWorkspace({
   }
   async function acceptCopy(invitation: CopyInvitation, classId: string) {
     await action(async () => {
-      const { data: destination, error } = await supabase.rpc('sala_accept_copy', { p_invitation: invitation.id, p_class: classId || null });
+      const { data: destination, error } = await apiClient.rpc('sala_accept_copy', { p_invitation: invitation.id, p_class: classId || null });
       if (error) throw error;
       await load(); navigate('classes'); setCurrent(destination as string);
       setMessage('Cópia recebida. Você pode editá-la sem alterar a original.');
@@ -841,7 +842,7 @@ export default function TeacherWorkspace({
   }
   async function cancelCopy(invitation: CopyInvitation) {
     await action(async () => {
-      const { error } = await supabase.rpc('sala_cancel_copy', { p_invitation: invitation.id });
+      const { error } = await apiClient.rpc('sala_cancel_copy', { p_invitation: invitation.id });
       if (error) throw error;
       await loadInvitations(); setMessage('Convite cancelado.');
     });
@@ -852,7 +853,7 @@ export default function TeacherWorkspace({
       const archived_at = room.archived_at ? null : now();
       let saved: ClassRoom = { ...room, archived_at, deletion_due_at: archived_at ? deletionDate(archived_at) : null };
       if (!demo) {
-        const result = await supabase.rpc('sala_set_class_active', { p_class: room.id, p_active: Boolean(room.archived_at) });
+        const result = await apiClient.rpc('sala_set_class_active', { p_class: room.id, p_active: Boolean(room.archived_at) });
         if (result.error) throw result.error;
         saved = result.data as ClassRoom;
       }
@@ -868,7 +869,7 @@ export default function TeacherWorkspace({
       const reason = String(form.get('reason') ?? '').trim();
       if (reason.length < 5 || reason.length > 1000) throw new Error('Descreva o motivo da exclusão (5 a 1000 caracteres).');
       if (!demo) {
-        const { error } = await supabase.rpc('sala_delete_class', { p_class: active.id, p_reason: reason });
+        const { error } = await apiClient.rpc('sala_delete_class', { p_class: active.id, p_reason: reason });
         if (error) throw error;
         await load();
       } else {
@@ -1479,7 +1480,7 @@ export default function TeacherWorkspace({
                             e.preventDefault();
                             const f = new FormData(e.currentTarget);
                             void action(async () => {
-                              const { error } = await supabase
+                              const { error } = await apiClient
                                 .from('sala_templates')
                                 .update({
                                   extracted_text: String(f.get('text')),
@@ -1510,7 +1511,7 @@ export default function TeacherWorkspace({
                         className="text-button"
                         onClick={() =>
                           void action(async () => {
-                            const { data: s, error } = await supabase.storage
+                            const { data: s, error } = await apiClient.storage
                               .from('sala-templates')
                               .createSignedUrl(t.path, 60);
                             if (error) throw error;

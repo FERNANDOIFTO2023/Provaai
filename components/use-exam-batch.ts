@@ -1,5 +1,6 @@
+import { apiFetch } from '@/lib/api-client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { apiClient } from '@/lib/api-client';
 
 type Batch = {batch_id:string;title:string;exam_ids:string[];completed:number;failed:number;last_error:string|null;lease_until:string|null};
 
@@ -16,7 +17,7 @@ export function useExamBatch(userId: string | undefined, onProgress: () => Promi
     if (!userId || checking.current) return;
     checking.current=true;
     try {
-      const {data,error}=await supabase.from('sala_exam_batches')
+      const {data,error}=await apiClient.from('sala_exam_batches')
         .select('batch_id,title,exam_ids,completed,failed,last_error,lease_until').eq('user_id',userId).maybeSingle();
       if (error) throw error;
       const next = data as Batch|null;
@@ -34,9 +35,9 @@ export function useExamBatch(userId: string | undefined, onProgress: () => Promi
       }
       if (running && (!next.lease_until || Date.parse(next.lease_until)<=Date.now()) && Date.now()-lastKick.current>1500) {
         lastKick.current=Date.now();
-        const {data:{session}}=await supabase.auth.getSession();
+        const {data:{session}}=await apiClient.auth.getSession();
         if (!session || session.user.id!==userId) return;
-        const response=await fetch('/api/exam-batch',{method:'POST',headers:{authorization:'Bearer '+session.access_token}});
+        const response=await apiFetch('/api/exam-batch',{method:'POST',headers:{authorization:'Bearer '+session.access_token}});
         if (!response.ok) throw new Error();
       }
     } catch {setSyncError('Não foi possível atualizar a geração. Tentando novamente…');}
@@ -54,12 +55,12 @@ export function useExamBatch(userId: string | undefined, onProgress: () => Promi
     if (startingRef.current || running) throw new Error('Aguarde o lote de provas em andamento.');
     startingRef.current=true;setStarting(true);setNotice('');
     try {
-      const {error}=await supabase.rpc('sala_begin_exam_batch',{p_input:input});
+      const {error}=await apiClient.rpc('sala_begin_exam_batch',{p_input:input});
       if (error) throw error;
       // Inicia o trabalhador mesmo que outra consulta de progresso esteja em andamento.
-      const {data:{session}}=await supabase.auth.getSession();
+      const {data:{session}}=await apiClient.auth.getSession();
       if (session?.user.id===userId && session) {
-        await fetch('/api/exam-batch',{method:'POST',headers:{authorization:'Bearer '+session.access_token}}).catch(()=>{});
+        await apiFetch('/api/exam-batch',{method:'POST',headers:{authorization:'Bearer '+session.access_token}}).catch(()=>{});
       }
     } finally {await refresh();startingRef.current=false;setStarting(false);}
   }

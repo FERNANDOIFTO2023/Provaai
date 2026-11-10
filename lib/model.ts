@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { classColorValues, classIconValues, type BannerCrop } from './class-appearance.ts';
-import type { ExamContent } from '../supabase/functions/_shared/exam.ts';
-export * from '../supabase/functions/_shared/exam.ts';
+import type { ExamContent } from './exam.ts';
+export * from './exam.ts';
 export type ClassRoom = {
   icon?: typeof classIconValues[number];
   banner_path?: string | null;
