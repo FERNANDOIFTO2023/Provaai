@@ -26,6 +26,8 @@ jobs:
   migration:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      COMPOSE_FILE: compose.yaml:.github/compose.test.yaml
     steps:
       - uses: actions/checkout@v4
       - name: Prepare isolated configuration
@@ -43,12 +45,12 @@ jobs:
           EOF
       - name: Build the production image and migrate an empty PostgreSQL schema
         run: |
-          docker compose -f compose.yaml -f .github/compose.test.yaml up -d --wait postgres
-          docker compose -f compose.yaml -f .github/compose.test.yaml exec -T postgres psql -v ON_ERROR_STOP=1 -U provaai -c 'CREATE SCHEMA provaai'
+          docker compose up -d --wait postgres
+          docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U provaai -c 'CREATE SCHEMA provaai'
           docker compose build app
           docker compose run --rm app php artisan migrate --force
           docker compose up -d app
-          curl --retry 15 --retry-connrefused --retry-delay 2 -fsS http://127.0.0.1:8080/up
+          curl --retry 15 --retry-all-errors --retry-delay 2 -fsS http://127.0.0.1:8080/up
           curl -fsS http://127.0.0.1:8080/ > /dev/null
           docker compose exec -T app composer check-platform-reqs --no-dev
       - name: Check legacy import and document conversion in the built image
@@ -62,6 +64,6 @@ jobs:
           node --experimental-strip-types scripts/render-document.mjs /tmp/header.json > /tmp/header-result.json
           node -e "if (!JSON.parse(require('fs').readFileSync('/tmp/header-result.json')).image) process.exit(1)"
           SH
-          test "$(docker compose -f compose.yaml -f .github/compose.test.yaml exec -T postgres psql -At -U provaai -c 'SELECT count(*) FROM provaai.users')" = 1
+          test "$(docker compose exec -T postgres psql -At -U provaai -c 'SELECT count(*) FROM provaai.users')" = 1
       - if: failure()
         run: docker compose logs --tail 50 app

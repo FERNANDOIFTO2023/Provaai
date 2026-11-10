@@ -4,7 +4,7 @@
 
 Backend migrado para Laravel 13/PHP 8.3+, com React/Vite na apresentação. Next.js, SDK Supabase no navegador e Edge Functions deixaram o runtime. Login, negócio, Eloquent, IA, compartilhamento, filas e arquivos são controlados pelo Laravel. Node permanece apenas como conversor.
 
-Foram executados testes PHP de autenticação, isolamento, regras, cópias, IA simulada, filas, documentos reais e transferência de dados; testes JavaScript, TypeScript e build. Login local e retorno entre telas foram conferidos no navegador. SMTP real, IA real, PostgreSQL hospedado e Docker ainda precisam de homologação.
+Os testes cobrem autenticação, isolamento entre professores, cópias, geração com IA simulada, filas, documentos e transferência de dados. O GitHub Actions também constrói a imagem Docker de produção, migra um schema PostgreSQL temporário, abre a aplicação, importa um usuário fictício e extrai o cabeçalho de um modelo PDF. A homologação no servidor de destino ainda precisa validar o banco hospedado, o SMTP, a IA e uma cópia dos dados reais.
 
 O site público não foi alterado nem seus dados importados. O SQLite local é separado. Secrets já existentes no Supabase precisam ser cadastrados no ambiente privado do novo servidor.
 
@@ -45,7 +45,11 @@ JSON com `version: 1`, `users`, `tables` e `files`. Cada arquivo informa `bucket
 
 ## Pendências externas
 
-### Publicar em um servidor gratuito da instituição ou uma VM Always Free
+### Escolher o servidor de homologação
+
+Uma instância Linux x86-64 do Amazon EC2 pode hospedar o Compose durante a homologação. Para contas elegíveis criadas a partir de 15/07/2025, o plano gratuito termina em seis meses ou quando os créditos acabam, o que ocorrer primeiro. Confira o saldo e a data de término no painel de faturamento antes de criar a VM. Inclua as exportações PDF e DOCX no teste de memória e mantenha uma cópia dos dados fora da VM. [Regras do EC2 Free Tier](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-free-tier-usage.html)
+
+### Subir o ambiente Linux
 
 O arquivo `compose.yaml` utiliza o Linux com Docker já disponível no servidor. Ele mantém PDFs, modelos e capas em um volume local persistente. As contas, provas, fila e sessões ficam no PostgreSQL. Web, worker e agendador rodam no mesmo serviço.
 
