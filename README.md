@@ -57,6 +57,7 @@ Os testes PHP usam banco temporário e IA simulada; os testes de documentos exec
 - [Especificação acadêmica PDF](docs/ESPECIFICACAO-LTP3-PROVAAI.pdf) e [fonte editável](docs/ESPECIFICACAO-LTP3-PROVAAI.md).
 - [Guia técnico e publicação](docs/GUIA-TECNICO.md).
 - [Transferência dos dados existentes](docs/MIGRACAO-LARAVEL.md).
+- [Histórico de alterações](docs/MIGRACAO-LARAVEL.md#histórico-de-alterações).
 - [PDF e arquivos](docs/PDF-E-ARQUIVOS.md).
 - [Segurança e limitações conhecidas](docs/SEGURANCA.md).
 

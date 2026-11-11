@@ -4,9 +4,22 @@
 
 Backend migrado para Laravel 13/PHP 8.3+, com React/Vite na apresentação. Next.js, SDK Supabase no navegador e Edge Functions deixaram o runtime. Login, negócio, Eloquent, IA, compartilhamento, filas e arquivos são controlados pelo Laravel. Node permanece apenas como conversor.
 
-Os testes cobrem autenticação, isolamento entre professores, cópias, geração com IA simulada, filas, documentos e transferência de dados. O GitHub Actions também constrói a imagem Docker de produção, migra um schema PostgreSQL temporário, abre a aplicação, importa um usuário fictício e extrai o cabeçalho de um modelo PDF. A homologação no servidor de destino ainda precisa validar o banco hospedado, o SMTP, a IA e uma cópia dos dados reais.
+Os testes cobrem autenticação, isolamento entre professores, cópias, geração com IA simulada, filas, documentos e transferência de dados. O GitHub Actions também constrói a imagem Docker de produção, migra um schema PostgreSQL temporário, abre a aplicação, importa um usuário fictício e extrai o cabeçalho de um modelo PDF. A homologação já roda na AWS com PostgreSQL e e-mail de teste. Para o corte, faltam validar o SMTP externo, o provedor de IA e uma cópia dos dados reais.
 
 O site público não foi alterado nem seus dados importados. O SQLite local é separado. Secrets já existentes no Supabase precisam ser cadastrados no ambiente privado do novo servidor.
+
+## Histórico de alterações
+
+### 10/11/2026 — Validação da branch e preparação da VM
+
+1. A branch `codex/migracao-laravel` incorporou a versão de `main` com suporte ao cabeçalho PDF. Um teste local com o modelo fornecido confirmou a presença do cabeçalho no arquivo exportado.
+2. O GitHub Actions passou a construir a imagem de produção e testar a migração em PostgreSQL 16. Na primeira execução, o teste HTTP encontrou a conexão fechada durante a inicialização do servidor. Depois do ajuste na espera, passaram a inicialização do site, a importação de uma conta fictícia e a extração do cabeçalho PDF dentro da imagem. [Execução validada em `aa2a51f`](https://github.com/FERNANDOIFTO2023/Provaai/actions/runs/42925429907)
+3. Após conferir as instâncias existentes e a elegibilidade do tipo de máquina, foi criada a VM de homologação na região `us-east-1`, com Ubuntu 24.04, instância `t3.small`, créditos de CPU no modo padrão e volume gp3 criptografado de 24 GiB. O grupo de segurança permite SSH apenas a partir do IP da estação de administração.
+4. A VM recebeu Docker, Compose, Buildx e 2 GiB de swap para a compilação. O checkout foi fixado em `aa2a51f`. O PostgreSQL tem volume persistente e o Mailpit recebe os e-mails de homologação. A configuração privada está em `/etc/provaai` na VM.
+5. A estação de administração recebeu o atalho **Abrir Provaai AWS**. Ele usa um túnel SSH para abrir o site em `http://127.0.0.1:18080` e a caixa de e-mails de teste em `http://127.0.0.1:18025`. Se o IP da estação mudar, é preciso atualizar a regra de SSH. Se a VM for parada e receber outro IPv4 ao religar, é preciso atualizar também o destino do túnel.
+6. A imagem compilou na VM e o Laravel aplicou as quatro migrações. O EC2 confirmou a integridade do sistema e da instância. O endpoint `/up` respondeu HTTP 200 e o volume de documentos aceitou escrita pelo usuário do PHP. Nginx, PHP-FPM, o consumidor de filas e o agendador estavam em execução.
+7. O teste pelo Edge abriu a página pelo túnel, solicitou um código para um endereço fictício, leu a mensagem no Mailpit e entrou no painel com a sessão autenticada. A conta, o código e a sessão de teste foram removidos. A contagem de professores voltou a zero para permitir o ensaio de importação.
+8. Dentro do contêiner, o conversor extraiu o cabeçalho do modelo PDF de teste e exportou uma prova fictícia nos dois formatos. Foram conferidos a assinatura do arquivo PDF e a integridade do pacote DOCX. Os arquivos temporários foram removidos ao final.
 
 ## Transferir dados
 
@@ -59,4 +72,4 @@ O arquivo `compose.yaml` utiliza o Linux com Docker já disponível no servidor.
 4. Mantenha o novo endereço restrito à equipe até concluir a transferência. Entregue o manifesto e a pasta de anexos juntos por canal privado. Execute a importação com o mesmo usuário do PHP (`docker compose exec --user www-data app php artisan provaai:import-legacy CAMINHO/manifest.json`, primeiro sem e depois com `--apply`).
 5. Inclua o volume de documentos e o banco nas cópias de segurança. Recriar o contêiner preserva o volume. O comando `docker compose down -v` remove o volume e seus documentos.
 
-Hospedagem PHP, disco persistente, SMTP, chaves de IA, transferência real, homologação Docker/PostgreSQL e domínio. Drive segue no backlog. Os nomes do professor e integrantes na capa acadêmica precisam ser informados pela equipe.
+Antes de direcionar o domínio ao Laravel, configure a entrega externa de e-mail e o provedor de IA, teste uma geração de ponta a ponta e ensaie a importação e a restauração de uma cópia do backup. A VM e seus volumes consomem créditos enquanto estiverem em uso.
