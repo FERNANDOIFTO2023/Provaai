@@ -50,22 +50,22 @@ class DocumentService
         return Storage::disk('local')->path($path);
     }
 
-    public function header(ExamTemplate $template, float $ratio): array
+    public function header(ExamTemplate $template, float $ratio, bool $fitBoundary = false): array
     {
         if ($ratio < .05 || $ratio > .45) {
             throw new RuntimeException('Escolha um cabeçalho entre 5% e 45%.');
         }
         $path = $this->path($template);
-        $key = 'pdf-header:'.$template->user_id.':'.hash_file('sha256', $path).':'.$ratio;
+        $key = 'pdf-header:'.$template->user_id.':'.hash_file('sha256', $path).':'.$ratio.($fitBoundary ? ':fit' : '');
         if ($cached = Cache::get($key)) {
             return $cached;
         }
 
-        return Cache::lock($key.':lock', 130)->block(125, function () use ($path, $ratio, $key) {
+        return Cache::lock($key.':lock', 130)->block(125, function () use ($path, $ratio, $key, $fitBoundary) {
             if ($cached = Cache::get($key)) {
                 return $cached;
             }
-            $result = $this->run(['operation' => 'header', 'templatePath' => $path, 'ratio' => $ratio]);
+            $result = $this->run(['operation' => 'header', 'templatePath' => $path, 'ratio' => $ratio, 'fitBoundary' => $fitBoundary]);
             if (strlen($result['image']) < 8 * 1024 * 1024) {
                 Cache::put($key, $result, 300);
             }
@@ -74,35 +74,69 @@ class DocumentService
         });
     }
 
-    public function export(Exam $exam, User $user, string $format, bool $answerKey): string
+    public function export(Exam $exam, User $user, string $format, bool $answerKey, ?callable $layoutReady = null): string
     {
         $template = $exam->template_id ? ExamTemplate::ownedBy($user->id)->findOrFail($exam->template_id) : null;
         $path = $template ? $this->path($template) : null;
         $className = ClassRoom::ownedBy($user->id)->findOrFail($exam->class_id)->name;
-        $key = 'export:'.hash('sha256', json_encode([$exam->toArray(), $user->name, $className, $format, $answerKey, $template?->pdf_header_ratio, $path ? hash_file('sha256', $path) : null]));
-        $cached = Cache::get($key);
-        if ($cached) {
+        $key = 'export:v2:'.hash('sha256', json_encode([$exam->toArray(), $user->name, $className, $answerKey,
+            $template?->filename, $template?->pdf_header_ratio, $path ? hash_file('sha256', $path) : null]));
+        $docx = fn () => $this->cachedDocument($key.':docx', function () use ($exam, $user, $template, $path, $className, $answerKey) {
+            $header = $template && preg_match('/\.pdf$/i', $template->filename) ? $this->header($template, $template->pdf_header_ratio) : null;
+
+            return $this->renderFile(['operation' => 'export', 'exam' => $exam->toArray(), 'className' => $className, 'teacherName' => $user->name,
+                'format' => 'docx', 'answerKey' => $answerKey, 'templatePath' => $header ? null : $path, 'filename' => $template?->filename, 'header' => $header]);
+        });
+        if ($format === 'docx') {
+            return $docx();
+        }
+
+        return $this->cachedDocument($key.':pdf', function () use ($docx, $layoutReady) {
+            $bytes = $docx();
+            if ($layoutReady) {
+                $layoutReady();
+            }
+            $input = storage_path('app/private/').Str::uuid().'.docx';
+            try {
+                if (file_put_contents($input, $bytes) === false) {
+                    throw new RuntimeException('Não foi possível preparar o documento para conversão.');
+                }
+
+                return $this->renderFile(['operation' => 'convert', 'docxPath' => $input]);
+            } finally {
+                @unlink($input);
+            }
+        });
+    }
+
+    private function renderFile(array $request): string
+    {
+        $output = storage_path('app/private/').Str::uuid().'.bin';
+        try {
+            $this->run($request + ['outputPath' => $output]);
+
+            return file_get_contents($output);
+        } finally {
+            @unlink($output);
+        }
+    }
+
+    private function cachedDocument(string $key, callable $render): string
+    {
+        if ($cached = Cache::get($key)) {
             return base64_decode($cached, true);
         }
 
-        return Cache::lock($key.':lock', 130)->block(125, function () use ($exam, $user, $format, $answerKey, $template, $path, $key, $className) {
+        return Cache::lock($key.':lock', 150)->block(125, function () use ($key, $render) {
             if ($cached = Cache::get($key)) {
                 return base64_decode($cached, true);
             }
-            $output = storage_path('app/private/').Str::uuid().'.'.$format;
-            try {
-                $header = $template && preg_match('/\.pdf$/i', $template->filename) ? $this->header($template, $template->pdf_header_ratio) : null;
-                $this->run(['operation' => 'export', 'exam' => $exam->toArray(), 'className' => $className, 'teacherName' => $user->name,
-                    'format' => $format, 'answerKey' => $answerKey, 'templatePath' => $header ? null : $path, 'filename' => $template?->filename, 'header' => $header, 'outputPath' => $output]);
-                $bytes = file_get_contents($output);
-                if (strlen($bytes) < 8 * 1024 * 1024) {
-                    Cache::put($key, base64_encode($bytes), 300);
-                }
-
-return $bytes;
-            } finally {
-                @unlink($output);
+            $bytes = $render();
+            if (strlen($bytes) < 8 * 1024 * 1024) {
+                Cache::put($key, base64_encode($bytes), 300);
             }
+
+            return $bytes;
         });
     }
 }

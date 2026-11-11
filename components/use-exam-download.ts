@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { DownloadProgress } from '@/lib/export';
 
 export function useExamDownload() {
   const running = useRef(false);
   const live = useRef(true);
-  const [status, setStatus] = useState<{ completed: number; total: number } | null>(null);
+  const [status, setStatus] = useState<DownloadProgress | null>(null);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
 
@@ -18,14 +19,14 @@ export function useExamDownload() {
     return () => { live.current = false; window.removeEventListener('beforeunload', beforeUnload); };
   }, []);
 
-  async function start(total: number, work: (report: (completed: number) => void) => Promise<void>) {
+  async function start(total: number, work: (report: (progress: DownloadProgress) => void) => Promise<void>) {
     if (running.current) return;
     running.current = true;
-    setStatus({ completed: 0, total });
+    setStatus({ completed: 0, total, percent: 0, label: 'Preparando a prova' });
     setNotice('');
     setError('');
     try {
-      await work(completed => { if (live.current) setStatus({ completed, total }); });
+      await work(progress => { if (live.current) setStatus(progress); });
       if (live.current) setNotice('Arquivo pronto! Confira os downloads do navegador.');
     } catch (error) {
       if (live.current) setError(error instanceof Error ? error.message : 'Não foi possível preparar o download. Tente novamente.');

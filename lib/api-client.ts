@@ -24,7 +24,8 @@ async function request(url: string, body?: unknown, method='POST'): Promise<Resu
 }
 class Query implements PromiseLike<Result> {
   private input: Record<string,any>={op:'select',filters:[]};
-  constructor(private resource: string) {}
+  private readonly resource: string;
+  constructor(resource: string) { this.resource = resource; }
   select(columns='*') {this.input.columns=columns;return this;}
   eq(column: string,value: unknown) {this.input.filters.push([column,value]);return this;}
   order(column: string,options: {ascending?: boolean}={}) {this.input.order=[column,options.ascending??true];return this;}

@@ -10,6 +10,14 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 11/11/2026 — Modelo vinculado à prova e andamento do download
+
+Uma prova individual aprovada tinha um modelo Word de extensão DOC. A aplicação lia o texto desse modelo, mas ao exportar usava a diagramação interna. O conversor agora abre o DOC como Word, transforma-o em DOCX e utiliza a mesma diagramação para os dois formatos de saída. A preparação e a revisão identificam o arquivo escolhido. Se o padrão do professor mudar em outra aba durante a preparação, a aplicação pede que ele confira a escolha.
+
+O download mostra a porcentagem das etapas de preparação e acompanha os bytes recebidos. Nos lotes, inclui a montagem do ZIP. O conversor usa o LibreOffice instalado na imagem da aplicação. PDF e DOCX compartilham a montagem da mesma prova durante o período do cache. O teste local conferiu o cabeçalho institucional, a tabela e a distribuição das questões nas páginas com modelos PDF, DOCX e DOC.
+
+A README voltou a usar a capa animada e o fluxo visual anteriores à migração. A instalação, as ferramentas de teste e a publicação descrevem o projeto Laravel atual.
+
 ### 11/11/2026 — Geração de questões a partir de um rascunho
 
 Quando a primeira geração falhava, o botão **Gerar com IA** em **Revisar prova** enviava o identificador da prova, mas a API exigia os campos de um lote novo. O professor recebia “The class id field is required”, mesmo com a turma já vinculada. A retomada agora enfileira apenas o rascunho selecionado, com sua matéria, conteúdo e modelo. O professor pode ajustar a divisão das questões na revisão. Um segundo clique não duplica a prova e questões já existentes não são sobrescritas.

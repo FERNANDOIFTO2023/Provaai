@@ -165,11 +165,19 @@ class WorkspaceTest extends TestCase
         $s = $this->student($u, $r);
         $this->actingAs($u);
         $input = ['classId' => $r->id, 'students' => [$s->id], 'title' => 'Prova', 'subject' => 'Ciências', 'topics' => 'Fotossíntese', 'count' => 2, 'objectiveCount' => 1, 'choice' => 'builtin'];
+        $model = new ExamTemplate;
+        $model->forceFill(['user_id' => $u->id, 'name' => 'Cabeçalho', 'filename' => 'escola.pdf', 'path' => $u->id.'/escola.pdf', 'processing_status' => 'ready'])->save();
+        $input['choice'] = 'inherit';
+        $input['expectedTemplateId'] = $model->id;
+        $this->postJson('/api/actions/sala_begin_exam_batch', ['p_input' => $input])->assertConflict();
+        $this->assertDatabaseCount('sala_exams', 0);
+        $this->record('sala_teacher_template_defaults', ['template_id' => $model->id], 'upsert')->assertOk();
         $this->postJson('/api/actions/sala_begin_exam_batch', ['p_input' => $input])->assertOk();
         Queue::assertPushed(GenerateBatchStep::class);
         $this->assertDatabaseCount('sala_exams', 1);
         $this->postJson('/api/actions/sala_begin_exam_batch', ['p_input' => $input])->assertConflict();
         $this->assertSame('Ciências', Exam::first()->subject);
+        $this->assertSame($model->id, Exam::first()->template_id);
     }
 
     public function test_retry_queues_only_the_owned_empty_draft_with_the_requested_mix(): void

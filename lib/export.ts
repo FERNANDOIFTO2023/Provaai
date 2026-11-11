@@ -127,38 +127,57 @@ export function downloadBlob(blob: Blob, name: string) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+export type FileProgress = (steps: number, label: string) => void;
+export type DownloadProgress = { completed: number; total: number; percent: number; label: string };
+
 export async function downloadExams(
   exams: Exam[],
   format: 'pdf' | 'docx',
   answerKey = false,
-  render: typeof examFile = examFile,
-  report: (completed: number) => void = () => {},
+  render: (exam: Exam, format: 'pdf' | 'docx', key: boolean, report: FileProgress) => Promise<Blob> =
+    (exam, format, key) => examFile(exam, format, key),
+  report: (progress: DownloadProgress) => void = () => {},
 ) {
   if (!exams.length)
     throw new Error('Selecione pelo menos uma prova aprovada.');
-  if (exams.length === 1) {
-    const blob = await render(exams[0], format, answerKey);
-    report(1);
+  const total = exams.length;
+  const steps = format === 'pdf' ? 4 : 3;
+  const allSteps = steps * total + (total > 1 ? 1 : 0);
+  const update = (finished: number, completed: number, label: string) => {
+    report({ total, completed, percent: Math.min(99, Math.floor(100 * finished / allSteps)), label });
+  };
+  const renderAt = (index: number) => {
+    const prefix = total > 1 ? `Arquivo ${index + 1} de ${total} · ` : '';
+    const progress: FileProgress = (n, label) => update(index * steps + n, index, prefix + label);
+    progress(0, 'Preparando a prova');
+    return render(exams[index], format, answerKey, progress);
+  };
+  const finish = () => report({ completed: total, total, percent: 100, label: 'Arquivo pronto' });
+  if (total === 1) {
+    const blob = await renderAt(0);
     downloadBlob(
       blob,
       `${answerKey ? 'gabarito' : 'prova'}_${safeName(exams[0].profile_snapshot.code)}.${format}`,
     );
+    finish();
     return;
   }
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
   const manifest = ['id,aluno_codigo,formato,arquivo'];
-  for (const e of exams) {
+  for (const [index, e] of exams.entries()) {
     const file = `${safeName(e.profile_snapshot.code)}_${e.id}.${format}`;
-    zip.file(file, await (await render(e, format, answerKey)).arrayBuffer());
+    zip.file(file, await (await renderAt(index)).arrayBuffer());
     manifest.push(
       `${e.id},${safeName(e.profile_snapshot.code)},${format},${file}`,
     );
-    report(manifest.length - 1);
+    update((index + 1) * steps, index + 1, 'Arquivo preparado');
   }
   zip.file('manifesto.csv', manifest.join('\n'));
   downloadBlob(
-    await zip.generateAsync({ type: 'blob' }),
+    await zip.generateAsync({ type: 'blob' }, ({ percent }) =>
+      update(total * steps + percent / 100, total, 'Montando o ZIP')),
     `provas_${new Date().toISOString().slice(0, 10)}.zip`,
   );
+  finish();
 }

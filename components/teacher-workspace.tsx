@@ -62,6 +62,8 @@ import {
   type Template,
 } from '@/lib/model';
 import { downloadExams } from '@/lib/export';
+import { fetchExamFile } from '@/lib/download-file';
+import { DownloadProgressMeter } from './download-progress';
 import { Dialog, Field, Empty } from './workspace-ui';
 import StudentsWorkspace from './students-workspace';
 import CopySharing, { ShareCopyForm } from './copy-sharing';
@@ -209,30 +211,13 @@ export default function TeacherWorkspace({
     uploads.dismiss();
   }, [uploads.tasks, uploading, uploadFailed]);
   const approved = data.exams.filter((e) => e.status === 'approved');
-  async function exportExams(exams: Exam[], format: 'pdf'|'docx', answerKey=false, report: (completed: number) => void = () => {}) {
-    if (demo) return downloadExams(exams,format,answerKey,undefined,report);
-    const {data:{session}}=await apiClient.auth.getSession();
-    if (!session) throw new Error('Entre novamente para exportar a prova.');
-    await downloadExams(exams,format,answerKey,async (exam,format,answerKey)=>{
-      const response=await apiFetch('/api/export/exam',{method:'POST',headers:{
-        'content-type':'application/json',
-      },body:JSON.stringify({id:exam.id,format,answerKey}), signal: AbortSignal.timeout(160_000)}).catch(error => {
-        if (error?.name === 'TimeoutError') throw new Error('O download demorou mais que o esperado. Tente novamente ou baixe em DOCX.');
-        throw error;
-      });
-      if (!response.ok) {
-        const body=await response.json().catch(()=>({}));
-        throw new Error(body.error || 'Não foi possível baixar a prova. Tente novamente.');
-      }
-      return response.blob();
-    },report);
-  }
   function startDownload(items: Exam[], format: 'pdf'|'docx', answerKey = false) {
     if (busy || downloads.running.current || generation.busy) return;
     const snapshot = structuredClone(items);
     setError('');
     setModal('downloads');
-    void downloads.start(snapshot.length, report => exportExams(snapshot, format, answerKey, report));
+    void downloads.start(snapshot.length, report =>
+      downloadExams(snapshot, format, answerKey, demo ? undefined : fetchExamFile, report));
   }
   async function load(includeTemplates = false) {
     if (!user) return;
@@ -519,7 +504,7 @@ export default function TeacherWorkspace({
       if (generation.busy) throw new Error('Aguarde o lote de provas em andamento.');
       if (downloads.running.current) throw new Error('Aguarde o download terminar antes de gerar outras provas.');
       if (aiMode) {
-        await generation.start({classId:room.id,students:[...ids],title,subject,topics,count,objectiveCount,choice,purpose});
+        await generation.start({classId:room.id,students:[...ids],title,subject,topics,count,objectiveCount,choice,expectedTemplateId:templateId,purpose});
         if (!recoveryStudent) setData(d => ({...d,classes:d.classes.map(c => c.id===room.id ? {...c,
           template_override_id:choice==='inherit'||choice==='builtin'?null:choice,
           use_provaai_template:choice==='builtin'} : c)}));
@@ -955,7 +940,7 @@ export default function TeacherWorkspace({
           {(downloads.busy || downloads.notice || downloads.error) && <div className="generation-notice download-notice" role="status">
             <BloubMood mood={downloads.error ? 'frustrado' : downloads.busy ? 'sonolento' : 'feliz'} />
             <div><strong>{downloads.busy ? 'Preparando seu download em segundo plano…' : downloads.error || downloads.notice}</strong>
-              {downloads.status && <p>{downloads.status.completed} de {downloads.status.total} arquivos preparados. Você pode navegar; novas provas e downloads serão liberados ao terminar.</p>}</div>
+              {downloads.status && <DownloadProgressMeter percent={downloads.status.percent} label={downloads.status.label} />}</div>
             {downloads.busy ? <button className="text-button" onClick={() => setModal('downloads')}>Acompanhar</button>
               : <button className="icon-button" aria-label="Fechar aviso de download" onClick={downloads.dismiss}><X size={16}/></button>}
           </div>}
@@ -1420,10 +1405,7 @@ export default function TeacherWorkspace({
               <div className="notice soft">
                 <BookOpen size={21} />
                 <p>
-                  A IA usa o conteúdo extraído do arquivo e suas orientações.
-                  Revise o texto antes de gerar provas. PDFs digitalizados são
-                  lidos por IA; imagens dentro de arquivos Word não são
-                  extraídas. Modelos DOCX também fornecem a diagramação do PDF e do Word. Use campos em branco como “Nome do estudante:”, “Turma:” e “Tema”.
+                  No PDF, ajuste o recorte do cabeçalho que aparecerá na prova. No Word, o site aproveita a diagramação e usa o texto como referência para as questões.
                 </p>
               </div>
               <div className="template-grid">
@@ -1637,9 +1619,8 @@ export default function TeacherWorkspace({
             <BloubMood mood={downloads.error ? 'frustrado' : downloads.busy ? 'sonolento' : 'feliz'} />
             <h3 role="status">{downloads.busy ? 'Preparando suas provas! Aguarde um pouquinho.' : downloads.error ? 'Não foi possível concluir o download.' : 'Arquivo pronto!'}</h3>
             <p>{downloads.error || (downloads.busy ? 'Você pode continuar explorando o site. Mantenha esta aba aberta até o download terminar.' : downloads.notice)}</p>
-            {downloads.status && <p role="status">{downloads.status.completed < downloads.status.total
-              ? 'Preparando arquivo ' + (downloads.status.completed + 1) + ' de ' + downloads.status.total + '…'
-              : 'Finalizando o arquivo para download…'}</p>}
+            {(downloads.status || downloads.notice) && <DownloadProgressMeter
+              percent={downloads.status?.percent ?? 100} label={downloads.status?.label ?? 'Arquivo pronto'} />}
             <button className="button primary" onClick={() => setModal(null)}>{downloads.busy ? 'Continuar navegando' : 'Concluir'}</button>
           </section>}
           {modal === 'uploads' && (
@@ -1811,7 +1792,7 @@ export default function TeacherWorkspace({
                   <option value="builtin">Modelo Provaai</option>
                   {data.templates.map((t) => (
                     <option key={t.id} value={t.id} disabled={!templateReady(t.id)}>
-                      {t.name}{!templateReady(t.id) ? ' · leitura pendente' : ''}
+                      {t.name} · {t.filename.split('.').pop()?.toUpperCase()}{!templateReady(t.id) ? ' · leitura pendente' : ''}
                     </option>
                   ))}
                   {uploads.active.filter(task => !data.templates.some(t => t.id === task.id)).map(task => (
@@ -1820,6 +1801,7 @@ export default function TeacherWorkspace({
                 </select>
               </Field>
               <p className="helper-note" id="class-template-hint">
+                {generationTemplate && <><strong>{data.templates.find(t => t.id === generationTemplate)?.filename}</strong><br /></>}
                 {templateReady(generationTemplate)
                   ? recoveryStudent ? 'Este modelo será usado nesta prova individual. O padrão da turma permanece o mesmo.' : 'Ao preparar as provas, a escolha fica salva só nesta turma. Selecione “Seguir meu padrão” para acompanhar as mudanças feitas em Modelos.'
                   : 'O modelo escolhido ainda não está pronto. Aguarde a leitura ou selecione outro modelo.'}
@@ -1927,6 +1909,9 @@ export default function TeacherWorkspace({
                   <small>
                     {exam.subject} · {exam.profile_snapshot.code}
                   </small>
+                  <small>Modelo da prova · {exam.template_id
+                    ? data.templates.find(t => t.id === exam.template_id)?.filename ?? 'Modelo vinculado'
+                    : 'Modelo Provaai'}</small>
                 </div>
                 <span
                   className={`status ${exam.status === 'approved' ? 'good' : 'pending'}`}

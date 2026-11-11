@@ -6,6 +6,7 @@ use App\Models\Exam;
 use App\Models\ExamTemplate;
 use App\Services\DocumentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class DocumentsController extends Controller
@@ -17,11 +18,12 @@ class DocumentsController extends Controller
         try {
             if (preg_match('/\.pdf$/i', $t->filename)) {
                 $ratio = $v['headerRatio'] ?? $t->pdf_header_ratio;
-                $header = $documents->header($t, $ratio);
+                $firstCrop = $t->processing_status === 'pending' && !isset($v['headerRatio']) && empty($v['preview']);
+                $header = $documents->header($t, $ratio, $firstCrop);
                 if ($v['preview'] ?? false) {
                     return response(base64_decode($header['image'], true))->header('Content-Type', 'image/png')->header('Cache-Control', 'private, no-store');
                 }
-                $t->pdf_header_ratio = $ratio;
+                $t->pdf_header_ratio = $firstCrop ? round($header['ratio'], 4) : $ratio;
                 $t->extracted_text = '';
             } else {
                 abort_unless(preg_match('/\.docx?$/i', $t->filename), 422);
@@ -45,16 +47,33 @@ class DocumentsController extends Controller
 
     public function export(Request $r, DocumentService $documents)
     {
-        $v = $r->validate(['id' => 'required|uuid', 'format' => 'required|in:pdf,docx', 'answerKey' => 'sometimes|boolean']);
+        $v = $r->validate(['id' => 'required|uuid', 'format' => 'required|in:pdf,docx', 'answerKey' => 'sometimes|boolean', 'progressId' => 'sometimes|uuid']);
         $exam = Exam::ownedBy($r->user()->id)->findOrFail($v['id']);
         abort_unless($exam->status === 'approved', 409, 'Aprove a prova antes de exportar.');
         try {
-            $bytes = $documents->export($exam, $r->user(), $v['format'], $v['answerKey'] ?? false);
+            $layoutReady = null;
+            if (isset($v['progressId'])) {
+                $key = 'download:'.$r->user()->id.':'.$v['progressId'];
+                Cache::put($key, 'approved', 180);
+                $layoutReady = fn () => Cache::put($key, 'layout', 180);
+            }
+            $bytes = $documents->export($exam, $r->user(), $v['format'], $v['answerKey'] ?? false, $layoutReady);
         } catch (\RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
+        } finally {
+            if (isset($key)) {
+                Cache::forget($key);
+            }
         }
 
-        return response($bytes)->header('Content-Type', $v['format'] === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')->header('Cache-Control', 'private, no-store');
+        return response($bytes)->header('Content-Type', $v['format'] === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            ->header('X-Document-Length', strlen($bytes))->header('Cache-Control', 'private, no-store');
+    }
+
+    public function progress(Request $r, string $id)
+    {
+        return response()->json(['stage' => Cache::get('download:'.$r->user()->id.':'.$id)])
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function upload(Request $r, string $bucket)

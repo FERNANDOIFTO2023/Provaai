@@ -60,7 +60,11 @@ class DocumentsTest extends TestCase
             'profile_snapshot' => ['name' => $s->name, 'code' => $s->code], 'content' => ['instructions' => 'Responda.', 'questions' => [['type' => 'essay', 'statement' => 'Explique a fotossíntese.', 'options' => [], 'answer' => 'RESPOSTA RESERVADA', 'objective' => 'Compreender', 'points' => 10]]]])->save();
         $pdf = $this->postJson('/api/export/exam', ['id' => $e->id, 'format' => 'pdf'])->assertOk()->assertHeader('Content-Type', 'application/pdf')->getContent();
         $this->assertStringStartsWith('%PDF-', $pdf);
-        $docx = $this->postJson('/api/export/exam', ['id' => $e->id, 'format' => 'docx'])->assertOk()->getContent();
+        // A geração do PDF já deve ter deixado pronto o Word com o cabeçalho.
+        $this->partialMock(DocumentService::class)->shouldNotReceive('run');
+        $response = $this->postJson('/api/export/exam', ['id' => $e->id, 'format' => 'docx'])->assertOk();
+        $docx = $response->getContent();
+        $response->assertHeader('X-Document-Length', (string) strlen($docx));
         $this->assertStringStartsWith('PK',$docx);
     }
 }

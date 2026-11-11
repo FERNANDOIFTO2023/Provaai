@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/files/{bucket}', [DocumentsController::class, 'remove']);
     Route::post('/api/template/process', [DocumentsController::class, 'process'])->middleware('throttle:60,1');
     Route::post('/api/export/exam', [DocumentsController::class, 'export']);
+    Route::get('/api/export/progress/{id}', [DocumentsController::class, 'progress'])->whereUuid('id');
     Route::post('/api/generate', function (Request $r, AiService $ai) {
         $id = $r->validate(['examId' => 'required|uuid'])['examId'];
         try {

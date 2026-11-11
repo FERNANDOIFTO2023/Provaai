@@ -62,7 +62,7 @@ O Dockerfile prepara PHP-FPM, Nginx, Node, conversor, worker e agendador. A imag
 
 1. Provisione PHP 8.3+/Node 24, PostgreSQL e disco persistente; a raiz pública é somente `public/`.
 2. Configure segredos, SMTP real, HTTPS, `APP_DEBUG=false` e `SESSION_SECURE_COOKIE=true`.
-3. Use `composer install --no-dev --optimize-autoloader`, `npm ci` e `npm run build`. Preserve `.office-runtime`, dependências de conversão e `public/build` no artefato.
+3. Use `composer install --no-dev --optimize-autoloader`, `npm ci` e `npm run build`. Inclua as dependências Node de produção e `public/build` na imagem. O pacote de conversão do LibreOffice já contém o motor usado nas exportações.
 4. Em banco novo, execute `php artisan migrate --force`; importe/confira o legado pelo guia de migração. Nunca execute `migrate:fresh` em produção.
 5. Dê escrita ao processo PHP em `storage/` e `bootstrap/cache/`; preserve `storage/app/private` entre versões e faça backups de banco e arquivos.
 6. Supervisione `php artisan queue:work --tries=1 --timeout=130` e `php artisan schedule:work`. Como alternativa ao segundo processo, rode `schedule:run` por cron a cada minuto.

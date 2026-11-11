@@ -17,7 +17,6 @@ COPY . .
 RUN chmod -R a+rX /var/www/html
 COPY --from=frontend /app/public/build ./public/build
 COPY --from=frontend /app/node_modules ./node_modules
-COPY --from=frontend /app/.office-runtime ./.office-runtime
 RUN mkdir -p storage/app/private storage/framework/cache/data storage/framework/cache/locks storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
     && chown -R www-data:www-data storage bootstrap/cache \

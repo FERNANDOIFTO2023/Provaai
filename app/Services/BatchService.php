@@ -32,6 +32,9 @@ class BatchService
         $room = ClassRoom::ownedBy($uid)->whereNull('archived_at')->findOrFail($v['classId']);
         $purpose = $v['purpose'] ?? 'regular';
         $template = $v['choice'] === 'inherit' ? DB::table('sala_teacher_template_defaults')->where('user_id', $uid)->value('template_id') : ($v['choice'] === 'builtin' ? null : $v['choice']);
+        if (array_key_exists('expectedTemplateId', $input)) {
+            abort_if($input['expectedTemplateId'] !== $template, 409, 'O modelo padrão mudou. Atualize a página e confira o modelo antes de gerar a prova.');
+        }
         if ($template) {
             ExamTemplate::ownedBy($uid)->where('processing_status', 'ready')->findOrFail($template);
         }

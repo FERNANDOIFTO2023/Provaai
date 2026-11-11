@@ -52,6 +52,16 @@ test('cabeçalho escaneado em alta resolução não perde a imagem',async()=>{
   assert.ok(pixel[2]>150 && pixel[0]<50,'a faixa azul escaneada deve ser preservada');
 });
 
+test('a leitura inicial inclui a borda de uma tabela e respeita o recorte manual', async () => {
+  const source = new jsPDF();
+  source.rect(5, 5, 200, 72);
+  const bytes = new Uint8Array(source.output('arraybuffer'));
+  const auto = await pdfHeader(bytes, 0.25, true);
+  const manual = await pdfHeader(bytes, 0.25);
+  assert.ok(auto.headerHeight > 77 && auto.headerHeight < 84);
+  assert.ok(Math.abs(manual.headerHeight / manual.height - 0.25) < 0.0001);
+});
+
 test('PDF usa só pixels do cabeçalho, repete nas páginas e não leva perguntas antigas nem gabarito',async()=>{
   const source=new jsPDF();
   source.setFillColor(20,100,180);source.rect(0,0,210,35,'F');
