@@ -10,6 +10,11 @@ O site público não foi alterado nem seus dados importados. O SQLite local é s
 
 ## Histórico de alterações
 
+### 11/11/2026 — Preparação do ensaio com dados do Supabase
+
+- O painel do projeto indicou ausência de backups. Foi preparada uma exportação das contas, tabelas e anexos vinculados para uma pasta privada na AWS. A credencial é usada apenas durante a leitura da origem.
+- A rotina de restauração foi exercitada com um manifesto vazio em um PostgreSQL isolado na VM. Ela importa o manifesto, copia o banco e os documentos, restaura a cópia em outro banco e compara os identificadores e os hashes dos arquivos. O ensaio com dados reais depende da exportação.
+
 ### 11/11/2026 — Autenticação do Gmail na homologação
 
 - A VM autenticou o remetente no Gmail por SMTP com STARTTLS na porta 587. Após a troca da caixa de testes pelo Gmail, o contêiner passou a usar o novo servidor e o Laravel respondeu HTTP 200 em `/up`. A senha de app fica na configuração privada da VM. No teste de entrega, a rota de login emitiu um código novo para o endereço do próprio remetente. O Gmail aceitou o envio e o destinatário confirmou o recebimento na caixa de entrada.
