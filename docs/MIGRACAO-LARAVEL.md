@@ -10,6 +10,12 @@ O site público não foi alterado nem seus dados importados. O SQLite local é s
 
 ## Histórico de alterações
 
+### 11/11/2026 — Preparação da publicação contínua
+
+- A homologação passou a consultar o resultado do GitHub Actions antes de instalar um commit. O serviço escolhe o SHA exato da branch configurada, constrói a imagem e só troca o contêiner depois de aplicar as migrações. Em seguida, verifica `/up` e a resposta Laravel em `/api/config`. Uma falha nessa etapa aciona a restauração da imagem anterior. A restauração da imagem não desfaz alterações no banco.
+- A configuração da Vercel passou a gerar rotas pela Build Output API. Ela usa `PROVAAI_ORIGIN` para encaminhar as requisições ao Laravel. O build exige uma origem HTTPS que responda às verificações de saúde e, em produção, que informe um provedor de IA configurado. A folha de estilos e o JavaScript usam caminhos relativos ao domínio pelo qual o professor acessou o site.
+- A suíte com IA simulada e a migração Docker/PostgreSQL passaram no CI. Na geração solicitada diretamente na VM, o Laravel informou ausência da chave de IA e preservou o rascunho vazio. A caixa de teste, o banco da homologação e o acesso pelo túnel são independentes do e-mail, dos dados e do endereço de produção. [Verificação do GitHub Actions](https://github.com/FERNANDOIFTO2023/Provaai/actions/runs/42961655122)
+
 ### 11/11/2026 — Validação de modelos de prova na AWS
 
 - O upload de um PDF terminava, mas a leitura retornava HTTP 500 e o modelo permanecia pendente. Na VM, o conversor encerrava o processo quando apenas 65.536 bytes da resposta tinham sido entregues ao Laravel. A imagem do cabeçalho precisava de várias escritas no canal entre os processos.
@@ -64,6 +70,14 @@ JSON com `version: 1`, `users`, `tables` e `files`. Cada arquivo informa `bucket
 `database/legacy-supabase` é referência histórica, não deve ser executada no destino novo.
 
 ## Pendências externas
+
+### Publicar novas versões pelo GitHub
+
+O timer `provaai-release.timer` consulta a branch a cada três minutos, mesmo com a estação do professor desligada. Na VM de teste, `/etc/provaai/release.env` seleciona `PROVAAI_BRANCH=codex/migracao-laravel` e os arquivos Compose da homologação. O serviço é instalado a partir de `deploy/release.sh` em `/usr/local/sbin/provaai-release`; as duas unidades de `deploy/` ficam em `/etc/systemd/system/`. Para acompanhar uma atualização, use `sudo journalctl -u provaai-release.service -f`. Versões que alterem o esquema precisam ser compatíveis com a versão anterior até o fim da troca.
+
+Para o primeiro corte, prepare um banco e um volume de documentos próprios para produção. A homologação já contém dados de teste e o importador exige destino vazio. Configure o SMTP externo, o remetente e a chave do provedor de IA no ambiente privado da aplicação. Mantenha a credencial administrativa do Supabase em um ambiente temporário exclusivo da exportação. Valide uma prova coletiva e uma individual com temas diferentes, a entrega do código por e-mail, a importação de uma cópia dos dados e a restauração do backup.
+
+Na Vercel, configure `PROVAAI_ORIGIN` separadamente para Preview e Production com a URL HTTPS da instalação correspondente. Teste a prévia de ponta a ponta com o domínio da Vercel, inclusive a sessão após o login e os downloads. Depois da homologação e da transferência final, a instalação de produção deve acompanhar `PROVAAI_BRANCH=main`. O push para `main` dispara o build na Vercel e o CI usado pela VM. O acompanhamento da branch exige um serviço já instalado e em execução na VM de destino.
 
 ### Escolher o servidor de homologação
 

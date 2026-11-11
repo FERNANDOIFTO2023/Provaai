@@ -1,6 +1,11 @@
-import { copyFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 
-const origin = new URL(process.env.PROVAAI_ORIGIN);
+const value = process.env.PROVAAI_ORIGIN;
+if (!value) throw new Error('Configure PROVAAI_ORIGIN com a origem HTTPS da AWS neste ambiente da Vercel.');
+const origin = new URL(value);
+if (origin.protocol !== 'https:' || origin.origin !== value.replace(/\/$/, '') || origin.hostname.endsWith('.vercel.app')) {
+  throw new Error('A origem deve ser o servidor HTTPS da AWS, sem caminho nem credenciais.');
+}
 const options = { redirect: 'error', signal: AbortSignal.timeout(15000) };
 const [health, configuration] = await Promise.all([
   fetch(new URL('/up', origin), options),
@@ -12,5 +17,13 @@ if (backend !== 'laravel') throw new Error('A origem não está servindo o backe
 if (process.env.VERCEL_ENV === 'production' && aiConfigured !== true) {
   throw new Error('A origem de produção ainda não configurou a IA.');
 }
-await mkdir('.provaai-vercel', {recursive: true});
-await copyFile('public/favicon.svg', '.provaai-vercel/favicon.svg');
+const output = '.vercel/output';
+await mkdir(output + '/static', {recursive: true});
+await copyFile('public/favicon.svg', output + '/static/favicon.svg');
+await writeFile(output + '/config.json', JSON.stringify({
+  version: 3,
+  routes: [
+    {src: '/(?:api/.*)?', headers: {'Cache-Control': 'private, no-store'}, continue: true},
+    {src: '/(.*)', dest: origin.origin + '/$1'},
+  ],
+}));
