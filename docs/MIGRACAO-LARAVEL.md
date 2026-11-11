@@ -10,6 +10,14 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 11/11/2026 — Entrada em produção
+
+- O domínio público passou a servir o Laravel na AWS após o avanço de `main` para `96124ff`. A página de login e os arquivos de interface responderam pelo domínio. A rota de login rejeitou um endereço inválido com HTTP 422 e a rota de dados exigiu autenticação. [Publicação na Vercel](https://vercel.com/fernandotribalism-1622/provaai/DTNeR1VjsAJEj9FKAupe971sZnGf)
+- A comparação dos campos importados com o manifesto passou. Uma prova aprovada foi exportada em PDF e DOCX a partir da cópia na AWS. Uma segunda cópia do backup foi guardada fora da VM e conferida por SHA-256.
+- O corte confirmou, na mesma transação no Supabase, que os dados ainda correspondiam à exportação, que os anexos vinculados existiam e que não havia lote ativo. Os gatilhos `provaai_arquivo_20261111` bloqueiam gravações da aplicação antiga. As sessões de professores recomeçam por código enviado ao e-mail de cadastro.
+- Para consultar a atualização automática, use `sudo journalctl -u provaai-producao-release.service`. A configuração de produção está em `/etc/provaai/release-production.env` e o checkout em `/opt/provaai-producao`. O timer de homologação usa a sua própria configuração.
+- Para restaurar uma versão anterior do Laravel, preserve o banco e os documentos atuais e confira a compatibilidade do esquema. Para voltar ao Supabase depois de novas gravações na AWS, reconcilie os registros e anexos primeiro. Só depois remova os gatilhos do corte nas relações que usam `public.provaai_arquivo_20261111()` e redirecione o domínio.
+
 ### 11/11/2026 — Restauração de dados e origem de produção
 
 - O manifesto real foi importado em um PostgreSQL isolado. O banco e os anexos foram copiados e restaurados em outro destino. Conferiram os identificadores dos professores e dos registros, além do conteúdo de cada arquivo por SHA-256.
@@ -87,7 +95,7 @@ JSON com `version: 1`, `users`, `tables` e `files`. Cada arquivo informa `bucket
 
 `database/legacy-supabase` é referência histórica, não deve ser executada no destino novo.
 
-## Pendências externas
+## Operação e referência de instalação
 
 ### Publicar novas versões pelo GitHub
 

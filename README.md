@@ -61,4 +61,4 @@ Os testes PHP usam banco temporário e IA simulada; os testes de documentos exec
 - [PDF e arquivos](docs/PDF-E-ARQUIVOS.md).
 - [Segurança e limitações conhecidas](docs/SEGURANCA.md).
 
-A versão Laravel foi preparada localmente. A publicação exige hospedagem PHP/Node, worker, agendador, armazenamento persistente, SMTP e migração dos dados. O site público não foi alterado e nenhum dado de produção foi importado ou removido nesta alteração.
+O [Provaai](https://provaai.vercel.app) roda em Laravel na AWS. Cada push para `main` inicia uma publicação na Vercel. A VM instala a imagem do commit depois que o GitHub Actions aprova os testes. Os professores entram com seu e-mail para acessar as turmas e provas migradas.
