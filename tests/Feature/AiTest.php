@@ -89,6 +89,33 @@ class AiTest extends TestCase
         Http::assertSentCount(3);
     }
 
+    public function test_quick_gemini_outage_retries_only_the_failed_stage(): void
+    {
+        config(['provaai.gemini_key' => 'test', 'provaai.groq_key' => null]);
+        $exam = $this->exam();
+        $response = fn ($data) => ['candidates' => [['content' => ['parts' => [['text' => json_encode($data)]]]]]];
+        Http::fakeSequence()->pushStatus(503)->push($response($this->content()))
+            ->push($response(['aligned' => true, 'offTopicQuestions' => [], 'missingTopics' => []]));
+        $saved = app(AiService::class)->generate($exam->user_id, $exam->id);
+        $this->assertSame($this->content()['questions'], $saved->content['questions']);
+        Http::assertSentCount(3);
+    }
+
+    public function test_quota_failure_leaves_a_retryable_draft_without_another_provider_call(): void
+    {
+        config(['provaai.gemini_key' => 'test', 'provaai.groq_key' => null]);
+        $exam = $this->exam();
+        Http::fakeSequence()->pushStatus(429);
+        try {
+            app(AiService::class)->generate($exam->user_id, $exam->id);
+            $this->fail('Expected quota failure');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('limite de uso', $e->getMessage());
+        }
+        $this->assertSame([], $exam->fresh()->content['questions']);
+        Http::assertSentCount(1);
+    }
+
     public function test_bad_review_leaves_draft_empty_and_retry_is_possible(): void
     {
         config(['provaai.gemini_key' => 'test']);

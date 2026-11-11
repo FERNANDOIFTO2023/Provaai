@@ -10,6 +10,14 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 11/11/2026 — Geração de questões a partir de um rascunho
+
+Quando a primeira geração falhava, o botão **Gerar com IA** em **Revisar prova** enviava o identificador da prova, mas a API exigia os campos de um lote novo. O professor recebia “The class id field is required”, mesmo com a turma já vinculada. A retomada agora enfileira apenas o rascunho selecionado, com sua matéria, conteúdo e modelo. O professor pode ajustar a divisão das questões na revisão. Um segundo clique não duplica a prova e questões já existentes não são sobrescritas.
+
+O registro da falha original do Gemini não informava o status HTTP. A aplicação agora registra a etapa, o modelo e o status das respostas de erro, sem incluir o pedido do professor. A interface distingue limite de uso, acesso recusado e indisponibilidade temporária. Sem provedor reserva, uma falha rápida de servidor permite uma nova tentativa automática dentro do tempo da etapa. O limite de uso não dispara essa repetição.
+
+Na homologação, uma prova fictícia de inglês sobre o *simple present* foi gerada e passou pela revisão com dez questões discursivas e nenhuma objetiva. A transação foi revertida após o teste. Os testes locais cobrem a retomada, o isolamento entre professores, a falha temporária e o limite de uso.
+
 ### 11/11/2026 — Entrada em produção
 
 - A primeira imagem compilada no checkout privado herdou permissões que impediam o PHP de ler a aplicação e devolveu HTTP 404. A verificação de saúde restaurou a imagem anterior. O build agora atribui permissão de leitura ao código da imagem, e a publicação verifica a inicialização do Laravel com o usuário do servidor web antes de trocar o contêiner. As credenciais ficam fora do contexto de build.

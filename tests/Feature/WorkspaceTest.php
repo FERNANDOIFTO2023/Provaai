@@ -172,6 +172,36 @@ class WorkspaceTest extends TestCase
         $this->assertSame('Ciências', Exam::first()->subject);
     }
 
+    public function test_retry_queues_only_the_owned_empty_draft_with_the_requested_mix(): void
+    {
+        $teacher = $this->teacher();
+        $room = $this->room($teacher);
+        $student = $this->student($teacher, $room);
+        $draft = new Exam;
+        $draft->forceFill(['user_id' => $teacher->id, 'class_id' => $room->id, 'student_id' => $student->id,
+            'title' => 'Inglês', 'subject' => 'Inglês', 'topics' => 'Simple present', 'question_count' => 10,
+            'content' => ['questions' => [], 'instructions' => 'Leia com atenção.', 'objectiveCount' => 5], 'profile_snapshot' => []])->save();
+        $url = '/api/actions/sala_begin_exam_batch';
+        $payload = ['p_input' => ['retry' => $draft->id, 'objectiveCount' => 0]];
+        $this->actingAs($this->teacher())->postJson($url, $payload)->assertNotFound();
+        $this->actingAs($teacher);
+        $student->forceFill(['archived_at' => now()])->save();
+        $this->postJson($url, $payload)->assertConflict();
+        $student->forceFill(['archived_at' => null])->save();
+        $draft->content = $this->content();
+        $draft->save();
+        $this->postJson($url, $payload)->assertConflict();
+        $draft->content = ['questions' => [], 'objectiveCount' => 5, 'instructions' => 'Leia com atenção.'];
+        $draft->save();
+        $this->postJson($url, $payload)->assertOk();
+        $this->postJson($url, $payload)->assertConflict();
+        $this->assertSame([$draft->id], \App\Models\ExamBatch::findOrFail($teacher->id)->exam_ids);
+        $this->assertSame(0, $draft->fresh()->content['objectiveCount']);
+        $this->assertSame('Simple present', $draft->fresh()->topics);
+        $this->assertDatabaseCount('sala_exams', 1);
+        Queue::assertPushed(GenerateBatchStep::class, 1);
+    }
+
     public function test_file_access_is_private_and_path_traversal_is_rejected(): void
     {
         Storage::fake('local');

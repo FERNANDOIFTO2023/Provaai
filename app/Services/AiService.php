@@ -59,6 +59,10 @@ class AiService
                 'reference' => mb_substr($reference, 0, 60000), 'exclude' => array_slice($exclude, -100)];
             $provider = config('provaai.provider') === 'mistral' ? 'mistral' : (config('provaai.gemini_key') ? 'gemini' : 'groq');
             $content = $this->ask($provider, 'generation', $context);
+            $instructions = trim($exam->content['instructions'] ?? '');
+            if ($instructions !== '' && $instructions !== 'Leia com atenção.') {
+                $content['instructions'] = $instructions;
+            }
             $validator = app(ExamValidator::class);
             $validator->validate($content, $exam->question_count, $objective);
             $seen = array_flip(array_map($validator->normalize(...), $exclude));
@@ -91,16 +95,31 @@ class AiService
         try {
             if ($provider === 'gemini') {
                 try {
-                    $response = Http::connectTimeout(8)->timeout($hasFallback ? ($review ? 10 : 35) : ($review ? 25 : 90))->withHeaders(['x-goog-api-key' => config('provaai.gemini_key')])
-                        ->post('https://generativelanguage.googleapis.com/v1beta/models/'.rawurlencode(config('provaai.gemini_model')).':generateContent', [
+                    $budget = $hasFallback ? ($review ? 10 : 35) : ($review ? 25 : 90);
+                    $model = config('provaai.gemini_model');
+                    $send = fn (int $timeout) => Http::connectTimeout(min(8, $timeout))->timeout($timeout)->withHeaders(['x-goog-api-key' => config('provaai.gemini_key')])
+                        ->post('https://generativelanguage.googleapis.com/v1beta/models/'.rawurlencode($model).':generateContent', [
                             'systemInstruction' => ['parts' => [['text' => $instruction]]], 'contents' => [['parts' => [['text' => json_encode($context, JSON_UNESCAPED_UNICODE)]]]],
                             'generationConfig' => ['responseMimeType' => 'application/json', 'maxOutputTokens' => $review ? 2048 : 12000, 'temperature' => $review ? 0 : .7],
                         ]);
+                    $response = $send($budget);
+                    if (! $hasFallback && in_array($response->status(), [500, 502, 503, 504], true) && microtime(true) - $start < 2) {
+                        Log::info('gemini_retry', ['stage' => $stage, 'status' => $response->status()]);
+                        usleep(300000);
+                        $response = $send(max(1, (int) ($budget - (microtime(true) - $start))));
+                    }
                     if (! $response->successful()) {
+                        Log::warning('gemini_request_failed', ['stage' => $stage, 'model' => $model, 'status' => $response->status()]);
                         if ($hasFallback && (in_array($response->status(), [401, 403, 404, 408, 429]) || $response->serverError())) {
                             throw new ConnectionException('Gemini indisponível');
                         }
-                        throw new RuntimeException('O Gemini não concluiu o pedido. Confira a cota e tente novamente.');
+                        throw new RuntimeException(match ($response->status()) {
+                            429 => 'O Gemini atingiu o limite de uso. Aguarde antes de tentar novamente.',
+                            401, 403 => 'O Gemini recusou o acesso. A equipe responsável precisa verificar a chave e as permissões.',
+                            404 => 'O modelo do Gemini não está disponível. A equipe responsável precisa verificar a configuração.',
+                            408, 500, 502, 503, 504 => 'O Gemini está temporariamente indisponível. Tente novamente neste rascunho em alguns instantes.',
+                            default => 'O Gemini não aceitou o pedido. O rascunho foi preservado.',
+                        });
                     }
                     $payload = $response->json();
                     $candidate = $payload['candidates'][0] ?? [];

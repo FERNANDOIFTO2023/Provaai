@@ -23,8 +23,11 @@ class BatchService
 
     public function begin(string $uid, array $input): string
     {
-        $v = Validator::make($input, ['classId' => 'required|uuid', 'students' => 'required|array|min:1|max:100', 'students.*' => 'required|uuid|distinct', 'title' => 'required|string|max:150', 'subject' => 'required|string|max:80', 'topics' => 'required|string|max:10000', 'count' => 'required|integer|min:1|max:30', 'objectiveCount' => 'required|integer|min:0|max:30', 'choice' => 'required|string', 'purpose' => 'sometimes|in:regular,recovery'])->validate();
         abort_if($this->running($uid), 409, 'Aguarde o lote em andamento.');
+        if (array_key_exists('retry', $input)) {
+            return $this->retryDraft($uid, $input);
+        }
+        $v = Validator::make($input, ['classId' => 'required|uuid', 'students' => 'required|array|min:1|max:100', 'students.*' => 'required|uuid|distinct', 'title' => 'required|string|max:150', 'subject' => 'required|string|max:80', 'topics' => 'required|string|max:10000', 'count' => 'required|integer|min:1|max:30', 'objectiveCount' => 'required|integer|min:0|max:30', 'choice' => 'required|string', 'purpose' => 'sometimes|in:regular,recovery'])->validate();
         abort_if($v['objectiveCount'] > $v['count'], 422, 'Distribuição inválida.');
         $room = ClassRoom::ownedBy($uid)->whereNull('archived_at')->findOrFail($v['classId']);
         $purpose = $v['purpose'] ?? 'regular';
@@ -46,9 +49,44 @@ class BatchService
                 'profile_snapshot' => $student->only(['name', 'code', 'difficulties', 'criteria', 'level'])])->save();
             $ids[] = $exam->id;
         }
+        return $this->enqueue($uid, $v['title'], $ids);
+    }
+
+    private function retryDraft(string $uid, array $input): string
+    {
+        Validator::make($input, ['retry' => 'required|uuid'])->validate();
+        $exam = Exam::ownedBy($uid)->lockForUpdate()->findOrFail($input['retry']);
+        abort_unless($exam->status === 'draft' && empty($exam->content['questions']), 409, 'Só é possível gerar questões para um rascunho vazio.');
+        abort_unless(ClassRoom::ownedBy($uid)->whereNull('archived_at')->whereKey($exam->class_id)->exists()
+            && Student::ownedBy($uid)->where('class_id', $exam->class_id)->whereNull('archived_at')->whereKey($exam->student_id)->exists(),
+            409, 'O aluno precisa estar ativo na turma desta prova.');
+        if ($exam->template_id) {
+            abort_unless(ExamTemplate::ownedBy($uid)->whereKey($exam->template_id)->where('processing_status', 'ready')->exists(), 409, 'Aguarde a leitura do modelo desta prova.');
+        }
+        $edits = Validator::make($input, [
+            'objectiveCount' => 'sometimes|required|integer|min:0|max:'.$exam->question_count,
+            'title' => 'sometimes|required|string|max:150',
+            'instructions' => 'sometimes|nullable|string|max:2000',
+        ])->validate();
+        $content = $exam->content;
+        if (isset($edits['objectiveCount'])) {
+            $content['objectiveCount'] = (int) $edits['objectiveCount'];
+        }
+        if (array_key_exists('instructions', $edits)) {
+            $content['instructions'] = $edits['instructions'] ?? '';
+        }
+        $exam->title = $edits['title'] ?? $exam->title;
+        $exam->content = $content;
+        $exam->save();
+
+        return $this->enqueue($uid, $exam->title, [$exam->id]);
+    }
+
+    private function enqueue(string $uid, string $title, array $ids): string
+    {
         $batchId = (string) Str::uuid();
         $batch = ExamBatch::find($uid) ?? new ExamBatch;
-        $batch->forceFill(['user_id' => $uid, 'batch_id' => $batchId, 'title' => $v['title'], 'exam_ids' => $ids, 'completed' => 0, 'failed' => 0, 'last_error' => null, 'lease' => null, 'lease_until' => null])->save();
+        $batch->forceFill(['user_id' => $uid, 'batch_id' => $batchId, 'title' => $title, 'exam_ids' => $ids, 'completed' => 0, 'failed' => 0, 'last_error' => null, 'lease' => null, 'lease_until' => null])->save();
         GenerateBatchStep::dispatch($uid, $batchId)->afterCommit();
 
         return $batchId;

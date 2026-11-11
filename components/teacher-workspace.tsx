@@ -2172,7 +2172,12 @@ export default function TeacherWorkspace({
                     onClick={() =>
                       void action(async () => {
                         if (downloads.running.current) return;
-                        await generation.start({retry:exam.id});
+                        await generation.start({
+                          retry: exam.id,
+                          title: exam.title,
+                          instructions: exam.content.instructions,
+                          objectiveCount: exam.content.objectiveCount,
+                        });
                         setModal(null);
                       })
                     }
