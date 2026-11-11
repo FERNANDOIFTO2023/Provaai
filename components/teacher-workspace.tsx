@@ -215,7 +215,7 @@ export default function TeacherWorkspace({
     if (!session) throw new Error('Entre novamente para exportar a prova.');
     await downloadExams(exams,format,answerKey,async (exam,format,answerKey)=>{
       const response=await apiFetch('/api/export/exam',{method:'POST',headers:{
-        authorization:'Bearer '+session.access_token,'content-type':'application/json',
+        'content-type':'application/json',
       },body:JSON.stringify({id:exam.id,format,answerKey}), signal: AbortSignal.timeout(160_000)}).catch(error => {
         if (error?.name === 'TimeoutError') throw new Error('O download demorou mais que o esperado. Tente novamente ou baixe em DOCX.');
         throw error;
@@ -644,7 +644,6 @@ export default function TeacherWorkspace({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + (session?.access_token || ''),
       },
       body: JSON.stringify({ templateId: id }),
       signal,

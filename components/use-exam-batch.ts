@@ -37,7 +37,7 @@ export function useExamBatch(userId: string | undefined, onProgress: () => Promi
         lastKick.current=Date.now();
         const {data:{session}}=await apiClient.auth.getSession();
         if (!session || session.user.id!==userId) return;
-        const response=await apiFetch('/api/exam-batch',{method:'POST',headers:{authorization:'Bearer '+session.access_token}});
+        const response=await apiFetch('/api/exam-batch',{method:'POST'});
         if (!response.ok) throw new Error();
       }
     } catch {setSyncError('Não foi possível atualizar a geração. Tentando novamente…');}
@@ -60,7 +60,7 @@ export function useExamBatch(userId: string | undefined, onProgress: () => Promi
       // Inicia o trabalhador mesmo que outra consulta de progresso esteja em andamento.
       const {data:{session}}=await apiClient.auth.getSession();
       if (session?.user.id===userId && session) {
-        await apiFetch('/api/exam-batch',{method:'POST',headers:{authorization:'Bearer '+session.access_token}}).catch(()=>{});
+        await apiFetch('/api/exam-batch',{method:'POST'}).catch(()=>{});
       }
     } finally {await refresh();startingRef.current=false;setStarting(false);}
   }
