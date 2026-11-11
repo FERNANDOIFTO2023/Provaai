@@ -10,6 +10,13 @@ O site público não foi alterado nem seus dados importados. O SQLite local é s
 
 ## Histórico de alterações
 
+### 11/11/2026 — Validação de modelos de prova na AWS
+
+- O upload de um PDF terminava, mas a leitura retornava HTTP 500 e o modelo permanecia pendente. Na VM, o conversor encerrava o processo quando apenas 65.536 bytes da resposta tinham sido entregues ao Laravel. A imagem do cabeçalho precisava de várias escritas no canal entre os processos.
+- O conversor agora aguarda a entrega completa do resultado. Se uma resposta chegar incompleta, a aplicação registra a falha de leitura e permite tentar novamente. Um teste executa o conversor com um cabeçalho maior que 128 KiB e compara a imagem recebida byte a byte. [Correção e testes no GitHub](https://github.com/FERNANDOIFTO2023/Provaai/actions/runs/42960420564)
+- A imagem `8fdc9f9` foi instalada na VM de homologação. O PDF pendente foi reprocessado a partir do arquivo já salvo e a prévia PNG foi conferida. Em uma conta de teste, o envio simultâneo de PDF e DOCX pelo navegador concluiu a validação dos dois formatos. A conta e os anexos de teste foram removidos.
+- A produção na Vercel acompanha os pushes para `main`. A Vercel também tentou construir uma prévia da branch `codex/migracao-laravel`; a prévia falhou na configuração Next.js do projeto. A atualização da VM usa Docker Compose e é feita separadamente. [Deploy de produção verificado](https://vercel.com/fernandotribalism-1622/provaai/7yCqPjMT1i1yQvcMHwxYnYFhBCUv)
+
 ### 10/11/2026 — Validação da branch e preparação da VM
 
 1. A branch `codex/migracao-laravel` incorporou a versão de `main` com suporte ao cabeçalho PDF. Um teste local com o modelo fornecido confirmou a presença do cabeçalho no arquivo exportado.
