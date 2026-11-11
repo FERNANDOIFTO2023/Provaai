@@ -39,6 +39,7 @@ trap restore ERR
 set -E
 git checkout --quiet --detach "$revision"
 "${compose[@]}" build app
+"${compose[@]}" run --rm --no-deps --user www-data app sh -ec 'test -r public/index.php && php artisan route:list --path=up >/dev/null'
 "${compose[@]}" run --rm --no-deps app php artisan migrate --force
 switched=1
 "${compose[@]}" up -d --no-deps --no-build app

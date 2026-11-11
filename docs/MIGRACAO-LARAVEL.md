@@ -12,6 +12,8 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ### 11/11/2026 — Entrada em produção
 
+- A primeira imagem compilada no checkout privado herdou permissões que impediam o PHP de ler a aplicação e devolveu HTTP 404. A verificação de saúde restaurou a imagem anterior. O build agora atribui permissão de leitura ao código da imagem, e a publicação verifica a inicialização do Laravel com o usuário do servidor web antes de trocar o contêiner. As credenciais ficam fora do contexto de build.
+- Uma conta temporária entrou pelo domínio público, consultou suas turmas e provas vazias e encerrou a sessão. A conta foi removida após o teste.
 - O domínio público passou a servir o Laravel na AWS após o avanço de `main` para `96124ff`. A página de login e os arquivos de interface responderam pelo domínio. A rota de login rejeitou um endereço inválido com HTTP 422 e a rota de dados exigiu autenticação. [Publicação na Vercel](https://vercel.com/fernandotribalism-1622/provaai/DTNeR1VjsAJEj9FKAupe971sZnGf)
 - A comparação dos campos importados com o manifesto passou. Uma prova aprovada foi exportada em PDF e DOCX a partir da cópia na AWS. Uma segunda cópia do backup foi guardada fora da VM e conferida por SHA-256.
 - O corte confirmou, na mesma transação no Supabase, que os dados ainda correspondiam à exportação, que os anexos vinculados existiam e que não havia lote ativo. Os gatilhos `provaai_arquivo_20261111` bloqueiam gravações da aplicação antiga. As sessões de professores recomeçam por código enviado ao e-mail de cadastro.

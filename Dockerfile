@@ -14,6 +14,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 COPY --from=frontend /usr/local/bin/node /usr/local/bin/node
 WORKDIR /var/www/html
 COPY . .
+RUN chmod -R a+rX /var/www/html
 COPY --from=frontend /app/public/build ./public/build
 COPY --from=frontend /app/node_modules ./node_modules
 COPY --from=frontend /app/.office-runtime ./.office-runtime
