@@ -30,9 +30,11 @@ class DocumentService
                 throw new RuntimeException('Não foi possível converter o documento. Confira se ele está legível e sem senha.');
             }
             $lines = explode("\n", trim($process->getOutput()));
-            $result = json_decode(end($lines), true, 64, JSON_THROW_ON_ERROR);
-
-            return $result;
+            try {
+                return json_decode(end($lines), true, 64, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                throw new RuntimeException('A resposta do conversor chegou incompleta. Tente novamente.', 0, $e);
+            }
         } finally {
             @unlink($path);
         }

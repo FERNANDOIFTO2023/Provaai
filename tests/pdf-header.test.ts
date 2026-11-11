@@ -6,6 +6,39 @@ import { examFile } from '../lib/export.ts';
 import { demoData } from '../lib/model.ts';
 import JSZip from 'jszip';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { execFile } from 'node:child_process';
+import { randomFillSync } from 'node:crypto';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
+
+test('o conversor entrega o cabeçalho completo pelo pipe usado pelo Laravel', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'provaai-cabecalho-'));
+  try {
+    const source = new jsPDF();
+    const canvas = createCanvas(512, 160);
+    const ctx = canvas.getContext('2d');
+    const pixels = ctx.createImageData(canvas.width, canvas.height);
+    randomFillSync(pixels.data);
+    for (let i = 3; i < pixels.data.length; i += 4) pixels.data[i] = 255;
+    ctx.putImageData(pixels, 0, 0);
+    source.addImage(new Uint8Array(canvas.toBuffer('image/png')), 'PNG', 0, 0, 210, 65);
+    const pdf = new Uint8Array(source.output('arraybuffer'));
+    const templatePath = join(dir, 'modelo.pdf');
+    const requestPath = join(dir, 'request.json');
+    await writeFile(templatePath, pdf);
+    await writeFile(requestPath, JSON.stringify({operation: 'header', templatePath, ratio: 0.25}));
+    const expected = await pdfHeader(pdf, 0.25);
+    assert.ok(expected.image.length > 128 * 1024);
+    const {stdout} = await promisify(execFile)(process.execPath,
+      ['--experimental-strip-types', 'scripts/render-document.mjs', requestPath], {maxBuffer: 8 * 1024 * 1024});
+    const result = JSON.parse(stdout.trim().split('\n').at(-1)!);
+    assert.deepEqual(Buffer.from(result.image, 'base64'), Buffer.from(expected.image));
+  } finally {
+    await rm(dir, {recursive: true, force: true});
+  }
+});
 
 test('cabeçalho escaneado em alta resolução não perde a imagem',async()=>{
   const scan=createCanvas(2200,3200), ctx=scan.getContext('2d');
