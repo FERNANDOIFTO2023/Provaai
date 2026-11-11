@@ -4,7 +4,7 @@
 
 Backend migrado para Laravel 13/PHP 8.3+, com React/Vite na apresentação. Next.js, SDK Supabase no navegador e Edge Functions deixaram o runtime. Login, negócio, Eloquent, IA, compartilhamento, filas e arquivos são controlados pelo Laravel. Node permanece apenas como conversor.
 
-Os testes cobrem autenticação, isolamento entre professores, cópias, geração com IA simulada, filas, documentos e transferência de dados. O GitHub Actions também constrói a imagem Docker de produção, migra um schema PostgreSQL temporário, abre a aplicação, importa um usuário fictício e extrai o cabeçalho de um modelo PDF. A homologação roda na AWS com PostgreSQL. O Gemini gerou provas coletivas e individuais, e o Gmail autenticou o remetente. Para o corte, faltam confirmar o recebimento de um código de login em uma caixa real e ensaiar a transferência e a restauração dos dados dos professores.
+Os testes cobrem autenticação, isolamento entre professores, cópias, geração com IA simulada, filas, documentos e transferência de dados. O GitHub Actions também constrói a imagem Docker de produção, migra um schema PostgreSQL temporário, abre a aplicação, importa um usuário fictício e extrai o cabeçalho de um modelo PDF. A homologação roda na AWS com PostgreSQL. O Gemini gerou provas coletivas e individuais, e o Gmail autenticou o remetente. Um código solicitado pelo login de homologação chegou à caixa de entrada do Gmail usado como remetente. Para o corte, falta validar a transferência e a restauração dos dados reais dos professores.
 
 O site público não foi alterado nem seus dados importados. O SQLite local é separado. Secrets já existentes no Supabase precisam ser cadastrados no ambiente privado do novo servidor.
 
@@ -12,7 +12,7 @@ O site público não foi alterado nem seus dados importados. O SQLite local é s
 
 ### 11/11/2026 — Autenticação do Gmail na homologação
 
-- A VM autenticou o remetente no Gmail por SMTP com STARTTLS na porta 587. Após a troca da caixa de testes pelo Gmail, o contêiner passou a usar o novo servidor e o Laravel respondeu HTTP 200 em `/up`. A senha de app fica na configuração privada da VM. A entrega de um código ainda aguarda confirmação na caixa de entrada.
+- A VM autenticou o remetente no Gmail por SMTP com STARTTLS na porta 587. Após a troca da caixa de testes pelo Gmail, o contêiner passou a usar o novo servidor e o Laravel respondeu HTTP 200 em `/up`. A senha de app fica na configuração privada da VM. No teste de entrega, a rota de login emitiu um código novo para o endereço do próprio remetente. O Gmail aceitou o envio e o destinatário confirmou o recebimento na caixa de entrada.
 
 ### 11/11/2026 — Preparação da publicação contínua
 
