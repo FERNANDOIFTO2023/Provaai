@@ -1,7 +1,7 @@
 #!/bin/bash
 # Executado pelo timer da VM. O Compose e o arquivo de ambiente pertencem a esta instalação.
 set -euo pipefail
-cd /opt/provaai
+cd "${PROVAAI_CHECKOUT:-/opt/provaai}"
 exec 9>/run/lock/provaai-release.lock
 flock -n 9 || exit 0
 branch=${PROVAAI_BRANCH:-main}
@@ -12,7 +12,8 @@ git cat-file -e "$revision:deploy/release.sh" 2>/dev/null || exit 0
 compose=(docker compose --env-file .env.production)
 container=$("${compose[@]}" ps -aq app)
 previous_image=$(docker inspect --format '{{.Image}}' "$container")
-image="provaai-app:$revision"
+image_repo=${PROVAAI_IMAGE_REPO:-provaai-app}
+image="$image_repo:$revision"
 running_image=$(docker inspect --format '{{.Config.Image}}' "$container")
 if [[ "$running_image" == "$image" ]]; then exit 0; fi
 
@@ -30,8 +31,8 @@ switched=0
 restore() {
   git checkout --quiet --detach "$previous_revision"
   if (( switched )); then
-    docker tag "$previous_image" provaai-app:rollback
-    PROVAAI_IMAGE=provaai-app:rollback "${compose[@]}" up -d --no-build --no-deps app
+    docker tag "$previous_image" "$image_repo:rollback"
+    PROVAAI_IMAGE="$image_repo:rollback" "${compose[@]}" up -d --no-build --no-deps app
   fi
 }
 trap restore ERR
@@ -41,14 +42,15 @@ git checkout --quiet --detach "$revision"
 "${compose[@]}" run --rm --no-deps app php artisan migrate --force
 switched=1
 "${compose[@]}" up -d --no-deps --no-build app
-curl --retry 15 --retry-delay 2 --retry-all-errors --max-time 8 -fsS http://127.0.0.1:8080/up -o /dev/null
-curl -fsS --max-time 8 http://127.0.0.1:8080/api/config |
+local_origin=${PROVAAI_LOCAL_ORIGIN:-http://127.0.0.1:8080}
+curl --retry 15 --retry-delay 2 --retry-all-errors --max-time 8 -fsS "$local_origin/up" -o /dev/null
+curl -fsS --max-time 8 "$local_origin/api/config" |
   python3 -c 'import json,sys; sys.exit(json.load(sys.stdin).get("backend") != "laravel")'
 trap - ERR
 echo "Versão $revision em execução."
 # Mantenha as duas últimas imagens de release para caber no disco da VM.
 while IFS= read -r tag; do
-  if [[ "$tag" =~ ^provaai-app:[a-f0-9]{40}$ && "$tag" != "$image" && "$tag" != "$running_image" ]]; then
+  if [[ "${tag#*:}" =~ ^[a-f0-9]{40}$ && "$tag" != "$image" && "$tag" != "$running_image" ]]; then
     docker image rm "$tag"
   fi
-done < <(docker image ls --format '{{.Repository}}:{{.Tag}}' provaai-app)
+done < <(docker image ls --format '{{.Repository}}:{{.Tag}}' "$image_repo")

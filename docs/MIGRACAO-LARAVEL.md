@@ -4,11 +4,17 @@
 
 Backend migrado para Laravel 13/PHP 8.3+, com React/Vite na apresentação. Next.js, SDK Supabase no navegador e Edge Functions deixaram o runtime. Login, negócio, Eloquent, IA, compartilhamento, filas e arquivos são controlados pelo Laravel. Node permanece apenas como conversor.
 
-Os testes cobrem autenticação, isolamento entre professores, cópias, geração com IA simulada, filas, documentos e transferência de dados. O GitHub Actions também constrói a imagem Docker de produção, migra um schema PostgreSQL temporário, abre a aplicação, importa um usuário fictício e extrai o cabeçalho de um modelo PDF. A homologação roda na AWS com PostgreSQL. O Gemini gerou provas coletivas e individuais, e o Gmail autenticou o remetente. Um código solicitado pelo login de homologação chegou à caixa de entrada do Gmail usado como remetente. Para o corte, falta validar a transferência e a restauração dos dados reais dos professores.
+Os testes cobrem autenticação, isolamento entre professores, cópias, geração com IA simulada, filas, documentos e transferência de dados. O GitHub Actions também constrói a imagem Docker de produção, migra um schema PostgreSQL temporário, abre a aplicação, importa um usuário fictício e extrai o cabeçalho de um modelo PDF. A homologação roda na AWS com PostgreSQL. O Gemini gerou provas coletivas e individuais, e o Gmail autenticou o remetente. Um código solicitado pelo login de homologação chegou à caixa de entrada do Gmail usado como remetente. A importação e a restauração de uma cópia dos dados reais passaram na AWS.
 
-O site público não foi alterado nem seus dados importados. O SQLite local é separado. Secrets já existentes no Supabase precisam ser cadastrados no ambiente privado do novo servidor.
+A produção e a homologação da AWS usam bancos, volumes de documentos e chaves de sessão próprios. O SQLite local é independente desses ambientes.
 
 ## Histórico de alterações
+
+### 11/11/2026 — Restauração de dados e origem de produção
+
+- O manifesto real foi importado em um PostgreSQL isolado. O banco e os anexos foram copiados e restaurados em outro destino. Conferiram os identificadores dos professores e dos registros, além do conteúdo de cada arquivo por SHA-256.
+- A instalação de produção recebeu o conjunto validado, em rede, banco e volume próprios. O serviço escuta em 127.0.0.1:8081. O Nginx encaminha o prefixo HTTPS /producao para essa instalação. A Vercel usa esse prefixo na variável PROVAAI_ORIGIN de Production.
+- A atualização por GitHub permite escolher o checkout, o endereço de saúde local e o repositório de imagens de cada instalação. A produção acompanha main e a homologação acompanha codex/migracao-laravel.
 
 ### 11/11/2026 — Preparação do ensaio com dados do Supabase
 
