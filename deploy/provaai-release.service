@@ -1,0 +1,10 @@
+[Unit]
+Description=Publicar no Provaai a versão validada no GitHub
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/provaai/release.env
+ExecStart=/usr/local/sbin/provaai-release
+TimeoutStartSec=45min

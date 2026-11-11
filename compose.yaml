@@ -1,5 +1,6 @@
 services:
   app:
+    image: ${PROVAAI_IMAGE:-provaai-app:latest}
     build: .
     restart: unless-stopped
     env_file: .env.production

@@ -2,6 +2,7 @@ node_modules/
 .office-runtime/
 .next/
 .vercel/
+.provaai-vercel/
 .env*
 !.env.example
 *.tsbuildinfo

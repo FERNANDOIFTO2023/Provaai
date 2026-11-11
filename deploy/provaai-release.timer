@@ -1,0 +1,10 @@
+[Unit]
+Description=Verificar novas versões do Provaai
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=3min
+Unit=provaai-release.service
+
+[Install]
+WantedBy=timers.target
