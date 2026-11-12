@@ -3,15 +3,44 @@
 Instituto Federal de Educação, Ciência e Tecnologia do Tocantins — Campus Paraíso do Tocantins
 Curso de Bacharelado em Sistemas de Informação
 Disciplina: Linguagens e Técnicas de Programação III
-Professor: [Nome do professor]
-Equipe: [Nome completo do integrante 1], [Nome completo do integrante 2], [Nome completo do integrante 3], [Nome completo do integrante 4]
+Professor: Marcos Raimundo
+Equipe: Fernando de Paula Matos, Vinicius Celestino, João Francisco e Gabriel Gutemberg
 Paraíso do Tocantins — 2026
 
 # 1. HISTÓRICO DE ALTERAÇÕES
 
-| Data | Versão | Descrição | Autor |
+O quadro reúne as principais mudanças de escopo, interface e implementação até 11/11/2026. Os registros anteriores à migração foram agrupados por período de desenvolvimento. A indicação 1.x identifica essa fase do projeto, sem atribuir um número de lançamento a cada ajuste. A versão 2.0 corresponde à migração para Laravel e às correções posteriores.
+
+O início do desenvolvimento é estimado em 04/11/2026, conforme a lembrança da equipe e o registro inicial da documentação. O primeiro commit disponível é de 05/11/2026; por isso, a data de início deve ser lida como aproximada.
+
+| Data / período | Versão | Descrição da alteração | Autor |
 | --- | --- | --- | --- |
-| 10/11/2026 | 2.0 | Especificação da versão Laravel, preservando as funções do Provaai e registrando pendências de publicação. | Equipe [identificar] |
+| Início de nov./2026 | 1.0 | Definição do nome Provaai e da identidade visual em violeta, menta e tons neutros. Adequação dos textos de acesso e do e-mail com código de login à marca. Registro inicial do escopo e dos requisitos. | Equipe |
+| 04 a 06/11/2026 | 1.x | Reformulação da tela de login com o mascote, acompanhamento do cursor pelo olhar e reação de negação em erros de preenchimento. Redução dos espaços na versão mobile e inclusão do estado de carregamento entre telas. | Equipe |
+| 04 a 06/11/2026 | 1.x | Navegação pelo cabeçalho e saída da conta com retorno ao login. Ajustes nas mensagens de envio e validação do código, no intervalo de reenvio e no encerramento de sessão por inatividade. | Equipe |
+| 04 a 06/11/2026 | 1.x | Organização da preparação de provas a partir de turmas cadastradas. Retirada do campo turno e geração automática do código de cada aluno, com confirmação de disponibilidade ao salvar. | Equipe |
+| 04 a 06/11/2026 | 1.x | Definição da quantidade de questões objetivas e discursivas dentro do total escolhido. Inclusão da revisão do rascunho, aprovação docente e exportação da prova e do gabarito. | Equipe |
+| 05 a 06/11/2026 | 1.x | Suporte a vários modelos por professor, com padrão geral e escolha própria por turma. Inclusão do envio por clique ou arraste e organização do processamento de anexos em segundo plano. | Equipe |
+| 05 a 06/11/2026 | 1.x | Geração de avaliações e preparação de downloads em segundo plano. Liberação da navegação durante o processamento e bloqueio de novas operações conflitantes até a conclusão. | Equipe |
+| 05 a 06/11/2026 | 1.x | Separação das provas por turma e inclusão da preparação para um aluno específico. Renomeação das seções para Provas coletivas e Provas individuais, preservando o vínculo do aluno com a turma de origem. | Equipe |
+| 05 a 06/11/2026 | 1.x | Filtros de alunos ativos e inativos. Retirada da turma por inativação e reativação com escolha da turma de destino, mantendo o histórico de provas. | Equipe |
+| 06/11/2026 | 1.x | Edição da turma pelo cartão e pela página interna. Inclusão de dez cores, seleção de ícones e foto de banner com recorte. Simplificação do cabeçalho e adoção de ícones com animações discretas ao passar o mouse ou receber foco. | Equipe |
+| 07/11/2026 | 1.x | Revisão da integração de geração para respeitar a matéria e os conteúdos informados em cada pedido. Ajustes nos provedores e nas verificações das questões, evitando reaproveitar o tema de uma avaliação anterior do mesmo aluno. | Equipe |
+| 08/11/2026 | 1.x | Revisão parcial de segurança: autenticação, isolamento de dados, compartilhamento e exportação. Registro da necessidade de limitar os recursos consumidos na descompactação de DOCX; a análise não foi tratada como comprovação de ausência de falhas. | Equipe |
+| 09/11/2026 | 1.x | Inclusão do cabeçalho visual de modelos PDF, com recorte para reaplicação nas provas. Separação entre o layout do modelo e os conteúdos solicitados para a avaliação. | Equipe |
+| 10/11/2026 | 2.0 | Migração do backend para Laravel, preservando a interface React. Centralização da autenticação, regras de negócio, arquivos privados e fila no servidor. Atualização da especificação e preparação dos testes com PostgreSQL e Docker. | Equipe |
+| 10/11/2026 | 2.0 | Preparação da VM de homologação na AWS, com banco persistente, processamento de filas e agendador. Validação inicial do acesso, da importação e da exportação de documentos no ambiente de teste. | Equipe |
+| 11/11/2026 | 2.0 | Correção da leitura de modelos PDF na AWS: o conversor passou a aguardar a entrega completa da imagem do cabeçalho. Reprocessamento do arquivo pendente e conferência do envio de modelos PDF e DOCX. | Equipe |
+| 11/11/2026 | 2.0 | Configuração do Gmail para envio dos códigos e teste de recebimento. Validação da geração com Gemini na homologação, exportação e restauração do backup, separação dos ambientes e transferência dos dados para produção na AWS. | Equipe |
+| 11/11/2026 | 2.0 | Manutenção do domínio público da Vercel, com encaminhamento à aplicação na AWS. Configuração da publicação pela branch main e da atualização da VM condicionada à aprovação dos testes no GitHub Actions. | Equipe |
+| 11/11/2026 | 2.0 | Correção da retomada de geração pelo editor: o pedido passou a utilizar o rascunho e a turma já vinculados, eliminando o erro de campo class_id obrigatório. Melhoria das mensagens e dos registros de falha dos provedores. | Equipe |
+| 11/11/2026 | 2.0 | Preservação do modelo escolhido na geração e na exportação. Inclusão da conversão de DOC para DOCX, reaproveitamento da montagem dos documentos em cache e conferência do cabeçalho e da distribuição das questões nos arquivos de saída. | Equipe |
+| 11/11/2026 | 2.0 | Inclusão de porcentagem no download, com acompanhamento do preparo, transferência e montagem do ZIP. Adição de progresso por etapas na geração com IA, mantendo o acompanhamento durante a navegação. | Equipe |
+| 11/11/2026 | 2.0 | Revisão da README com capa animada, tecnologias em uso e ícones Devicons. Criação do kit de marca e telas editáveis no Figma; a conferência final do kit permanece pendente. Atualização deste histórico e da identificação da equipe. | Equipe |
+
+Responsáveis pelo projeto: Fernando de Paula Matos, Vinicius Celestino, João Francisco e Gabriel Gutemberg. O quadro registra as entregas do projeto de forma conjunta, sem atribuir tarefas individuais não documentadas.
+
+As seções seguintes preservam a base da especificação de 10/11/2026. As entradas de 11/11 registram a evolução posterior, inclusive a publicação na AWS e os testes de integração que estavam pendentes naquela data.
 
 # 2. DEFINIÇÃO DO PROJETO
 
@@ -29,7 +58,7 @@ A aplicação reúne turmas, alunos, modelos e histórico de avaliações em um 
 
 O backend foi migrado para Laravel para atender ao requisito da disciplina. A interface React foi mantida. A implementação e os testes descritos referem-se ao ambiente local; a transferência dos dados reais e a publicação dependem de homologação. A integração com Google Drive está planejada e não integra esta entrega funcional.
 
-Os nomes do professor e dos integrantes não foram fornecidos. Os campos da capa devem ser completados pela equipe antes da entrega acadêmica.
+Professor responsável: Marcos Raimundo. Equipe: Fernando de Paula Matos, Vinicius Celestino, João Francisco e Gabriel Gutemberg.
 
 # 3. REQUISITOS DO SISTEMA
 

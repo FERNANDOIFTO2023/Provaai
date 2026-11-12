@@ -10,6 +10,10 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 11/11/2026 — Histórico da especificação acadêmica
+
+Ampliado o histórico em `docs/ESPECIFICACAO-LTP3-PROVAAI.md` e no PDF correspondente, com 22 registros sobre interface, autenticação, turmas, modelos, geração, segurança e migração. O início foi indicado como aproximadamente 04/11/2026; o primeiro commit disponível é de 05/11. A capa recebeu os nomes do professor e dos quatro integrantes já informados. O documento distingue a especificação-base de 10/11 das entregas posteriores e mantém as pendências registradas.
+
 ### 11/11/2026 — Kit de marca e telas no Figma
 
 Criado o arquivo [Provaai — Marca e telas](https://www.figma.com/design/56btn1bwQAtgCEk3gAi4ef?node-id=6-132) na equipe FERNANDO DE PAULA MATOS's team. O material reúne a paleta, o mascote em SVG, estilos de texto, componentes reutilizáveis e representações editáveis de 12 telas desktop, 10 telas mobile e 16 formulários e estados de uso. O inventário e as referências estão em [Identidade visual](IDENTIDADE-VISUAL.md).
