@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\LoginCode;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -64,9 +65,9 @@ class AuthController extends Controller
         }
         RateLimiter::hit($key, 3600);
         $code = (string) random_int(100000, 999999);
-        $expires = now()->addMinutes(10);
+        $expires = now()->addMinutes(LoginCode::VALID_FOR_MINUTES);
         try {
-            Mail::raw("Seu código de acesso ao Provaai é $code. Ele vale por 10 minutos. Não compartilhe este código.", fn ($m) => $m->to($email)->subject('Código de acesso ao Provaai'));
+            Mail::to($email)->send(new LoginCode($code));
             DB::table('login_codes')->updateOrInsert(['email' => $email], ['digest' => $this->digest($email, $code), 'expires_at' => $expires, 'attempts' => 0, 'created_at' => now(), 'updated_at' => now()]);
         } catch (\Throwable $e) {
             report($e);

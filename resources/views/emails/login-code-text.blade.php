@@ -1,0 +1,18 @@
+PROVAAI
+
+Seu código chegou.
+
+Use este código na tela de acesso do Provaai:
+
+{{ $code }}
+
+Válido por {{ $validForMinutes }} minutos a partir da solicitação.
+
+Copie os seis números e volte à aba em que você pediu o código.
+Se ele expirar, solicite outro por lá.
+
+Este código é só seu. Não compartilhe.
+Não pediu este acesso? Pode ignorar este e-mail.
+Sua conta só será acessada com o código.
+
+Provaai · Menos tempo preparando. Mais tempo ensinando.

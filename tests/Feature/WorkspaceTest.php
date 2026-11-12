@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Jobs\GenerateBatchStep;
+use App\Mail\LoginCode;
 use App\Models\ClassRoom;
 use App\Models\Exam;
 use App\Models\ExamTemplate;
@@ -223,13 +224,11 @@ class WorkspaceTest extends TestCase
 
     public function test_email_code_reuses_deadline_and_login_uses_server_session(): void
     {
-        $code = null;
-        Mail::shouldReceive('raw')->once()->andReturnUsing(function ($text, $callback) use (&$code) {
-            preg_match('/\b(\d{6})\b/', $text, $m);
-            $code = $m[1];
-        });
+        Mail::fake();
         $one = $this->postJson('/api/auth/code', ['action' => 'request', 'email' => 'teacher@example.com'])->assertOk()->json();
+        $code = Mail::sent(LoginCode::class)->sole()->code;
         $this->postJson('/api/auth/code', ['action' => 'request', 'email' => 'teacher@example.com'])->assertOk()->assertJsonPath('reused', true)->assertJsonPath('expiresAt', $one['expiresAt']);
+        Mail::assertSentCount(1);
         $this->postJson('/api/auth/code', ['action' => 'verify', 'email' => 'teacher@example.com', 'code' => '000000'])->assertUnprocessable();
         $this->postJson('/api/auth/code', ['action' => 'verify', 'email' => 'teacher@example.com', 'code' => $code])->assertOk()->assertJsonPath('session.user.email','teacher@example.com');
         $this->getJson('/api/auth/session')->assertOk()->assertJsonPath('session.user.email','teacher@example.com');
