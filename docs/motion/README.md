@@ -1,6 +1,77 @@
 # Provaai — Cada aluno, uma possibilidade
 
-## Versão atual: Motion V6 — Bloub reage às ações
+## Versão atual: Motion V9 — sincronia visual e dinâmica por cena
+
+- **Vídeo:** `output/v9/Provaai-motion-v9-1080p-120fps.mp4`.
+- **Edição:** `audio-v9.mjs`, `timing-v9.mjs` e `remix-v9.mjs`.
+
+A revisão anterior verificava principalmente o atraso introduzido pelo AAC. Esta revisão também confronta os acentos com a animação: os sons das palavras estavam 150–180 ms após o fim de suas entradas; os arrastes estavam até 33 ms afastados do pico real de velocidade da câmera. A V9 usa a curva de câmera amostrada a 120 Hz, o travamento das alças da seleção, os quadros de digitação e os estados visuais dos botões para reposicionar os sons.
+
+Trilha com crescimento no preparo/download, menos percussão durante a revisão, pequenos preparos rítmicos nas passagens e resoluções musicais junto às confirmações. Mantidos os arrastes suaves da V8. O volume integrado medido continua em **-16,15 LUFS**; a faixa de loudness sobe de **1,3 para 2,7 LU**, com true peak de **-1,81 dBTP**. Dinâmica por contraste entre momentos, sem aumentar o volume médio final.
+
+Verificações:
+- 54 eventos comparados entre o mix e o áudio AAC decodificado: nenhum atraso de codificação medido.
+- Leitura dos pixels do vídeo final: confirmação verde da aprovação em 18,975 s e do download em 22,5917 s, nos mesmos quadros dos respectivos marcadores sonoros.
+- Hash SHA-256 do fluxo de vídeo idêntico à V8: animação, 30 segundos e 120 fps preservados.
+
+Os testes de marcadores verificam o instante de início ou a âncora energética programada, conforme o efeito; não significam que todas as notas de uma confirmação musical tenham seu pico no mesmo quadro. Relatórios e âncoras estão em `output/v9/`.
+
+```powershell
+node docs/motion/remix-v9.mjs
+node docs/motion/verify-sync-v9.mjs
+node docs/motion/verify-actions-v9.mjs
+```
+
+O remix requer o vídeo V7 e seu `camera-120fps.json`, gerados por `render-v7.mjs`. V8 preservada. Nenhum commit criado.
+
+## Motion V8, preservada — trilha mais ativa e arrastes suaves
+
+- **Vídeo:** `output/v8/Provaai-motion-v8-1080p-120fps.mp4`.
+- **Áudio:** `audio-v8.mjs`; montagem: `remix-v8.mjs`.
+- **Mix e camadas:** `mix-v8.wav`, `musica-v8.wav` e `efeitos-v8.wav`, em `output/v8/`.
+
+A trilha ganhou baixo sincopado com harmônicos, percussão a 120 BPM, notas curtas com eco discreto e variações por compasso. A redução de volume da música ocorre apenas nos cliques e confirmações principais e é menor que na V7.
+
+O arraste sintético foi substituído por três gravações da soundcn: `card-slide-1`, `card-slide-4` e `card-slide-8`, de Kenney, CC0 segundo os módulos instalados. São filtradas e ajustadas à duração da ação; seu pico de energia é alinhado ao relógio visual da V7. Removido o impacto grave automático das passagens. Os módulos foram instalados em `C:/Users/R3/.codex/tools/soundcn`, fora do projeto; só os recursos de áudio usados no filme estão em `assets/soundcn/`.
+
+O vídeo é copiado diretamente da V7 sem recodificação: preserva exatamente a animação, os 30 segundos e os 120 fps. Normalização de áudio em duas passagens com alvo de -16 LUFS e margem de true peak de -1,8 dBTP. Medições do MP4 em `output/v8/loudness-final.json`; sincronia em `verificacao-sincronia.json`.
+
+```powershell
+node docs/motion/remix-v8.mjs
+node docs/motion/verify-sync-v8.mjs
+```
+
+V7 preservada para comparação. Sem locução e sem commit.
+
+## Motion V7 / Modelo B, preservada — câmera contínua, 120 fps
+
+- **Vídeo:** `output/v7/Provaai-motion-v7-1080p-120fps.mp4`, 30 segundos, 1920 × 1080, **120 fps nativos**.
+- **Render:** `render-v7.mjs`; roteiro/relógio: `timing-v7.mjs`; áudio: `audio-v7.mjs`.
+- **Storyboard:** `output/v7/storyboard-v7.jpg`.
+- **Relatórios:** `verificacao-video.json`, `verificacao-sincronia.json` e `verificacao-camera.json`, em `output/v7/`.
+
+Modelo alternativo inspirado na referência local enviada pelo usuário. Os nove momentos ocupam uma composição espacial única: a câmera percorre os painéis, recua durante as passagens, faz curvas e inclinações, e se aproxima da palavra selecionada. Não há cortes entre slides. Cartões, sinais luminosos e personagem reagem às ações em seus próprios planos. O encerramento mantém o Bloub sem olhos de coração.
+
+Cada quadro é calculado a 120 Hz. Passagens rápidas recebem duas amostras subquadro de exposição curta; não há duplicação de um vídeo de 60 fps nem interpolação de vídeo por IA. A verificação decodifica os 3.600 quadros e confere a base temporal, continuidade e repetição de quadros adjacentes. Telas e players de menor frequência podem apresentar menos quadros que os contidos no arquivo.
+
+### Áudio e instalações solicitadas
+
+O `click-soft` foi instalado com o CLI shadcn em **`C:/Users/R3/.codex/tools/soundcn`**, fora do repositório. O áudio foi extraído do módulo instalado e incorporado aos cliques e seleções do filme. Autor e licença informados pelo registro: **Kenney, CC0**. Arquivo e origem em `assets/soundcn/`. Fonte: [soundcn](https://github.com/kapishdima/soundcn).
+
+Trilha original refeita com 50 eventos sonoros: cliques suaves, passagens estéreo em camadas, impactos graves, papel, sinais de conexão e confirmações. A música abre espaço para os efeitos por redução localizada de volume; reflexões curtas dão profundidade. O MP4 usa AAC estéreo 48 kHz/256 kbps e normalização com alvo de -16 LUFS e true peak de -1,5 dBTP. Sem locução.
+
+A skill [motion-design / LottieFiles](https://github.com/LottieFiles/motion-design-skill) está instalada em **`C:/Users/R3/.codex/skills/motion-design`**, pelo instalador do Codex. Nenhum arquivo de skill foi instalado no projeto. Aplicados seus princípios de antecipação, trajetórias em arco, movimentos secundários e hierarquia de atenção. O catálogo de motion SaaS do Higgsfield foi consultado; não foi gerado ou incorporado material de lá.
+
+```powershell
+node docs/motion/render-v7.mjs --stills
+node docs/motion/render-v7.mjs
+node docs/motion/verify-sync-v7.mjs
+node docs/motion/verify-video-v7.mjs
+```
+
+V6 e demais versões preservadas. Nenhum commit criado pelo agente.
+
+## Motion V6, preservada — Bloub reage às ações
 
 - **Vídeo:** `output/v6/Provaai-motion-v6-1080p.mp4`, 28 segundos, 1080p, 60 fps.
 - **Render:** `render-v6.mjs`; atuação: `bloub-choreography.mjs`.

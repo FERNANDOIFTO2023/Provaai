@@ -3,14 +3,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "render": "node render-v6.mjs",
-    "stills": "node render-v6.mjs --stills",
-    "verify:sync": "node verify-sync-v6.mjs",
+    "render": "node remix-v9.mjs",
+    "stills": "node render-v7.mjs --stills",
+    "verify:sync": "node verify-sync-v9.mjs",
     "render:v4": "node render-v4.mjs",
     "render:v3": "node render-v3.mjs",
     "render:v2": "node render-v2.mjs",
     "render:v1": "node render.mjs",
-    "render:v5": "node render-v5.mjs"
+    "render:v5": "node render-v5.mjs",
+    "render:v6": "node render-v6.mjs",
+    "render:v7": "node render-v7.mjs",
+    "remix:v8": "node remix-v8.mjs",
+    "remix:v9": "node remix-v9.mjs",
+    "verify:actions": "node verify-actions-v9.mjs"
   },
-  "description": "Provaai motion V6 · 28 segundos · 1920 × 1080 · 60 fps. Usa @napi-rs/canvas do projeto e FFmpeg local."
+  "description": "Provaai Motion Modelo B · 30 segundos · 1920 × 1080 · 120 fps nativos."
 }
