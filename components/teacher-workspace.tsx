@@ -63,7 +63,7 @@ import {
 } from '@/lib/model';
 import { downloadExams } from '@/lib/export';
 import { fetchExamFile } from '@/lib/download-file';
-import { DownloadProgressMeter } from './download-progress';
+import { ProgressMeter } from './progress-meter';
 import { Dialog, Field, Empty } from './workspace-ui';
 import StudentsWorkspace from './students-workspace';
 import CopySharing, { ShareCopyForm } from './copy-sharing';
@@ -940,23 +940,24 @@ export default function TeacherWorkspace({
           {(downloads.busy || downloads.notice || downloads.error) && <div className="generation-notice download-notice" role="status">
             <BloubMood mood={downloads.error ? 'frustrado' : downloads.busy ? 'sonolento' : 'feliz'} />
             <div><strong>{downloads.busy ? 'Preparando seu download em segundo plano…' : downloads.error || downloads.notice}</strong>
-              {downloads.status && <DownloadProgressMeter percent={downloads.status.percent} label={downloads.status.label} />}</div>
+              {downloads.status && <ProgressMeter name="Progresso do download" percent={downloads.status.percent} label={downloads.status.label} />}</div>
             {downloads.busy ? <button className="text-button" onClick={() => setModal('downloads')}>Acompanhar</button>
               : <button className="icon-button" aria-label="Fechar aviso de download" onClick={downloads.dismiss}><X size={16}/></button>}
           </div>}
-          {generation.busy && <div className="generation-notice" role="status">
-            <BloubMood mood="curioso" />
-            <div><strong>Gerando provas com IA em segundo plano…</strong>
-              <p>{generation.batch && generation.batch.completed < generation.batch.exam_ids.length
-                ? `${generation.batch.title} · ${generation.batch.completed} de ${generation.batch.exam_ids.length} processadas. ` : ''}
-                Você pode continuar usando a Provaai. Outra geração será liberada ao terminar.</p></div>
+          {(generation.busy || generation.notice) && <div className="generation-notice" role="status">
+            <BloubMood mood={generation.busy ? 'curioso' : generation.batch?.failed ? 'frustrado' : 'feliz'} />
+            <div><strong>{generation.busy ? 'Gerando provas com IA em segundo plano…' : generation.notice}</strong>
+              {(generation.busy || !generation.batch?.failed) &&
+                <ProgressMeter name="Progresso da geração de provas" {...generation.progress} />}
+              {generation.busy && <p>Você pode continuar usando a Provaai.</p>}
+              {generation.busy && Boolean(generation.batch?.failed) && <p>Provas com falha neste lote: {generation.batch?.failed}.</p>}
+            </div>
+            {!generation.busy && <>
+              <button className="text-button" onClick={()=>{generation.dismiss();navigate('exams');}}>Ver provas</button>
+              <button className="icon-button" aria-label="Fechar aviso de geração" onClick={generation.dismiss}><X size={16}/></button>
+            </>}
           </div>}
           {generation.syncError && generation.busy && <p role="status">{generation.syncError}</p>}
-          {generation.notice && <div className="generation-notice" role="status">
-            <span>{generation.notice}</span>
-            <button className="text-button" onClick={()=>{generation.dismiss();navigate('exams');}}>Ver provas</button>
-            <button className="icon-button" aria-label="Fechar aviso de geração" onClick={generation.dismiss}><X size={16}/></button>
-          </div>}
           {uploads.tasks.length > 0 && (uploading || uploadFailed) && (
             <button type="button" className="upload-notice" onClick={() => open('uploads')}>
               {uploading ? <Loader2 size={17} className="spin" /> : <AlertCircle size={17} />}
@@ -1619,7 +1620,7 @@ export default function TeacherWorkspace({
             <BloubMood mood={downloads.error ? 'frustrado' : downloads.busy ? 'sonolento' : 'feliz'} />
             <h3 role="status">{downloads.busy ? 'Preparando suas provas! Aguarde um pouquinho.' : downloads.error ? 'Não foi possível concluir o download.' : 'Arquivo pronto!'}</h3>
             <p>{downloads.error || (downloads.busy ? 'Você pode continuar explorando o site. Mantenha esta aba aberta até o download terminar.' : downloads.notice)}</p>
-            {(downloads.status || downloads.notice) && <DownloadProgressMeter
+            {(downloads.status || downloads.notice) && <ProgressMeter name="Progresso do download"
               percent={downloads.status?.percent ?? 100} label={downloads.status?.label ?? 'Arquivo pronto'} />}
             <button className="button primary" onClick={() => setModal(null)}>{downloads.busy ? 'Continuar navegando' : 'Concluir'}</button>
           </section>}

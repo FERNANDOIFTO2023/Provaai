@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ClassRoom;
+use App\Jobs\GenerateBatchStep;
 use App\Models\Exam;
 use App\Models\ExamBatch;
 use App\Models\ExamTemplate;
@@ -131,6 +132,33 @@ class AiTest extends TestCase
         $this->assertSame([], $e->fresh()->content['questions']);
     }
 
+    public function test_batch_publishes_the_confirmed_generation_stage_until_the_exam_is_saved(): void
+    {
+        Queue::fake();
+        config(['provaai.gemini_key' => 'test', 'provaai.groq_key' => null]);
+        $exam = $this->exam();
+        $service = app(BatchService::class);
+        $id = $service->begin($exam->user_id, ['retry' => $exam->id]);
+        $batch = ExamBatch::findOrFail($exam->user_id);
+        $this->assertNull($batch->stage);
+
+        Http::fake(function ($request) use ($batch) {
+            $context = json_decode($request['contents'][0]['parts'][0]['text'], true);
+            $reviewing = isset($context['questions']);
+            $batch->refresh();
+            $this->assertSame($reviewing ? 'reviewing' : 'generating', $batch->stage);
+            $this->assertSame(0, $batch->completed);
+            $result = $reviewing ? ['aligned' => true, 'offTopicQuestions' => [], 'missingTopics' => []] : $this->content();
+
+            return Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode($result)]]]]]]);
+        });
+        (new GenerateBatchStep($exam->user_id, $id))->handle($service, app(AiService::class));
+        $this->assertSame(1, $batch->refresh()->completed);
+        $this->assertSame(0, $batch->failed);
+        $this->assertNull($batch->stage);
+        $this->assertCount(1, $exam->fresh()->content['questions']);
+    }
+
     public function test_batch_lease_prevents_duplicate_work_and_old_worker_cannot_finish(): void
     {
         Queue::fake();
@@ -144,6 +172,8 @@ class AiTest extends TestCase
         $this->travel(151)->seconds();
         $next = $service->claim($e->user_id, $b->batch_id);
         $this->assertNotSame($a['lease'], $next['lease']);
+        $service->setStage($e->user_id, $b->batch_id, $a['lease'], 'reviewing');
+        $this->assertNull($b->fresh()->stage);
         $service->finish($e->user_id, $b->batch_id, $a['lease'], null);
         $this->assertSame(0, $b->fresh()->completed);
         $service->finish($e->user_id, $b->batch_id, $next['lease'], 'Limite de uso');

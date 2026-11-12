@@ -10,6 +10,12 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 11/11/2026 — Porcentagem da geração com IA
+
+O aviso de geração usa a mesma barra animada dos downloads. Cada prova contribui com três etapas para o progresso do lote: preparo do pedido, geração e validação das questões, e conferência da matéria com gravação do rascunho. A fila registra a etapa da prova em andamento para que o professor possa acompanhar o lote ao mudar de página ou recarregar a aba. Se uma tentativa falhar, o aviso informa quantas provas foram geradas e o motivo da falha.
+
+A seção de tecnologias da README descreve as ferramentas presentes no código, suas funções e os provedores de IA opcionais. Os logotipos usam o catálogo Devicons. A atualização do banco inclui o campo de etapa em `sala_exam_batches`, aplicado pelo processo de publicação da AWS.
+
 ### 11/11/2026 — Modelo vinculado à prova e andamento do download
 
 Uma prova individual aprovada tinha um modelo Word de extensão DOC. A aplicação lia o texto desse modelo, mas ao exportar usava a diagramação interna. O conversor agora abre o DOC como Word, transforma-o em DOCX e utiliza a mesma diagramação para os dois formatos de saída. A preparação e a revisão identificam o arquivo escolhido. Se o padrão do professor mudar em outra aba durante a preparação, a aplicação pede que ele confira a escolha.

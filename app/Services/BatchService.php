@@ -89,6 +89,7 @@ class BatchService
     {
         $batchId = (string) Str::uuid();
         $batch = ExamBatch::find($uid) ?? new ExamBatch;
+        $batch->stage = null;
         $batch->forceFill(['user_id' => $uid, 'batch_id' => $batchId, 'title' => $title, 'exam_ids' => $ids, 'completed' => 0, 'failed' => 0, 'last_error' => null, 'lease' => null, 'lease_until' => null])->save();
         GenerateBatchStep::dispatch($uid, $batchId)->afterCommit();
 
@@ -111,11 +112,18 @@ class BatchService
                 return null;
             }
             $b->lease = (string) Str::uuid();
+            $b->stage = null;
             $b->lease_until = now()->addSeconds(150);
             $b->save();
 
             return ['id' => $b->exam_ids[$b->completed], 'lease' => $b->lease];
         });
+    }
+
+    public function setStage(string $uid, string $batchId, string $lease, string $stage): void
+    {
+        ExamBatch::where('user_id', $uid)->where('batch_id', $batchId)->where('lease', $lease)
+            ->update(['stage' => $stage]);
     }
 
     public function finish(string $uid, string $batchId, string $lease, ?string $error): void
@@ -129,7 +137,9 @@ class BatchService
             if ($error) {
                 $b->failed++;
                 $b->last_error = mb_substr($error, 0, 1000);
-            }$b->lease = null;
+            }
+            $b->stage = null;
+            $b->lease = null;
             $b->lease_until = null;
             $b->save();
             if ($b->completed < count($b->exam_ids)) {

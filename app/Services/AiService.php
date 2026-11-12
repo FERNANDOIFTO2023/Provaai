@@ -17,7 +17,7 @@ class AiService
         return config('provaai.provider') === 'mistral' ? (bool) config('provaai.mistral_key') : (bool) (config('provaai.gemini_key') || config('provaai.groq_key'));
     }
 
-    public function generate(string $userId, string $examId): Exam
+    public function generate(string $userId, string $examId, ?\Closure $reportStage = null): Exam
     {
         $lock = Cache::lock('generate:'.$examId, 150);
         if (! $lock->get()) {
@@ -58,6 +58,7 @@ class AiService
                 'profile' => array_intersect_key($exam->profile_snapshot, array_flip(['difficulties', 'criteria', 'level'])),
                 'reference' => mb_substr($reference, 0, 60000), 'exclude' => array_slice($exclude, -100)];
             $provider = config('provaai.provider') === 'mistral' ? 'mistral' : (config('provaai.gemini_key') ? 'gemini' : 'groq');
+            $reportStage?->__invoke('generating');
             $content = $this->ask($provider, 'generation', $context);
             $instructions = trim($exam->content['instructions'] ?? '');
             if ($instructions !== '' && $instructions !== 'Leia com atenção.') {
@@ -71,6 +72,7 @@ class AiService
                     $validator->fail('Foram detectadas questões repetidas em outra prova.');
                 }
             }
+            $reportStage?->__invoke('reviewing');
             $review = $this->ask($provider, 'review', ['subject' => $exam->subject, 'topics' => $exam->topics, 'instructions' => $content['instructions'], 'questions' => $content['questions']]);
             if (($review['aligned'] ?? null) !== true || ! isset($review['offTopicQuestions'],$review['missingTopics']) || $review['offTopicQuestions'] !== [] || $review['missingTopics'] !== []) {
                 throw new RuntimeException('A conferência não confirmou a matéria e os conteúdos. O rascunho foi preservado.');

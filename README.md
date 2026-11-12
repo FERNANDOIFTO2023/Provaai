@@ -11,17 +11,10 @@
 
 <p align="center">
   <a href="https://provaai.vercel.app/"><strong>Abrir o Provaai ↗</strong></a> &nbsp;·&nbsp;
+  <a href="#tecnologias-e-bibliotecas">Tecnologias</a> &nbsp;·&nbsp;
   <a href="#comece-por-aqui">Executar localmente</a> &nbsp;·&nbsp;
   <a href="docs/GUIA-TECNICO.md">Guia técnico</a> &nbsp;·&nbsp;
   <a href="docs/ESPECIFICACAO-LTP3-PROVAAI.pdf">Documentação acadêmica</a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Laravel-13-5210CE?style=flat-square&amp;logo=laravel&amp;logoColor=white" alt="Laravel 13" />
-  <img src="https://img.shields.io/badge/PHP-8.3%2B-0D1823?style=flat-square&amp;logo=php&amp;logoColor=white" alt="PHP 8.3 ou superior" />
-  <img src="https://img.shields.io/badge/React-19-0D1823?style=flat-square&amp;logo=react&amp;logoColor=2ADFB8" alt="React 19" />
-  <img src="https://img.shields.io/badge/TypeScript-Vite-5210CE?style=flat-square&amp;logo=vite&amp;logoColor=white" alt="TypeScript e Vite" />
-  <img src="https://img.shields.io/badge/PostgreSQL-AWS-0D1823?style=flat-square&amp;logo=postgresql&amp;logoColor=2ADFB8" alt="PostgreSQL na AWS" />
 </p>
 
 ---
@@ -55,6 +48,57 @@ flowchart LR
 ```
 
 O PDF usa a faixa da primeira página escolhida pelo professor como cabeçalho. No Word, o exportador aproveita a diagramação do modelo para montar o documento que também dará origem ao PDF. [Modelos e formatos de exportação](docs/PDF-E-ARQUIVOS.md)
+
+## Tecnologias e bibliotecas
+
+<table align="center">
+  <tr>
+    <td align="center" width="120"><a href="https://devicons.io/icons/laravel/"><img src="https://devicons.io/devicons/icons/laravel.svg" alt="Laravel 13" width="38" height="38" /></a><br /><sub>Laravel 13</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/php/"><img src="https://devicons.io/devicons/icons/php.svg" alt="PHP 8.3+" width="38" height="38" /></a><br /><sub>PHP 8.3+</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/react/"><img src="https://devicons.io/devicons/icons/react.svg" alt="React 19" width="38" height="38" /></a><br /><sub>React 19</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/typescript/"><img src="https://devicons.io/devicons/icons/typescript-icon.svg" alt="TypeScript" width="38" height="38" /></a><br /><sub>TypeScript</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/vite/"><img src="https://devicons.io/devicons/icons/vite.svg" alt="Vite" width="38" height="38" /></a><br /><sub>Vite</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/nodejs/"><img src="https://devicons.io/devicons/icons/nodejs-icon.svg" alt="Node.js 24" width="38" height="38" /></a><br /><sub>Node.js 24</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="120"><a href="https://devicons.io/icons/html-5/"><img src="https://devicons.io/devicons/icons/html-5.svg" alt="HTML" width="38" height="38" /></a><br /><sub>HTML</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/css/"><img src="https://devicons.io/devicons/icons/css.svg" alt="CSS" width="38" height="38" /></a><br /><sub>CSS</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/javascript/"><img src="https://devicons.io/devicons/icons/javascript.svg" alt="JavaScript" width="38" height="38" /></a><br /><sub>JavaScript</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/zod/"><img src="https://devicons.io/devicons/icons/zod.svg" alt="Zod" width="38" height="38" /></a><br /><sub>Zod</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/postgresql/"><img src="https://devicons.io/devicons/icons/postgresql.svg" alt="PostgreSQL" width="38" height="38" /></a><br /><sub>PostgreSQL</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/sqlite/"><img src="https://devicons.io/devicons/icons/sqlite-icon.svg" alt="SQLite" width="38" height="38" /></a><br /><sub>SQLite</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="120"><a href="https://devicons.io/icons/docker/"><img src="https://devicons.io/devicons/icons/docker-icon.svg" alt="Docker" width="38" height="38" /></a><br /><sub>Docker</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/nginx/"><img src="https://devicons.io/devicons/icons/nginx.svg" alt="NGINX" width="38" height="38" /></a><br /><sub>NGINX</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/aws/"><img src="https://devicons.io/devicons/icons/aws.svg" alt="AWS" width="38" height="38" /></a><br /><sub>AWS</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/vercel/"><img src="https://devicons.io/devicons/icons/vercel-icon.svg" alt="Vercel" width="38" height="38" /></a><br /><sub>Vercel</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/google-gemini/"><img src="https://devicons.io/devicons/icons/google-gemini.svg" alt="Gemini" width="38" height="38" /></a><br /><sub>Gemini</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/github-actions/"><img src="https://devicons.io/devicons/icons/github-actions.svg" alt="GitHub Actions" width="38" height="38" /></a><br /><sub>GitHub Actions</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="120"><a href="https://devicons.io/icons/git/"><img src="https://devicons.io/devicons/icons/git-icon.svg" alt="Git" width="38" height="38" /></a><br /><sub>Git</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/github/"><img src="https://devicons.io/devicons/icons/github-icon.svg" alt="GitHub" width="38" height="38" /></a><br /><sub>GitHub</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/npm/"><img src="https://devicons.io/devicons/icons/npm-icon.svg" alt="npm" width="38" height="38" /></a><br /><sub>npm</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/composer/"><img src="https://devicons.io/devicons/icons/composer.svg" alt="Composer" width="38" height="38" /></a><br /><sub>Composer</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/debian/"><img src="https://devicons.io/devicons/icons/debian.svg" alt="Debian" width="38" height="38" /></a><br /><sub>Debian</sub></td>
+    <td align="center" width="120"><a href="https://devicons.io/icons/bash/"><img src="https://devicons.io/devicons/icons/bash-icon.svg" alt="Bash" width="38" height="38" /></a><br /><sub>Bash</sub></td>
+  </tr>
+</table>
+
+| Camada | Uso no Provaai |
+| --- | --- |
+| **Interface** | React 19 e TypeScript, com Vite e `laravel-vite-plugin`. HTML e CSS compõem as telas. Motion e `@heroicons-animated/react` animam os ícones, as transições e as barras de progresso. |
+| **Aplicação** | PHP 8.3+ e Laravel 13. Blade entrega a página inicial, Eloquent acessa os dados e as filas executam a geração das provas. |
+| **Dados** | PostgreSQL em produção e SQLite no ambiente local. A sessão, o cache e a fila usam o banco. Os modelos, capas e documentos ficam no armazenamento privado do servidor. |
+| **Inteligência artificial** | Gemini gera e confere as questões. O código também oferece Groq como reserva quando configurado e Mistral como provedor opcional. |
+| **Documentos** | LibreOffice WebAssembly, pelo pacote `@matbee/libreoffice-converter`, converte Word e PDF. `docx` e `@xmldom/xmldom` montam os documentos, e `word-extractor` lê os modelos Word. |
+| **PDF e arquivos** | `pdfjs-dist` e `@napi-rs/canvas` recortam cabeçalhos. `jspdf` exporta PDFs na demonstração. `jszip` manipula modelos DOCX e reúne provas em ZIP, com `buffer` para compatibilidade no navegador. |
+| **Validação e testes** | Zod valida os dados da interface. PHPUnit, Mockery e Faker cobrem o backend. O executor nativo de testes do Node verifica regras e arquivos. |
+| **Publicação** | Docker e Compose na AWS, com imagem Debian e scripts Bash. NGINX e PHP-FPM atendem HTTP, Supervisor mantém os processos e SMTP entrega os códigos de login. A Vercel fornece a entrada pública e o GitHub Actions executa as verificações. |
+| **Desenvolvimento** | Git e GitHub versionam o código. npm e Composer gerenciam as dependências. TypeScript verifica os tipos, Laravel Pint formata PHP, Tinker oferece o console e Pail auxilia na leitura dos logs. |
+
+As versões instaladas ficam registradas em [package-lock.json](package-lock.json) e [composer.lock](composer.lock). Os ícones desta seção vêm do [Devicons](https://devicons.io/).
 
 ## Comece por aqui
 

@@ -23,9 +23,11 @@ class GenerateBatchStep implements ShouldQueue
         $step = $batches->claim($this->userId, $this->batchId);
         if (! $step) {
             return;
-        }$error = null;
+        }
+        $error = null;
         try {
-            $ai->generate($this->userId, $step['id']);
+            $ai->generate($this->userId, $step['id'], fn (string $stage) =>
+                $batches->setStage($this->userId, $this->batchId, $step['lease'], $stage));
         } catch (\Throwable $e) {
             $error = $e instanceof ValidationException ? collect($e->errors())->flatten()->first() : $e->getMessage();
             report($e);
