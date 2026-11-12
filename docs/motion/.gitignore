@@ -1,0 +1,4 @@
+ffmpeg.exe
+node_modules/
+output/
+reference-analysis/

@@ -1,0 +1,16 @@
+{
+  "name": "provaai-motion-film",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node render-v6.mjs",
+    "stills": "node render-v6.mjs --stills",
+    "verify:sync": "node verify-sync-v6.mjs",
+    "render:v4": "node render-v4.mjs",
+    "render:v3": "node render-v3.mjs",
+    "render:v2": "node render-v2.mjs",
+    "render:v1": "node render.mjs",
+    "render:v5": "node render-v5.mjs"
+  },
+  "description": "Provaai motion V6 · 28 segundos · 1920 × 1080 · 60 fps. Usa @napi-rs/canvas do projeto e FFmpeg local."
+}
