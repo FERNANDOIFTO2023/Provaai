@@ -10,6 +10,14 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 11/11/2026 — Kit de marca e telas no Figma
+
+Criado o arquivo [Provaai — Marca e telas](https://www.figma.com/design/56btn1bwQAtgCEk3gAi4ef?node-id=6-132) na equipe FERNANDO DE PAULA MATOS's team. O material reúne a paleta, o mascote em SVG, estilos de texto, componentes reutilizáveis e representações editáveis de 12 telas desktop, 10 telas mobile e 16 formulários e estados de uso. O inventário e as referências estão em [Identidade visual](IDENTIDADE-VISUAL.md).
+
+As cores e os ícones foram extraídos do projeto. Como Trebuchet MS e Segoe UI não estavam disponíveis na conexão do Figma, o arquivo usa Lato e Open Sans, com autorização do responsável. As fontes do site permanecem iguais. Foram revisados visualmente os quadros de marca, componentes, login, turmas, modelos e formulários selecionados, corrigindo espaçamento, escala do mascote e largura dos rótulos.
+
+A limpeza da captura temporária de referência e a conferência final de todos os quadros aguardam acesso de edição ao arquivo. A conexão foi restabelecida com outra conta, que ainda não possui essa permissão. Esta atualização altera apenas a documentação local; não publica uma nova versão do site.
+
 ### 11/11/2026 — Porcentagem da geração com IA
 
 O aviso de geração usa a mesma barra animada dos downloads. Cada prova contribui com três etapas para o progresso do lote: preparo do pedido, geração e validação das questões, e conferência da matéria com gravação do rascunho. A fila registra a etapa da prova em andamento para que o professor possa acompanhar o lote ao mudar de página ou recarregar a aba. Se uma tentativa falhar, o aviso informa quantas provas foram geradas e o motivo da falha.

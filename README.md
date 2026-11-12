@@ -14,6 +14,7 @@
   <a href="#tecnologias-e-bibliotecas">Tecnologias</a> &nbsp;·&nbsp;
   <a href="#comece-por-aqui">Executar localmente</a> &nbsp;·&nbsp;
   <a href="docs/GUIA-TECNICO.md">Guia técnico</a> &nbsp;·&nbsp;
+  <a href="https://www.figma.com/design/56btn1bwQAtgCEk3gAi4ef?node-id=6-132">Marca e telas no Figma</a> &nbsp;·&nbsp;
   <a href="docs/ESPECIFICACAO-LTP3-PROVAAI.pdf">Documentação acadêmica</a>
 </p>
 
