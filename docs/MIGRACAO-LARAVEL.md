@@ -12,7 +12,7 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ### 11/11/2026 — Histórico da especificação acadêmica
 
-Ampliado o histórico em `docs/ESPECIFICACAO-LTP3-PROVAAI.md` e no PDF correspondente, com 22 registros sobre interface, autenticação, turmas, modelos, geração, segurança e migração. O início foi indicado como aproximadamente 04/11/2026; o primeiro commit disponível é de 05/11. A capa recebeu os nomes do professor e dos quatro integrantes já informados. O documento distingue a especificação-base de 10/11 das entregas posteriores e mantém as pendências registradas.
+Ampliado o histórico em `docs/ESPECIFICACAO-LTP3-PROVAAI.md` e no PDF correspondente, com 22 registros sobre interface, autenticação, turmas, modelos, geração, segurança e migração. O início foi indicado como aproximadamente 04/11/2026; o primeiro commit disponível é de 05/11. Os nomes do professor e dos quatro integrantes foram registrados no texto. A capa original do PDF foi restaurada a pedido da equipe, mantendo o brasão do IFTO, a diagramação e os campos anteriores. As oito páginas seguintes, incluindo o histórico atualizado, foram preservadas. O documento distingue a especificação-base de 10/11 das entregas posteriores e mantém as pendências registradas.
 
 ### 11/11/2026 — Kit de marca e telas no Figma
 
