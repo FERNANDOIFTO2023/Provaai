@@ -13,7 +13,7 @@ class LoginCodeMailTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_requested_email_contains_working_code_in_html_and_text_with_embedded_images(): void
+    public function test_requested_email_contains_working_code_in_html_and_text_without_images(): void
     {
         $response = $this->postJson('/api/auth/code', ['action' => 'request', 'email' => 'teacher@example.test'])->assertOk();
         $sent = Mail::mailer()->getSymfonyTransport()->messages()->sole();
@@ -30,15 +30,11 @@ class LoginCodeMailTest extends TestCase
         $this->assertStringNotContainsString('<svg', $html);
         $this->assertStringNotContainsString('<script', $html);
         $this->assertStringNotContainsString('src="http', $html);
-        $this->assertCount(2, $email->getAttachments());
-        foreach ($email->getAttachments() as $image) {
-            $this->assertSame('inline', $image->getDisposition());
-            $this->assertContains($image->getMediaSubtype(), ['gif', 'png']);
-            $this->assertNotEmpty($image->bodyToString());
-        }
+        $this->assertCount(0, $email->getAttachments());
+        $this->assertStringNotContainsString('<img', $html);
         $wire = $sent->toString();
         $this->assertStringContainsString('multipart/alternative', $wire);
-        $this->assertStringContainsString('Content-ID:', $wire);
+        $this->assertStringNotContainsString('Content-ID:', $wire);
         $this->assertNotSame($code, DB::table('login_codes')->value('digest'));
         $this->postJson('/api/auth/code', ['action' => 'verify', 'email' => 'teacher@example.test', 'code' => $code])
             ->assertOk()->assertJsonPath('session.user.email', 'teacher@example.test');

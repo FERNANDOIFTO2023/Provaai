@@ -9,6 +9,13 @@ Os testes cobrem autenticação, isolamento entre professores, cópias, geraçã
 A produção e a homologação da AWS usam bancos, volumes de documentos e chaves de sessão próprios. O SQLite local é independente desses ambientes.
 
 ## Histórico de alterações
+### 12/11/2026 — E-mail de acesso sem mascote
+
+Retirados o GIF e o PNG incorporados ao e-mail de login. O cabeçalho agora usa a marca Provaai sobre roxo, com acabamento verde-menta; o código recebe destaque sobre fundo menta claro. A mensagem mantém texto selecionável, versão textual, validade de dez minutos e instruções de acesso. Nenhuma regra de autenticação ou credencial SMTP foi alterada.
+
+O template foi aplicado diretamente no contêiner de produção da AWS, sem commit ou push. A cópia anterior está em `/var/backups/provaai/email-20261112-without-mascot/login-code.blade.php`. As views compiladas foram limpas, a renderização foi conferida pelo transporte em memória e o endpoint de saúde respondeu normalmente. O SHA-256 do template e do HTML renderizado confere com a versão local. Não foi enviado e-mail real.
+
+Validação: quatro testes de e-mail/login passaram, com 38 verificações; a prévia foi conferida em 320, 375, 600 e 900 px, sem rolagem horizontal ou dependência de imagens. Os arquivos e as prévias estão em `docs/email`. A aplicação direta permanece ao reiniciar o contêiner, mas a recriação a partir da imagem antiga pode revertê-la. O responsável deve incluir a alteração no próximo commit e push para incorporá-la às próximas publicações automáticas.
 
 ### 11/11/2026 — Histórico da especificação acadêmica
 
