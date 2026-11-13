@@ -12,6 +12,10 @@ Editar enunciado, resposta, alternativas, tipo, matéria ou instruções invalid
 
 ## Escopo atual
 
+Antes da conferência matemática, a geração associa o gabarito de cada questão objetiva à opção indicada pelo índice `answerIndex` (0 a 3). O texto da alternativa é copiado integralmente para `answer`, incluindo LaTeX. O índice não é armazenado na prova; revisão, edição e exportação continuam usando o mesmo campo `answer`. Nas respostas de provedores no formato anterior, apenas uma correspondência única de texto/delimitadores ou letra permite essa associação. Casos conflitantes são recusados. Esse passo resolve formatação e seleção da opção; não comprova que o cálculo está correto.
+
+O pedido ao Gemini usa [saída estruturada por esquema JSON](https://ai.google.dev/gemini-api/docs/structured-output) para controlar a quantidade de opções e o formato do índice. A validação do Laravel continua verificando o conteúdo recebido, incluindo repetições e a distribuição de questões solicitada.
+
 - Operações explícitas com inteiros, decimais exatos, frações, potências pequenas e raízes quadradas reais.
 - Equações polinomiais de primeiro e segundo grau na variável `x`, com coeficientes racionais, considerando as raízes reais. Denominadores com variável não são aceitos.
 - Quatro alternativas expressas como valores ou conjuntos de raízes: o gabarito precisa ser a única opção correta, e as alternativas não podem ser equivalentes.

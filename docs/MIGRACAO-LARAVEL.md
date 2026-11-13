@@ -10,6 +10,18 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 12/11/2026 — Correção do gabarito das questões objetivas
+
+Investigada a recusa “Questões objetivas precisam de quatro alternativas distintas e resposta igual à correta”. A validação comparava o gabarito e a opção como texto exato; diferenças de delimitadores LaTeX ou a indicação por letra podiam recusar uma resposta associável a uma opção. A mensagem antiga também agrupava alternativas repetidas, quantidade incorreta e gabarito sem correspondência, sem distinguir a causa. A resposta original dessa tentativa não foi persistida, portanto não foi possível determinar qual condição ocorreu naquele caso.
+
+A geração passou a pedir `answerIndex` de 0 a 3 nas objetivas, e o servidor copia a opção indicada para o campo `answer`. O Gemini recebe um esquema JSON com quatro alternativas nas objetivas, nenhuma nas discursivas e a quantidade total solicitada. Respostas no formato anterior continuam aceitas quando a correspondência é única, inclusive com delimitadores matemáticos diferentes ou indicação explícita da alternativa. Indicações conflitantes, índices inválidos, opções ausentes e duplicadas continuam sendo recusados; o sistema não inventa alternativas nem deduz um gabarito a partir de explicações livres.
+
+A comparação de alternativas preserva maiúsculas de variáveis e símbolos sobrescritos, evitando confundir `x` com `X` ou `x²` com `x2`. As mensagens agora identificam a questão e a condição inválida. A conferência de matéria, conteúdos e cálculos permanece após a associação do gabarito.
+
+Teste real no ambiente AWS: o Gemini retornou três questões fictícias, duas objetivas e uma discursiva. As duas respostas objetivas corresponderam exatamente às opções selecionadas, a validação passou e a revisão de matéria/conteúdos aprovou o resultado. A geração levou 2,44 segundos nessa amostra; isso não é garantia de tempo para outros pedidos. O teste não salvou provas nem alterou o código publicado. A correção permanece local, aguardando commit e push pelo responsável.
+
+Validação automatizada: a suíte completa do backend passou com 40 testes e 244 verificações. As regressões cobrem associação por índice, diferenças de delimitadores, letras, conflitos, alternativas repetidas e geração coletiva e individual. Nenhuma alteração de banco foi necessária.
+
 ### 12/11/2026 — Conferência local de resultados matemáticos
 
 Integrado SymPy ao término da geração e ao salvamento da revisão. O cálculo explícito do enunciado é comparado com o resultado final do gabarito; equações de primeiro e segundo grau são conferidas nos reais, e alternativas equivalentes recebem aviso. A interface distingue resultado conferido, divergência e revisão manual. Alterações nos dados da questão invalidam o aviso anterior, e o servidor recalcula sem confiar em relatórios enviados pelo navegador ou pela IA.

@@ -66,6 +66,36 @@ class AiTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    public function test_math_objective_answer_is_resolved_before_review_for_collective_and_individual_exams(): void
+    {
+        config(['provaai.gemini_key' => 'test', 'provaai.groq_key' => null]);
+        foreach (['regular', 'recovery'] as $purpose) {
+            $exam = $this->exam();
+            $exam->forceFill(['purpose' => $purpose, 'subject' => 'Matemática', 'topics' => 'Adição',
+                'content' => ['instructions' => 'Responda.', 'objectiveCount' => 1, 'questions' => []]])->save();
+            $raw = $this->content();
+            $raw['questions'][0] = ['statement' => 'Calcule \\(2+3\\).', 'type' => 'objective',
+                'options' => ['\\(4\\)', '\\(5\\)', '\\(6\\)', '\\(7\\)'],
+                'answerIndex' => 1, 'objective' => 'Somar', 'points' => 10];
+            Http::fake(function ($request) use ($raw) {
+                $context = json_decode($request['contents'][0]['parts'][0]['text'], true);
+                if (isset($context['questions'])) {
+                    $this->assertSame('\\(5\\)', $context['questions'][0]['answer']);
+                    $this->assertArrayNotHasKey('answerIndex', $context['questions'][0]);
+                    $result = ['aligned' => true, 'offTopicQuestions' => [], 'missingTopics' => []];
+                } else {
+                    $this->assertSame(4, $request['generationConfig']['responseJsonSchema']['properties']['questions']['items']['properties']['options']['minItems']);
+                    $result = $raw;
+                }
+                return Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode($result)]]]]]]);
+            });
+            $saved = app(AiService::class)->generate($exam->user_id, $exam->id);
+            $this->assertSame('\\(5\\)', $saved->content['questions'][0]['answer']);
+            $this->assertSame('verified', $saved->content['mathReview']['results'][0]['status']);
+            Http::assertSentCount(2);
+        }
+    }
+
     public function test_gemini_generation_and_review_keep_private_fields_and_pdf_out_of_context(): void
     {
         config(['provaai.gemini_key' => 'test', 'provaai.groq_key' => 'reserve']);

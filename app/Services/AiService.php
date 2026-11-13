@@ -59,7 +59,7 @@ class AiService
                 'reference' => mb_substr($reference, 0, 60000), 'exclude' => array_slice($exclude, -100)];
             $provider = config('provaai.provider') === 'mistral' ? 'mistral' : (config('provaai.gemini_key') ? 'gemini' : 'groq');
             $reportStage?->__invoke('generating');
-            $content = $this->ask($provider, 'generation', $context);
+            $content = app(GeneratedExamContent::class)->prepare($this->ask($provider, 'generation', $context));
             $instructions = trim($exam->content['instructions'] ?? '');
             if ($instructions !== '' && $instructions !== 'Leia com atenção.') {
                 $content['instructions'] = $instructions;
@@ -100,10 +100,14 @@ class AiService
                 try {
                     $budget = $hasFallback ? ($review ? 10 : 35) : ($review ? 25 : 90);
                     $model = config('provaai.gemini_model');
+                    $generationConfig = ['responseMimeType' => 'application/json', 'maxOutputTokens' => $review ? 2048 : 12000, 'temperature' => $review ? 0 : .7];
+                    if (! $review) {
+                        $generationConfig['responseJsonSchema'] = app(GeneratedExamContent::class)->schema($context['count'], $context['distribution']['objective']);
+                    }
                     $send = fn (int $timeout) => Http::connectTimeout(min(8, $timeout))->timeout($timeout)->withHeaders(['x-goog-api-key' => config('provaai.gemini_key')])
                         ->post('https://generativelanguage.googleapis.com/v1beta/models/'.rawurlencode($model).':generateContent', [
                             'systemInstruction' => ['parts' => [['text' => $instruction]]], 'contents' => [['parts' => [['text' => json_encode($context, JSON_UNESCAPED_UNICODE)]]]],
-                            'generationConfig' => ['responseMimeType' => 'application/json', 'maxOutputTokens' => $review ? 2048 : 12000, 'temperature' => $review ? 0 : .7],
+                            'generationConfig' => $generationConfig,
                         ]);
                     $response = $send($budget);
                     if (! $hasFallback && in_array($response->status(), [500, 502, 503, 504], true) && microtime(true) - $start < 2) {
