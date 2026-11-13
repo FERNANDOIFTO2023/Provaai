@@ -37,7 +37,7 @@
   border: 0;
   border-radius: 14px;
   background: transparent;
-  color: #746c80;
+  color: var(--color-muted);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -60,7 +60,7 @@
   align-items: center;
   font-size: 13px;
   font-weight: 500;
-  color: #746c80;
+  color: var(--color-muted);
   transition:
     background-color 0.18s ease,
     color 0.18s ease;
@@ -70,13 +70,13 @@
 }
 .header-more summary:hover,
 .header-more[open] summary {
-  background: #f3f0f9;
+  background: var(--color-canvas);
   color: #5210ce;
 }
 .header-more summary.is-active {
-  background: #efe8fc;
-  color: #5210ce;
-  box-shadow: inset 0 -2px #5210ce;
+  background: var(--color-successSurface);
+  color: var(--color-ink);
+  box-shadow: none;
 }
 .header-more summary:focus-visible {
   outline: 2px solid #5210ce;
@@ -101,7 +101,7 @@
   border-radius: 9px;
 }
 .header-more-pages button[aria-current="page"] {
-  background: #efe8fc;
+  background: var(--color-successSurface);
 }
 @container workspace-header (max-width: 900px) {
   .workspace-header-nav > .header-overflow-link {
@@ -116,17 +116,17 @@
 }
 .workspace-header-nav button:hover {
   color: #5210ce;
-  background: #f3f0f9;
+  background: var(--color-canvas);
 }
 .workspace-header-nav button[aria-current="page"] {
-  color: #5210ce;
+  color: var(--color-ink);
 }
 .header-active-indicator {
   position: absolute;
   inset: 0;
   border-radius: 14px;
-  background: #efe8fc;
-  box-shadow: inset 0 -2px #5210ce;
+  background: var(--color-successSurface);
+  box-shadow: none;
   pointer-events: none;
   z-index: 0;
 }

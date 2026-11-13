@@ -9,6 +9,11 @@ Os testes cobrem autenticação, isolamento entre professores, cópias, geraçã
 A produção e a homologação da AWS usam bancos, volumes de documentos e chaves de sessão próprios. O SQLite local é independente desses ambientes.
 
 ## Histórico de alterações
+### 12/11/2026 — Destaque da navegação
+
+A página selecionada na header passou a usar fundo verde-menta claro e texto escuro, sem a linha roxa inferior. O efeito ao passar o mouse usa um fundo neutro discreto. A mesma seleção aparece no menu Mais e nas opções recolhidas. Foram preservados o tamanho da header, a navegação por texto, a animação de transição e o respeito à preferência por movimento reduzido.
+
+Build concluído e navegação conferida na demonstração local, com seleção de páginas no desktop e no menu móvel. Não houve rolagem horizontal nas larguras de 320, 375, 760, 1024 e 1440 px. Alteração local, sem commit ou publicação.
 ### 12/11/2026 — E-mail de acesso sem mascote
 
 Retirados o GIF e o PNG incorporados ao e-mail de login. O cabeçalho agora usa a marca Provaai sobre roxo, com acabamento verde-menta; o código recebe destaque sobre fundo menta claro. A mensagem mantém texto selecionável, versão textual, validade de dez minutos e instruções de acesso. Nenhuma regra de autenticação ou credencial SMTP foi alterada.
