@@ -64,6 +64,28 @@ class WorkspaceTest extends TestCase
         $this->postJson('/api/generate', ['examId' => (string) Str::uuid()])->assertUnauthorized();
     }
 
+    public function test_exam_save_recomputes_math_report_instead_of_accepting_browser_claim(): void
+    {
+        $user = $this->teacher();
+        $room = $this->room($user);
+        $student = $this->student($user, $room);
+        $this->actingAs($user);
+        $content = $this->content();
+        $content['questions'][0]['statement'] = 'Calcule \\(2+3\\).';
+        $content['questions'][0]['answer'] = '6';
+        $content['mathReview'] = ['results' => [['status' => 'verified']]];
+        $exam = $this->record('sala_exams', [
+            'class_id' => $room->id, 'student_id' => $student->id,
+            'title' => 'Soma', 'subject' => 'Matemática', 'topics' => 'Adição',
+            'question_count' => 1, 'content' => $content,
+        ])->assertOk()->assertJsonPath('data.content.mathReview.results.0.status', 'mismatch')->json('data');
+        $content['questions'][0]['answer'] = '5';
+        $this->record('sala_exams', ['content' => $content], 'update', [['id', $exam['id']]])
+            ->assertOk()->assertJsonPath('data.content.mathReview.results.0.status', 'verified');
+        $this->record('sala_exams', ['subject' => 'Português'], 'update', [['id', $exam['id']]])
+            ->assertOk()->assertJsonMissingPath('data.content.mathReview');
+    }
+
     public function test_crud_enforces_ownership_and_server_student_codes(): void
     {
         $a = $this->teacher();

@@ -25,6 +25,21 @@ export const questionSchema = z
       });
   });
 export const examContentSchema = z.object({
+  mathReview: z.object({
+    version: z.literal(1),
+    subject: z.string(),
+    instructions: z.string(),
+    results: z.array(z.object({
+      status: z.enum(['verified', 'mismatch', 'needs_review']),
+      message: z.string(),
+      input: z.object({
+        statement: z.string(),
+        type: z.enum(['objective', 'essay']),
+        options: z.array(z.string()),
+        answer: z.string(),
+      }),
+    })),
+  }).optional(),
   objectiveCount: z.number().int().min(0).max(30).optional(),
   instructions: z.string().max(2000),
   questions: z.array(questionSchema).min(1).max(30),

@@ -1,5 +1,7 @@
 import type { Exam } from './model.ts';
 import type { PdfHeader } from './pdf-header.ts';
+import { hasMath } from './math-text.ts';
+import { isMathematics, answerRows, answerRowTwips } from './answer-space.ts';
 export const safeName = (s: string) =>
   s
     .normalize('NFD')
@@ -21,7 +23,7 @@ export async function examFile(
     exam.content.instructions,
   ];
   if (format === 'docx') {
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel, Header, ImageRun } = await import(
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, Header, ImageRun, LineRuleType, TabStopType, LeaderType } = await import(
       'docx'
     );
     const children = lines.map(
@@ -42,6 +44,8 @@ export async function examFile(
             }),
           ],
           spacing: { before: 240, after: 180 },
+          keepNext: true,
+          keepLines: true,
         }),
       );
       if (answerKey) children.push(new Paragraph(`Resposta: ${q.answer}`));
@@ -50,31 +54,51 @@ export async function examFile(
           children.push(new Paragraph(`${String.fromCharCode(65 + j)}) ${o}`)),
         );
         if (q.type === 'essay')
-          for (let n = 0; n < 5; n++)
+          for (let n = 0; n < answerRows; n++)
             children.push(
-              new Paragraph(
-                '________________________________________________________________',
-              ),
+              new Paragraph({
+                children: [new TextRun(isMathematics(exam.subject) ? '' : '\t')],
+                indent: { left: 0, right: 0 },
+                spacing: { before: 0, after: 0, line: answerRowTwips, lineRule: LineRuleType.EXACT },
+                keepNext: n < answerRows - 1,
+                ...(!isMathematics(exam.subject) ? { tabStops: [{
+                  type: TabStopType.RIGHT,
+                  position: (header ? Math.round(header.width * 1440 / 25.4) : 11906) - 2000,
+                  leader: LeaderType.UNDERSCORE,
+                }] } : {}),
+              }),
             );
       }
     });
-    return Packer.toBlob(
+    const blob = await Packer.toBlob(
       new Document({
         sections: [
           {
             properties: {
+              titlePage: !!header,
               page: {
-                ...(header ? {size:{width:Math.round(header.width*1440/25.4),height:Math.round(header.height*1440/25.4)}} : {}),
-                margin: { top: header ? Math.round((header.headerHeight+12)*1440/25.4) : 1000, right: 1000, bottom: 1000, left: 1000, header: 0 },
+                size: header ? {width:Math.round(header.width*1440/25.4),height:Math.round(header.height*1440/25.4)} : {width:11906, height:16838},
+                margin: { top: 1000, right: 1000, bottom: 1000, left: 1000, header: 0 },
               },
             },
-            ...(header ? {headers:{default:new Header({children:[new Paragraph({indent:{left:-1000},children:[new ImageRun({type:'png',data:header.image,
+            ...(header ? {headers:{first:new Header({children:[new Paragraph({indent:{left:-1000},children:[new ImageRun({type:'png',data:header.image,
               transformation:{width:header.width*96/25.4,height:header.headerHeight*96/25.4}})]})]})}} : {}),
             children,
           },
         ],
       }),
     );
+    if (!hasMath(lines.join('\n')) && !exam.content.questions.some(q =>
+      [q.statement, ...(answerKey ? [q.answer] : q.options)].some(hasMath))) return blob;
+    const { formatDocxMath } = await import('./docx-math.ts');
+    const bytes = await formatDocxMath(new Uint8Array(await blob.arrayBuffer()));
+    return new Blob([bytes as BlobPart], { type: blob.type });
+  }
+  // Production PDF downloads use the server's DOCX → PDF pipeline, including equations.
+  // The lightweight demo PDF writer cannot typeset math; never export raw LaTeX silently.
+  if (hasMath(lines.join('\n')) || exam.content.questions.some(q =>
+    [q.statement, ...(answerKey ? [q.answer] : q.options)].some(hasMath))) {
+    throw new Error('Para baixar esta prova com fórmulas em PDF, use sua conta. Na demonstração, baixe o DOCX.');
   }
   const { jsPDF } = await import('jspdf');
   const pdf = new jsPDF(header ? {orientation: header.width > header.height ? 'landscape' : 'portrait', format:[header.width, header.height]} : {});
@@ -88,8 +112,7 @@ export async function examFile(
     for (const row of pdf.splitTextToSize(s, width - 40)) {
       if (y > height - 22) {
         pdf.addPage();
-        drawHeader();
-        y = start;
+        y = 20;
       }
       pdf.text(row, 20, y);
       y += size * 0.48;
@@ -104,11 +127,17 @@ export async function examFile(
       q.options.forEach((o, j) =>
         write(`${String.fromCharCode(65 + j)}) ${o}`),
       );
-      if (q.type === 'essay')
-        for (let n = 0; n < 5; n++)
-          write(
-            '________________________________________________________________',
-          );
+      if (q.type === 'essay') {
+        const rowHeight = answerRowTwips * 25.4 / 1440;
+        if (y + rowHeight * answerRows > height - 22) { pdf.addPage(); y = 20; }
+        for (let n = 0; n < answerRows; n++) {
+          y += rowHeight;
+          if (!isMathematics(exam.subject)) {
+            pdf.setDrawColor(115); pdf.setLineWidth(0.18);
+            pdf.line(20, y, width - 20, y);
+          }
+        }
+      }
     }
     y += 5;
   });

@@ -9,6 +9,7 @@ return [
     'mistral_model' => env('MISTRAL_MODEL', 'mistral-small-latest'),
     'provider' => env('AI_PROVIDER', 'gemini'),
     'node_binary' => env('NODE_BINARY', 'node'),
+    'python_binary' => env('PYTHON_BINARY', 'python3'),
     'legacy_url' => env('LEGACY_SUPABASE_URL'),
     'legacy_key' => env('LEGACY_SUPABASE_SERVICE_KEY'),
 ];

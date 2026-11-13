@@ -78,6 +78,7 @@ class AiService
                 throw new RuntimeException('A conferência não confirmou a matéria e os conteúdos. O rascunho foi preservado.');
             }
             $content['objectiveCount'] = $objective;
+            $content = app(MathVerificationService::class)->verify($exam->subject, $content);
             $exam->content = $content;
             $exam->status = 'draft';
             $exam->save();

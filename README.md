@@ -48,7 +48,7 @@ flowchart LR
     style F fill:#0d1823,color:#ffffff,stroke:#0d1823
 ```
 
-O PDF usa a faixa da primeira página escolhida pelo professor como cabeçalho. No Word, o exportador aproveita a diagramação do modelo para montar o documento que também dará origem ao PDF. [Modelos e formatos de exportação](docs/PDF-E-ARQUIVOS.md)
+O PDF usa a faixa escolhida pelo professor como cabeçalho somente na primeira página. No Word, o exportador aproveita a diagramação do modelo para montar o documento que também dará origem ao PDF. Fórmulas têm prévia na revisão e são exportadas como equações editáveis. Matemática recebe espaço livre para cálculos; outras matérias recebem linhas entre as margens. [Modelos e formatos de exportação](docs/PDF-E-ARQUIVOS.md)
 
 ## Tecnologias e bibliotecas
 
@@ -94,16 +94,19 @@ O PDF usa a faixa da primeira página escolhida pelo professor como cabeçalho. 
 | **Dados** | PostgreSQL em produção e SQLite no ambiente local. A sessão, o cache e a fila usam o banco. Os modelos, capas e documentos ficam no armazenamento privado do servidor. |
 | **Inteligência artificial** | Gemini gera e confere as questões. O código também oferece Groq como reserva quando configurado e Mistral como provedor opcional. |
 | **Documentos** | LibreOffice WebAssembly, pelo pacote `@matbee/libreoffice-converter`, converte Word e PDF. `docx` e `@xmldom/xmldom` montam os documentos, e `word-extractor` lê os modelos Word. |
+| **Matemática** | KaTeX apresenta fórmulas na revisão; `mathml2omml` cria equações editáveis no Word, também usadas na conversão para PDF. Python e SymPy conferem resultados de operações e equações simples, sem nova chamada à IA. Casos não reconhecidos ficam para revisão do professor. [Escopo e instalação](docs/VERIFICACAO-MATEMATICA.md). |
 | **PDF e arquivos** | `pdfjs-dist` e `@napi-rs/canvas` recortam cabeçalhos. `jspdf` exporta PDFs na demonstração. `jszip` manipula modelos DOCX e reúne provas em ZIP, com `buffer` para compatibilidade no navegador. |
 | **Validação e testes** | Zod valida os dados da interface. PHPUnit, Mockery e Faker cobrem o backend. O executor nativo de testes do Node verifica regras e arquivos. |
 | **Publicação** | Docker e Compose na AWS, com imagem Debian e scripts Bash. NGINX e PHP-FPM atendem HTTP, Supervisor mantém os processos e SMTP entrega os códigos de login. A Vercel fornece a entrada pública e o GitHub Actions executa as verificações. |
 | **Desenvolvimento** | Git e GitHub versionam o código. npm e Composer gerenciam as dependências. TypeScript verifica os tipos, Laravel Pint formata PHP, Tinker oferece o console e Pail auxilia na leitura dos logs. |
 
-As versões instaladas ficam registradas em [package-lock.json](package-lock.json) e [composer.lock](composer.lock). Os ícones desta seção vêm do [Devicons](https://devicons.io/).
+As versões instaladas ficam registradas em [package-lock.json](package-lock.json), [composer.lock](composer.lock) e [requirements-math.txt](requirements-math.txt). Os ícones desta seção vêm do [Devicons](https://devicons.io/).
 
 ## Comece por aqui
 
 Use **PHP 8.3 ou superior**, **Composer 2** e **Node.js 24**. Habilite no PHP as extensões PDO/SQLite, mbstring, intl, fileinfo, openssl, curl, zip, XML e gd. O ambiente local usa seu próprio banco SQLite.
+
+Para conferir cálculos, instale também **Python 3.11+** e as dependências de [verificação matemática](docs/VERIFICACAO-MATEMATICA.md#instalação-local). A imagem Docker já inclui esse ambiente.
 
 1. Na raiz do repositório, instale as dependências.
 
@@ -150,6 +153,7 @@ A aplicação e o PostgreSQL de produção rodam na AWS. A Vercel mantém o dom�
 | `npm run dev` | Atualizar a interface durante a edição, junto de `php artisan serve`. |
 | `php artisan test` | Testar autenticação, permissões, filas, documentos e migração em banco temporário. |
 | `npm test` | Testar regras da interface e arquivos de prova. |
+| `python -m unittest discover -s tests/math_verifier` | Conferir cálculos, limites e entradas não suportadas; use o Python do ambiente virtual. |
 | `npm run typecheck` | Conferir os tipos TypeScript. |
 | `npm run build` | Compilar a interface para distribuição. |
 

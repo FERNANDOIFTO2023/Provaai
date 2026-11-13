@@ -40,6 +40,32 @@ class AiTest extends TestCase
         return ['instructions' => 'Responda.', 'questions' => [['type' => 'essay', 'statement' => 'Explique a fotossíntese.', 'options' => [], 'answer' => 'Produção de açúcares com luz.', 'objective' => 'Compreender a fotossíntese', 'points' => 10]]];
     }
 
+    public function test_math_notation_survives_generation_review_and_storage(): void
+    {
+        config(['provaai.gemini_key' => 'test', 'provaai.groq_key' => null]);
+        $exam = $this->exam();
+        $exam->forceFill(['subject' => 'Matemática', 'topics' => 'Frações'])->save();
+        $content = $this->content();
+        $content['questions'][0]['statement'] = 'Calcule \\(\\frac{1}{2}+\\frac{1}{4}\\).';
+        $content['questions'][0]['answer'] = '\\(\\frac{3}{4}\\)';
+        $content['questions'][0]['objective'] = 'Somar frações';
+        Http::fake(function ($request) use ($content) {
+            $context = json_decode($request['contents'][0]['parts'][0]['text'], true);
+            if (isset($context['questions'])) {
+                $this->assertSame($content['questions'], $context['questions']);
+                $result = ['aligned' => true, 'offTopicQuestions' => [], 'missingTopics' => []];
+            } else {
+                $this->assertStringContainsString('LaTeX', $request['systemInstruction']['parts'][0]['text']);
+                $result = $content;
+            }
+            return Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode($result)]]]]]]);
+        });
+        app(AiService::class)->generate($exam->user_id, $exam->id);
+        $this->assertSame($content['questions'], $exam->fresh()->content['questions']);
+        $this->assertSame('verified', $exam->fresh()->content['mathReview']['results'][0]['status']);
+        Http::assertSentCount(2);
+    }
+
     public function test_gemini_generation_and_review_keep_private_fields_and_pdf_out_of_context(): void
     {
         config(['provaai.gemini_key' => 'test', 'provaai.groq_key' => 'reserve']);

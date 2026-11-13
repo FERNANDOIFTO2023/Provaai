@@ -110,6 +110,7 @@ class RecordsController extends Controller
                     app(ExamValidator::class)->validate($content);
                 }
                 if (! empty($content['questions'])) {
+                    $data['content'] = app(\App\Services\MathVerificationService::class)->verify($data['subject'] ?? $record->subject, $content);
                     $validator = app(ExamValidator::class);
                     $others = Exam::ownedBy($uid)->where('class_id', $data['class_id'] ?? $record->class_id)->where('title', $data['title'] ?? $record->title)->where('id', '!=', $record->id ?? '')->pluck('content');
                     $used = [];

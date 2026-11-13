@@ -27,6 +27,9 @@ class DocumentService
             $process->setTimeout(120);
             $process->run();
             if (! $process->isSuccessful()) {
+                if (str_contains($process->getErrorOutput(), 'PROVAAI_INVALID_MATH')) {
+                    throw new RuntimeException('Confira as fórmulas na revisão da prova antes de baixar. Há uma expressão incompleta ou não suportada.');
+                }
                 throw new RuntimeException('Não foi possível converter o documento. Confira se ele está legível e sem senha.');
             }
             $lines = explode("\n", trim($process->getOutput()));
@@ -79,7 +82,7 @@ class DocumentService
         $template = $exam->template_id ? ExamTemplate::ownedBy($user->id)->findOrFail($exam->template_id) : null;
         $path = $template ? $this->path($template) : null;
         $className = ClassRoom::ownedBy($user->id)->findOrFail($exam->class_id)->name;
-        $key = 'export:v2:'.hash('sha256', json_encode([$exam->toArray(), $user->name, $className, $answerKey,
+        $key = 'export:v4:'.hash('sha256', json_encode([$exam->toArray(), $user->name, $className, $answerKey,
             $template?->filename, $template?->pdf_header_ratio, $path ? hash_file('sha256', $path) : null]));
         $docx = fn () => $this->cachedDocument($key.':docx', function () use ($exam, $user, $template, $path, $className, $answerKey) {
             $header = $template && preg_match('/\.pdf$/i', $template->filename) ? $this->header($template, $template->pdf_header_ratio) : null;

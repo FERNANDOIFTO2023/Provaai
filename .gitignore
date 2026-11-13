@@ -19,3 +19,5 @@ supabase/.branches/
 
 /backups/
 .phpunit.cache/
+.venv/
+__pycache__/

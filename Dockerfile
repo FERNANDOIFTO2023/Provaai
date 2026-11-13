@@ -6,13 +6,17 @@ COPY . .
 RUN npm run build && npm prune --omit=dev --ignore-scripts
 
 FROM php:8.3-fpm-bookworm
-RUN apt-get update && apt-get install -y --no-install-recommends nginx supervisor libpq-dev libzip-dev libicu-dev libonig-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev libfontconfig1 ca-certificates unzip git \
+RUN apt-get update && apt-get install -y --no-install-recommends nginx supervisor libpq-dev libzip-dev libicu-dev libonig-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev libfontconfig1 ca-certificates unzip git python3 python3-venv \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
     && docker-php-ext-install pdo_pgsql pdo_mysql zip intl mbstring gd pcntl opcache \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 COPY --from=frontend /usr/local/bin/node /usr/local/bin/node
 WORKDIR /var/www/html
+COPY requirements-math.txt /tmp/requirements-math.txt
+RUN python3 -m venv /opt/provaai-python && /opt/provaai-python/bin/pip install --no-cache-dir -r /tmp/requirements-math.txt
+ENV PYTHON_BINARY=/opt/provaai-python/bin/python
+ENV PATH="/opt/provaai-python/bin:${PATH}"
 COPY . .
 RUN chmod -R a+rX /var/www/html
 COPY --from=frontend /app/public/build ./public/build

@@ -1,6 +1,9 @@
 'use client';
 import { apiFetch } from '@/lib/api-client';
 import PdfHeaderSettings from './pdf-header-settings';
+import MathPreview from './math-preview';
+import MathReview from './math-review';
+import { hasMath } from '@/lib/math-text';
 import {
   useEffect,
   useLayoutEffect,
@@ -1946,6 +1949,7 @@ export default function TeacherWorkspace({
                   }
                 />
               </Field>
+              <MathPreview text={exam.content.instructions} label="Prévia das instruções" />
               {!demo && !exam.content.questions.length && (
                 <QuestionCounts
                   fixedTotal={exam.question_count}
@@ -2000,6 +2004,7 @@ export default function TeacherWorkspace({
                       }
                     />
                   </Field>
+                  <MathPreview text={q.statement} label={`Prévia do enunciado ${i + 1}`} />
                   <div className="form-grid">
                     <Field label="Habilidade / objetivo">
                       <input
@@ -2046,8 +2051,8 @@ export default function TeacherWorkspace({
                     </Field>
                   </div>
                   {q.options.map((o, k) => (
+                    <div key={k}>
                     <Field
-                      key={k}
                       label={`Alternativa ${String.fromCharCode(65 + k)}`}
                     >
                       <input
@@ -2078,6 +2083,8 @@ export default function TeacherWorkspace({
                         }
                       />
                     </Field>
+                    <MathPreview text={o} label={`Prévia da alternativa ${String.fromCharCode(65 + k)}`} />
+                    </div>
                   ))}
                   <Field label="Resposta esperada · apenas para o professor">
                     {q.type === 'objective' ? (
@@ -2097,7 +2104,7 @@ export default function TeacherWorkspace({
                         }
                       >
                         {q.options.map((o, k) => (
-                          <option key={k}>{o}</option>
+                          <option key={k} value={o}>{hasMath(o) ? `Alternativa ${String.fromCharCode(65 + k)}` : o}</option>
                         ))}
                       </select>
                     ) : (
@@ -2120,6 +2127,8 @@ export default function TeacherWorkspace({
                       />
                     )}
                   </Field>
+                  <MathPreview text={q.answer} label="Prévia da resposta · apenas para o professor" />
+                  <MathReview content={exam.content} subject={exam.subject} index={i} demo={demo} />
                 </section>
               ))}
               <div className="actions">

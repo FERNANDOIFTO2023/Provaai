@@ -1,0 +1,13 @@
+.math-review {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #ddd8e8;
+  border-radius: 12px;
+  background: #f8f6fc;
+  color: #394351;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.math-review p { margin: 3px 0 0; }
+.math-review--verified { background: #e4faf4; border-color: #b1e8d8; color: #115747; }
+.math-review--mismatch { background: #fff5e4; border-color: #ebd4ab; color: #76480e; }

@@ -9,6 +9,28 @@ Os testes cobrem autenticação, isolamento entre professores, cópias, geraçã
 A produção e a homologação da AWS usam bancos, volumes de documentos e chaves de sessão próprios. O SQLite local é independente desses ambientes.
 
 ## Histórico de alterações
+
+### 12/11/2026 — Conferência local de resultados matemáticos
+
+Integrado SymPy ao término da geração e ao salvamento da revisão. O cálculo explícito do enunciado é comparado com o resultado final do gabarito; equações de primeiro e segundo grau são conferidas nos reais, e alternativas equivalentes recebem aviso. A interface distingue resultado conferido, divergência e revisão manual. Alterações nos dados da questão invalidam o aviso anterior, e o servidor recalcula sem confiar em relatórios enviados pelo navegador ou pela IA.
+
+Casos fora do escopo e instruções que possam mudar domínio ou precisão permanecem para revisão. A explicação dos passos não é certificada. O processo tem limites de entrada, memória e tempo e não usa avaliação de código recebido. Docker e CI foram preparados com Python e dependências fixadas. O serviço preserva as questões se o verificador estiver indisponível. [Escopo, instalação e operação](VERIFICACAO-MATEMATICA.md).
+
+Validação local: sete testes Python, 52 testes JavaScript/TypeScript e a suíte completa de 33 testes Laravel passaram, com 204 verificações no backend, incluindo conversão de documentos. A integração usa o processo Python real; as chamadas de geração Gemini são simuladas nos testes. Build e checagem de tipos concluídos. A revisão para publicação confirmou a instalação do SymPy no Docker, a conferência dentro da imagem pelo CI e a exclusão de credenciais, ambiente virtual e caches do Git. Sem commit, push ou deploy; a nova imagem Docker ainda precisa ser construída e validada pelo CI na publicação.
+
+### 12/11/2026 — Fórmulas matemáticas, áreas de resposta e cabeçalho
+
+Integradas prévias KaTeX para instruções, enunciados, alternativas e gabaritos. As orientações da geração agora pedem notação LaTeX delimitada, com escape correto no JSON. O código existente de conferência da matéria foi preservado. Não houve chamadas reais ao Gemini nesta validação: as respostas da API foram simuladas nos testes.
+
+DOCX e PDF de produção usam equações editáveis convertidas de MathML para OMML. Corrigidos argumentos vazios de integrais, delimitadores de matrizes que não acompanhavam a altura e perda da notação de conjuntos numéricos. A exportação recusa fórmulas inválidas ou incompatíveis com aviso para revisão. KaTeX carrega sob demanda; texto comum e provas anteriores permanecem compatíveis.
+
+Retiradas as linhas de resposta das questões discursivas de matemática, preservando espaço para cálculos. Nas outras matérias, as linhas ocupam a largura útil da folha, respeitando as margens. O cabeçalho escolhido, tanto de PDF quanto de Word, aparece somente na primeira página; rodapés de modelos Word são preservados. A versão do cache de documentos foi alterada para invalidar arquivos do formato anterior.
+
+Verificação local: 51 testes JavaScript/TypeScript passaram; oito testes de geração com API simulada passaram, com 38 verificações; dois testes das rotas de documentos passaram, com 20 verificações. Build e checagem de tipos concluídos. Conferidas a revisão em desktop e celular, fórmulas incompletas e exportações reais com várias páginas, com modelos PDF e DOCX. SymPy e a validação automática de cálculos permanecem para outra etapa. Alterações locais, sem commit, push ou deploy.
+
+### 12/11/2026 — Instalação do KaTeX
+
+Adicionado `katex` 0.19.1 às dependências npm, com atualização do arquivo de versões `package-lock.json`. A instalação foi conferida com `npm ls katex` e o build de produção concluiu. Esta etapa prepara o suporte à notação matemática; a integração com a revisão das provas e a conversão das equações para DOCX/PDF ainda não foram implementadas. Sem commit ou publicação nesta etapa.
 ### 12/11/2026 — Destaque da navegação
 
 A página selecionada na header passou a usar fundo verde-menta claro e texto escuro, sem a linha roxa inferior. O efeito ao passar o mouse usa um fundo neutro discreto. A mesma seleção aparece no menu Mais e nas opções recolhidas. Foram preservados o tamanho da header, a navegação por texto, a animação de transição e o respeito à preferência por movimento reduzido.

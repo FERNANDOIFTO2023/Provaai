@@ -62,7 +62,7 @@ test('a leitura inicial inclui a borda de uma tabela e respeita o recorte manual
   assert.ok(Math.abs(manual.headerHeight / manual.height - 0.25) < 0.0001);
 });
 
-test('PDF usa só pixels do cabeçalho, repete nas páginas e não leva perguntas antigas nem gabarito',async()=>{
+test('PDF usa só pixels do cabeçalho na primeira página e não leva perguntas antigas nem gabarito',async()=>{
   const source=new jsPDF();
   source.setFillColor(20,100,180);source.rect(0,0,210,35,'F');
   source.text('ESCOLA EXEMPLO',20,20);
@@ -86,8 +86,8 @@ test('PDF usa só pixels do cabeçalho, repete nas páginas e não leva pergunta
       const content=await page.getTextContent();
       all+=content.items.map(i=>'str' in i?i.str:'').join(' ');
       const ops=await page.getOperatorList();
-      assert.ok(ops.fnArray.includes(pdfjs.OPS.paintImageXObject),'cabeçalho deve aparecer em cada página');
-      for(const item of content.items) if('str' in item && item.str.startsWith('Questão nova'))
+      assert.equal(ops.fnArray.includes(pdfjs.OPS.paintImageXObject), n === 1, 'cabeçalho somente na primeira página');
+      for(const item of content.items) if(n === 1 && 'str' in item && item.str.startsWith('Questão nova'))
         assert.ok(item.transform[5] < page.getViewport({scale:1}).height*(1-0.2));
     }
     assert.match(all,/Questão nova 12/);
@@ -98,6 +98,10 @@ test('PDF usa só pixels do cabeçalho, repete nas páginas e não leva pergunta
   const docx=await JSZip.loadAsync(await (await examFile(exam,'docx',false,header)).arrayBuffer());
   assert.ok(docx.file(/word\/header\d+\.xml/).length);
   assert.ok(docx.file(/word\/media\/.+\.png/).length);
+  const mainXml = await docx.file('word/document.xml')!.async('string');
+  assert.match(mainXml, /w:type="first"/);
+  assert.doesNotMatch(mainXml, /<w:headerReference[^>]*w:type="default"/);
+  assert.match(mainXml, /<w:titlePg/);
   assert.doesNotMatch(await docx.file('word/document.xml')!.async('string'),/PERGUNTA ANTIGA|OUTRA QUESTAO|RESPOSTA RESERVADA/);
 });
 test('PDF inválido e recortes fora do limite são recusados',async()=>{
