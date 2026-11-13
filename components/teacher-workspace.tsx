@@ -21,7 +21,6 @@ import {
   Search,
   FileText,
   LayoutGrid,
-  Settings,
   LogOut,
   Check,
   CheckCircle2,
@@ -100,7 +99,7 @@ const sections = [
     name: 'Modelos de prova',
     icon: FolderOpen,
   },
-  { id: 'settings', short: 'Ajustes', name: 'Ajustes', icon: Settings },
+  { id: 'about', short: 'Sobre', name: 'Sobre', icon: BookOpen },
   { id: 'sharing', short: 'Compartilhamentos', name: 'Compartilhamentos', icon: ArrowUpRight },
 ];
 
@@ -176,14 +175,14 @@ export default function TeacherWorkspace({
     return () => { cancelled = true; };
   }, [modal, current, editing?.id, user?.id, demo]);
   const [initialLoad, setInitialLoad] = useState(!demo);
-  const [configPending, setConfigPending] = useState(true);
   useWorkspaceHistory(user?.id ?? 'demo', {
     view, current, modal, student: modal === 'student' || modal === 'reactivate' ? editing?.id ?? null : null,
     exam: modal === 'exam' ? exam?.id ?? null : null,
     recovery: modal === 'generate' ? recoveryStudent?.id ?? null : null,
     share: modal === 'share' && shareTarget ? `${shareTarget.kind}:${shareTarget.id}` : null,
   }, location => {
-    setView(sections.some(section => section.id === location.view) ? location.view : 'classes');
+    const restoredView = location.view === 'settings' ? 'about' : location.view;
+    setView(sections.some(section => section.id === restoredView) ? restoredView : 'classes');
     setCurrent(location.current);
     setEditing(data.students.find(item => item.id === location.student) ?? null);
     setExam(data.exams.find(item => item.id === location.exam) ?? null);
@@ -198,7 +197,7 @@ export default function TeacherWorkspace({
     setModal(missing ? null : location.modal as Modal);
     setSearch(''); setError(''); setMobile(false);
   }, !initialLoad);
-  const screenPending = initialLoad || (view === 'settings' && configPending);
+  const screenPending = initialLoad;
   useLayoutEffect(() => {
     onPendingChange(screenPending);
     return () => onPendingChange(false);
@@ -263,8 +262,7 @@ export default function TeacherWorkspace({
     apiFetch('/api/config')
       .then((r) => r.json() as Promise<{ aiConfigured: boolean }>)
       .then((v) => setAi(v.aiConfigured))
-      .catch(() => {})
-      .finally(() => setConfigPending(false));
+      .catch(() => {});
   }, []);
   const userId = user?.id;
   const generation = useExamBatch(userId, async () => {
@@ -892,7 +890,7 @@ export default function TeacherWorkspace({
         </div>
         <span className="nav-caption">ORGANIZAR & ENSINAR</span>
         <nav aria-label="Menu lateral">
-          {sections.filter(section => section.id !== 'settings').map((n) => (
+          {sections.filter(section => section.id !== 'about').map((n) => (
             <button
               key={n.id}
               className={view === n.id ? 'active' : ''}
@@ -908,11 +906,11 @@ export default function TeacherWorkspace({
         </nav>
         <nav className="bottom-nav">
           <button
-            className={view === 'settings' ? 'active' : ''}
-            onClick={() => navigate('settings')}
+            className={view === 'about' ? 'active' : ''}
+            onClick={() => navigate('about')}
           >
-            <Settings size={19} />
-            Ajustes
+            <BookOpen size={19} />
+            Sobre
           </button>
         </nav>
         <button
@@ -1512,48 +1510,60 @@ export default function TeacherWorkspace({
               </div>
             </>
           )}
-          {view === 'settings' && (
+          {view === 'about' && (
             <>
               <div className="page-heading">
                 <div>
-                  <span className="eyebrow">TUDO NO SEU LUGAR</span>
+                  <span className="eyebrow">FEITA PARA QUEM ENSINA</span>
                   <h1>
-                    Ajustes<span>.</span>
+                    Sobre<span>.</span>
                   </h1>
-                  <p>Conexões e próximos passos do seu espaço.</p>
+                  <p>Conheça o Provaai e o que ajuda a transformar seu planejamento em avaliações.</p>
                 </div>
               </div>
               <div className="settings-grid">
                 <section className="settings-card">
                   <span className="stat-icon peach">
-                    <Sparkles size={21} />
+                    <Users size={21} />
                   </span>
-                  <h2>Geração por IA</h2>
-                  <span className={`status ${ai ? 'good' : 'pending'}`}>
-                    {ai
-                      ? 'Chave configurada no servidor'
-                      : 'Configuração pendente'}
-                  </span>
+                  <h2>Turmas e alunos</h2>
                   <p>
-                    A IA usa a matéria e os critérios pedagógicos para preparar
-                    um rascunho. A revisão e a aprovação são sempre suas.
-                  </p>
-                  <p className="helper-note">
-                    Não informe nomes, diagnósticos ou outros dados pessoais nos
-                    critérios enviados à IA. A camada gratuita do provedor tem
-                    cotas.
+                    Organize suas turmas e registre os objetivos e as dificuldades
+                    de cada aluno para preparar avaliações coletivas ou individuais.
                   </p>
                 </section>
                 <section className="settings-card">
-                  <h2>Sobre esta primeira versão</h2>
+                  <span className="stat-icon peach">
+                    <Sparkles size={21} />
+                  </span>
+                  <h2>IA como apoio</h2>
                   <p>
-                    Turmas, alunos, perfis, rascunhos, revisão e downloads. O
-                    acesso é individual por professor. Não há contas de alunos.
+                    O Gemini ajuda a criar questões a partir da matéria, dos
+                    conteúdos e dos critérios pedagógicos. Você também pode
+                    escrever as questões: a revisão e a aprovação são sempre suas.
                   </p>
+                </section>
+                <section className="settings-card">
+                  <span className="stat-icon peach">
+                    <FileText size={21} />
+                  </span>
+                  <h2>Da revisão à impressão</h2>
                   <p>
-                    A geração ocorre uma prova por vez. OCR, conversão fiel de
-                    modelos, fila durável e verificação semântica de
-                    exclusividade são evoluções pendentes.
+                    Use modelos da escola, revise enunciados e gabaritos e aprove
+                    as avaliações. Depois, baixe as provas em PDF ou Word,
+                    individualmente ou em lote.
+                  </p>
+                </section>
+                <section className="settings-card">
+                  <span className="stat-icon peach">
+                    <BookOpen size={21} />
+                  </span>
+                  <h2>Por dentro do Provaai</h2>
+                  <p>
+                    React e TypeScript dão vida à interface. Laravel e PHP
+                    cuidam do acesso, dos dados e da geração em segundo plano.
+                    KaTeX exibe fórmulas e SymPy auxilia na conferência de
+                    cálculos matemáticos, com revisão final do professor.
                   </p>
                   {demo && (
                     <button
