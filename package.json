@@ -10,6 +10,7 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts",
+    "test:navigation": "node tests/browser/workspace-navigation.mjs",
     "test:backend": "php artisan test"
   },
   "dependencies": {

@@ -175,26 +175,15 @@ export default function TeacherWorkspace({
     return () => { cancelled = true; };
   }, [modal, current, editing?.id, user?.id, demo]);
   const [initialLoad, setInitialLoad] = useState(!demo);
-  useWorkspaceHistory(user?.id ?? 'demo', {
-    view, current, modal, student: modal === 'student' || modal === 'reactivate' ? editing?.id ?? null : null,
-    exam: modal === 'exam' ? exam?.id ?? null : null,
-    recovery: modal === 'generate' ? recoveryStudent?.id ?? null : null,
-    share: modal === 'share' && shareTarget ? `${shareTarget.kind}:${shareTarget.id}` : null,
-  }, location => {
+  const closeModal = useWorkspaceHistory(user?.id ?? 'demo', { view, current, modal }, location => {
     const restoredView = location.view === 'settings' ? 'about' : location.view;
     setView(sections.some(section => section.id === restoredView) ? restoredView : 'classes');
     setCurrent(location.current);
-    setEditing(data.students.find(item => item.id === location.student) ?? null);
-    setExam(data.exams.find(item => item.id === location.exam) ?? null);
-    setRecoveryStudent(data.students.find(item => item.id === location.recovery) ?? null);
-    const [kind, id] = location.share?.split(':') ?? [];
-    const resource = (kind === 'class' ? data.classes : data.students).find(item => item.id === id);
-    setShareTarget(resource ? { kind: kind as 'class' | 'student', id, name: resource.name } : null);
-    const missing = (location.modal === 'exam' && !data.exams.some(item => item.id === location.exam)) ||
-      (['edit-class', 'delete-class', 'generate'].includes(location.modal ?? '') && !data.classes.some(item => item.id === location.current)) ||
-      (location.modal === 'share' && !resource) ||
-      (location.modal === 'reactivate' && !data.students.some(item => item.id === location.student));
-    setModal(missing ? null : location.modal as Modal);
+    setEditing(null);
+    setExam(null);
+    setRecoveryStudent(null);
+    setShareTarget(null);
+    setModal(null);
     setSearch(''); setError(''); setMobile(false);
   }, !initialLoad);
   const screenPending = initialLoad;
@@ -464,7 +453,7 @@ export default function TeacherWorkspace({
         savedCode = saved.code;
         setData(previous => ({ ...previous, students: [saved.student as Student, ...previous.students] }));
       }
-      setModal(null);
+      closeModal();
       setMessage(editing ? 'Perfil do aluno salvo.' : `Aluno cadastrado com o código ${savedCode}.`);
     });
   }
@@ -1621,7 +1610,7 @@ export default function TeacherWorkspace({
           }
           wide={modal === 'exam' || modal === 'generate' || modal === 'class' || modal === 'edit-class'}
           onClose={() => {
-            if (!busy) setModal(null);
+            if (!busy) closeModal();
           }}
         >
           {error && (
@@ -1635,7 +1624,7 @@ export default function TeacherWorkspace({
             <p>{downloads.error || (downloads.busy ? 'Você pode continuar explorando o site. Mantenha esta aba aberta até o download terminar.' : downloads.notice)}</p>
             {(downloads.status || downloads.notice) && <ProgressMeter name="Progresso do download"
               percent={downloads.status?.percent ?? 100} label={downloads.status?.label ?? 'Arquivo pronto'} />}
-            <button className="button primary" onClick={() => setModal(null)}>{downloads.busy ? 'Continuar navegando' : 'Concluir'}</button>
+            <button className="button primary" onClick={closeModal}>{downloads.busy ? 'Continuar navegando' : 'Concluir'}</button>
           </section>}
           {modal === 'uploads' && (
             <section className="upload-wait">
@@ -1650,11 +1639,11 @@ export default function TeacherWorkspace({
               </ul>
               <button className="button primary" type="button" onClick={() => {
                 if (!uploading) uploads.dismiss();
-                setModal(null);
+                closeModal();
               }}>{uploading ? 'Continuar em segundo plano' : 'Concluir'}</button>
             </section>
           )}
-          {modal === 'share' && shareTarget && <ShareCopyForm key={`${shareTarget.kind}:${shareTarget.id}`} target={shareTarget} demo={demo} busy={busy} onSend={sendCopy} onCancel={() => setModal(null)} />}
+          {modal === 'share' && shareTarget && <ShareCopyForm key={`${shareTarget.kind}:${shareTarget.id}`} target={shareTarget} demo={demo} busy={busy} onSend={sendCopy} onCancel={closeModal} />}
           {modal === 'delete-class' && active && <form onSubmit={deleteClass}>
             <p>A exclusão de <strong>{active.name}</strong> é permanente. Remove os alunos ainda vinculados, todas as provas desses alunos e as provas desta turma. Convites pendentes também serão cancelados. Cópias já recebidas por outros professores são independentes.</p>
             <p className="helper-note">Para manter os dados e poder voltar depois, use Inativar turma.</p>
@@ -1665,16 +1654,16 @@ export default function TeacherWorkspace({
           </form>}
           {modal === 'reactivate' && editing && <form onSubmit={event => {
             event.preventDefault(); const classId = String(new FormData(event.currentTarget).get('classId'));
-            void reactivateStudent(editing, classId).then(() => setModal(null)).catch(error => setError(cleanError(error)));
+            void reactivateStudent(editing, classId).then(closeModal).catch(error => setError(cleanError(error)));
           }}><p>Escolha a turma para reativar <strong>{editing.name}</strong>. O histórico de provas será mantido.</p>
             <p className="helper-note">Na turma de origem, o código será mantido. Em outra turma, um novo código será gerado automaticamente.</p>
             <Field label="Turma de destino"><select name="classId" required defaultValue={data.classes.some(room => room.id === editing.class_id && !room.archived_at) ? editing.class_id : ''} disabled={busy}>
               <option value="" disabled>Selecione uma turma ativa</option>{data.classes.filter(room => !room.archived_at).map(room => <option value={room.id} key={room.id}>{room.name} · {room.subject}</option>)}
-            </select></Field><div className="dialog-actions"><button type="button" className="button secondary" disabled={busy} onClick={() => setModal(null)}>Cancelar</button>
+            </select></Field><div className="dialog-actions"><button type="button" className="button secondary" disabled={busy} onClick={closeModal}>Cancelar</button>
               <button className="button primary" disabled={busy || generation.busy}>{busy ? 'Reativando…' : 'Reativar aluno'}</button></div></form>}
           {(modal === 'class' || modal === 'edit-class') && (
             <ClassSettings key={modal === 'edit-class' ? active?.id : 'new'} room={modal === 'edit-class' ? active ?? undefined : undefined}
-              busy={busy} onSave={saveClass} onCancel={() => setModal(null)}>
+              busy={busy} onSave={saveClass} onCancel={closeModal}>
               {modal === 'edit-class' && active && <section className="class-lifecycle">
                 <h3>Status da turma: {active.archived_at ? 'inativa' : 'ativa'}</h3>
                 <p className="helper-note">Inativar preserva os dados por um ano. Você pode reativar nesse período. Ao completar um ano de inatividade, a turma, os alunos vinculados e suas provas serão excluídos pela rotina automática diária.</p>
@@ -1750,7 +1739,7 @@ export default function TeacherWorkspace({
                 <button
                   type="button"
                   className="button secondary"
-                  onClick={() => setModal(null)}
+                  onClick={closeModal}
                 >
                   Cancelar
                 </button>
@@ -1874,7 +1863,7 @@ export default function TeacherWorkspace({
                   type="button"
                   className="button secondary"
                   disabled={busy}
-                  onClick={() => setModal(null)}
+                  onClick={closeModal}
                 >
                   Cancelar
                 </button>
