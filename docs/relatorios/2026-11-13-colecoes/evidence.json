@@ -1,0 +1,27 @@
+{
+  "contract": "Refinar Modelos de prova e Provas individuais para professores, usando as capturas fornecidas como referência do problema. Manter identidade Provaai, destacar a ação de adicionar/preparar, organizar opções secundárias, reduzir ruído nas avaliações e permitir busca por formato. Verificar 1440x1000 e 375x1000, nomes longos, teclado, movimento reduzido, estados de dados e funções existentes.",
+  "targetViewports": ["1440x1000", "375x1000"],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Filtros com aria-pressed, busca rotulada, foco visível verificado após Tab/Shift+Tab; Enter abre opções e alterna histórico. Controles principais de inclusão/busca/situação têm ao menos 44px. Preferência reduced-motion elimina animação dos cartões; hover normal foi exercitado. Seis pares de cores de texto verificados com contraste entre 5,77:1 e 9,04:1. Não equivale a auditoria completa com leitor de tela."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Capturas inspecionadas nos dois tamanhos, sem overflow horizontal. Corrigida e testada a coluna de títulos de provas no celular com largura mínima de 180px. Nomes longos de alunos/modelos quebram dentro dos cartões; opções de PDF abertas cabem em 375px."
+  },
+  "contentStates": {
+    "loading": { "status": "pass", "evidence": "Modelo com leitura pendente renderizado junto aos modelos prontos; seleção como padrão desabilitada. Este teste cobre o estado aguardando processamento, não a execução de upload real." },
+    "empty": { "status": "pass", "evidence": "Busca sem modelos mostra mensagem e ação Ver todos os modelos, que limpa os filtros. Busca sem alunos mostra mensagem específica. Capturas dos estados vazios em ambos os tamanhos." },
+    "error": { "status": "pass", "evidence": "Modelo com falha de processamento mostra o erro em texto e mantém acesso às opções de revisão; não pode ser definido como padrão." },
+    "partial": { "status": "pass", "evidence": "Biblioteca com modelos prontos, pendente e com falha continua utilizável. Alunos com e sem provas recebem histórico ou orientação de primeira prova, respectivamente." },
+    "success": { "status": "pass", "evidence": "Troca de padrão atualiza o destaque e o resumo; revisão de texto extraído mantém o valor salvo no fixture. Inclusão de aluno aumenta o contador de 2 para 3 e permite abrir preparação; revisão de prova continua acessível." },
+    "permission": { "status": "pass", "evidence": "Resposta simulada HTTP 403 ao trocar o padrão exibe Sem permissão para alterar o modelo padrão e preserva o padrão anterior. Nova tentativa autorizada funciona. Nenhuma permissão real foi alterada." }
+  },
+  "renderedEvidence": [
+    { "viewport": "1440x1000", "artifact": "modelos-1440.png", "observation": "Biblioteca com filtros, destaque de padrão, cinco modelos e estados mistos; tipografia e hierarquia revisadas visualmente." },
+    { "viewport": "1440x1000", "artifact": "individuais-1440.png", "observation": "Resumo de acompanhamento, busca, aluno com avaliações e aluno com nome longo sem avaliações." },
+    { "viewport": "375x1000", "artifact": "modelos-375.png", "observation": "Biblioteca em coluna única, controles adaptados, nome longo e erro de processamento sem overflow." },
+    { "viewport": "375x1000", "artifact": "individuais-375.png", "observation": "Títulos das provas legíveis após correção da grade; botões acessíveis e informações agrupadas." },
+    { "viewport": "375x1000", "artifact": "modelos-opcoes-375.png", "observation": "Opções de revisão e cabeçalho PDF abertas dentro do cartão, sem transbordamento." }
+  ]
+}

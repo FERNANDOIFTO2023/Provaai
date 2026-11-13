@@ -1,6 +1,7 @@
 'use client';
 import { apiFetch } from '@/lib/api-client';
 import PdfHeaderSettings from './pdf-header-settings';
+import TemplateLibrary from './template-library';
 import MathPreview from './math-preview';
 import MathReview from './math-review';
 import { hasMath } from '@/lib/math-text';
@@ -1393,41 +1394,15 @@ export default function TeacherWorkspace({
                   Adicionar modelos
                 </button>
               </div>
-              <div className="notice soft">
-                <BookOpen size={21} />
-                <p>
-                  No PDF, ajuste o recorte do cabeçalho que aparecerá na prova. No Word, o site aproveita a diagramação e usa o texto como referência para as questões.
-                </p>
-              </div>
-              <div className="template-grid">
-                <div className="template-card">
-                  <div className="mini-document">
-                    <span />
-                    <b>Prova individual</b>
-                    <i />
-                    <i />
-                    <i />
-                    <i />
-                  </div>
-                  <h3>Modelo Provaai</h3>
-                  <p>A4 · Identificação · Espaço para respostas</p>
-                  {defaultControl(null)}
-                </div>
-                {data.templates.map((t) => (
-                  <div className="template-card" key={t.id}>
-                    <div className="template-file">
-                      <FileText size={38} />
-                      <span>{t.filename.split('.').pop()?.toUpperCase()}</span>
-                    </div>
-                    <h3>{t.name}</h3>
-                    <p>{t.filename}</p>
-                    <p className="muted">{t.reference_text.slice(0, 100)}</p>
-                    {defaultControl(t.id, templateReady(t.id))}
-                    <p>
+              <TemplateLibrary templates={data.templates} selected={teacherTemplate}
+                renderDefault={() => defaultControl(null)} renderActions={t => <>
+                    <div className="model-primary-action">{defaultControl(t.id, templateReady(t.id))}</div>
+                    <p className={`model-processing ${templateReady(t.id) ? 'is-ready' : 'is-pending'}`} role="status">
                       {uploads.active.some(task => task.id === t.id) ? 'Anexando modelo…' : t.processing_status === 'ready'
                         ? /\.pdf$/i.test(t.filename) ? 'Modelo visual pronto' : 'Leitura concluída'
                         : t.processing_error || 'Leitura pendente'}
                     </p>
+                    <details className="model-tools"><summary>Revisão e opções <SlidersHorizontal size={16} /></summary><div className="model-tools-content">
                     {!demo && (
                       <button
                         disabled={busy || uploads.active.some(task => task.id === t.id)}
@@ -1466,6 +1441,7 @@ export default function TeacherWorkspace({
                           }}
                         >
                           <textarea
+                            aria-label={`Texto extraído de ${t.name}`}
                             name="text"
                             rows={12}
                             defaultValue={t.extracted_text}
@@ -1494,9 +1470,8 @@ export default function TeacherWorkspace({
                         Abrir original <ArrowUpRight size={15} />
                       </button>
                     )}
-                  </div>
-                ))}
-              </div>
+                    </div></details>
+                  </>} />
             </>
           )}
           {view === 'about' && (

@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts",
     "test:navigation": "node tests/browser/workspace-navigation.mjs",
+    "test:collections": "node --experimental-strip-types tests/browser/collections-visual.mjs",
     "test:backend": "php artisan test"
   },
   "dependencies": {

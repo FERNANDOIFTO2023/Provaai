@@ -1,5 +1,20 @@
 # Testes de navegação
 
+## Modelos e provas individuais
+
+`npm run test:collections` usa os mesmos requisitos de Playwright/navegador
+abaixo para conferir as telas de Modelos e Provas individuais em 1440 × 1000
+e 375 × 1000. A suíte abre o build real com uma conta inteiramente fictícia e
+respostas de API simuladas; não acessa contas ou bancos reais.
+
+Verifica filtros, busca vazia, seleção de padrão, modelo pendente, falha de
+processamento, resposta de permissão negada, edição de texto extraído, inclusão
+de aluno, totais, revisão de provas, teclado, movimento reduzido e largura do
+texto no celular. Capturas são gravadas em
+`docs/relatorios/2026-11-13-colecoes/` para inspeção visual.
+
+## Navegação geral
+
 `npm run test:navigation` compila o frontend e abre um navegador isolado,
 sem usar a sessão pessoal do navegador. O servidor temporário serve o build
 real do aplicativo em uma porta local disponível e é encerrado ao final.
