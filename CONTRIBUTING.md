@@ -27,6 +27,16 @@ auto-merge** no PR; os mesmos requisitos continuam obrigatorios.
 
 ## Validacoes obrigatorias
 
+O agente prepara as alteracoes, executa e confere os testes relevantes e
+entrega um relatorio em `docs/relatorios/`. **Por padrao, somente o usuario
+faz o commit.** O agente so pode fazer staging, criar commits, enviar pushes
+ou integrar PRs quando o usuario autorizar explicitamente a operacao e o
+escopo atuais. A autorizacao nao vale para tarefas futuras e nao dispensa
+testes nem relatorio antes do commit. Essa regra esta registrada em
+`AGENTS.md` e vale mesmo com o bypass do GitHub. Falhas e testes que nao
+puderam ser executados devem ser descritos no relatorio; o trabalho nao
+deve ser apresentado como validado nesses casos.
+
 - `validate`: verificacao de tipos, testes do frontend, build, testes Laravel
   e testes do verificador matematico.
 - `migration`: construcao Docker, migracoes PostgreSQL e verificacao da
