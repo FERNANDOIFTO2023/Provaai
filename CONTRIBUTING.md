@@ -1,8 +1,10 @@
 # Como contribuir
 
-As alteracoes entram na `main` por pull request (PR), depois da revisao do
-proprietario e das validacoes automaticas. Commits em branches de trabalho
-continuam livres; push direto, force push e exclusao da `main` sao bloqueados.
+As alteracoes de colaboradores entram na `main` por pull request (PR), depois
+da revisao do proprietario e das validacoes automaticas. Commits em branches
+de trabalho continuam livres; push direto, force push e exclusao da `main`
+sao bloqueados para colaboradores. A conta proprietaria `@FERNANDOIFTO2023`
+tem liberacao total, conforme descrito abaixo.
 
 ## Fluxo do colaborador
 
@@ -40,13 +42,17 @@ As configuracoes estao documentadas em `.github/rulesets/` e precisam estar
 ativas em **Settings > Rules > Rulesets**. Editar os arquivos JSON, por si so,
 nao altera as regras do GitHub.
 
-- **main - integridade e testes**: nao permite excecoes. Exige PR, conversas
-  resolvidas e os dois testes; bloqueia force push e exclusao.
+- **main - integridade e testes**: exige PR, conversas resolvidas e os dois
+  testes; bloqueia force push e exclusao para colaboradores.
 - **main - aprovacao do proprietario**: exige a aprovacao do CODEOWNER e uma
-  revisao posterior ao ultimo envio. Apenas `@FERNANDOIFTO2023` pode concluir
-  um PR sem essa revisao, usando a excecao explicita no GitHub. Isso permite
-  integrar suas proprias contribuicoes, pois o GitHub nao aceita autoaprovacao.
-  A excecao nao permite push direto nem ignorar testes, force push ou exclusao.
+  revisao posterior ao ultimo envio para contribuicoes de colaboradores.
+
+Somente a conta `@FERNANDOIFTO2023` tem bypass permanente nos dois conjuntos
+de regras. Ela pode enviar commits diretamente para a `main`, concluir PRs
+sem revisao ou testes obrigatorios, fazer force push e excluir a branch.
+Os workflows de testes continuam rodando, mas nao bloqueiam essa conta.
+A excecao usa a identidade autenticada no GitHub, e nao o nome ou o e-mail
+gravado no commit; um colaborador nao ganha a excecao ao copiar esses dados.
 
 Colaboradores devem receber apenas permissao de escrita, sem administracao.
 Quem administra o repositorio pode alterar ou remover as protecoes.
