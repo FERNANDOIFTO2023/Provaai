@@ -10,6 +10,14 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 14/11/2026 — Conferência e encerramento da avaliação externa
+
+Concluído o download do ambiente Kali e conferido o relatório da execução 2 do PentAGI. Confirmadas as consultas de cabeçalhos à página pública e registradas as limitações do relatório automático. A lista de ferramentas desabilitadas não impediu essas consultas, portanto não foi considerada uma barreira de isolamento validada. O fluxo foi encerrado, seu contêiner temporário removido e as evidências exportadas sanitizadas. Mantida a regra SSH por decisão do responsável; inspeção interna da VM e testes com duas contas seguem pendentes. Documentação revisada sem commit ou publicação. [Relatório](relatorios/2026-11-13-seguranca-pentagi.md).
+
+### 13/11/2026 — Instalação do PentAGI e verificações externas
+
+Instalados Docker Desktop, WSL atualizado e os serviços locais do PentAGI, fora do repositório. Configurada chave Gemini separada e substituída a senha administrativa padrão. Confirmados o estado da instância AWS e o motivo do bloqueio SSH: a estação usa um IP diferente do permitido. A regra foi mantida por decisão do responsável. As verificações externas observaram bloqueio de arquivos internos, autenticação obrigatória, proteção CSRF e restrição de portas. Identificada ausência de cabeçalhos de proteção na página inicial; a correção e a inspeção interna permanecem pendentes. Iniciada a revisão automatizada das evidências. [Resultados, limites e comandos](SEGURANCA-PENTAGI.md).
+
 ### 12/11/2026 — Correção do gabarito das questões objetivas
 
 Investigada a recusa “Questões objetivas precisam de quatro alternativas distintas e resposta igual à correta”. A validação comparava o gabarito e a opção como texto exato; diferenças de delimitadores LaTeX ou a indicação por letra podiam recusar uma resposta associável a uma opção. A mensagem antiga também agrupava alternativas repetidas, quantidade incorreta e gabarito sem correspondência, sem distinguir a causa. A resposta original dessa tentativa não foi persistida, portanto não foi possível determinar qual condição ocorreu naquele caso.
