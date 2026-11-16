@@ -1,3 +1,8 @@
+/*
+ * Interface / capa da turma
+ * Obtém a imagem privada e aplica o mesmo recorte utilizado no editor. A geometria compartilhada em
+ * lib/class-appearance.ts evita diferenças entre a prévia e o cartão.
+ */
 "use client";
 import { useEffect, useState, type CSSProperties } from "react";
 import { apiClient } from "@/lib/api-client";

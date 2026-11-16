@@ -1,3 +1,8 @@
+/*
+ * Interface / fila de modelos
+ * Executa os trabalhos de envio e leitura com acompanhamento individual de estado. O
+ * AbortController e a limpeza na desmontagem evitam atualizar uma interface que já foi encerrada.
+ */
 import { useEffect, useRef, useState } from 'react';
 
 type Stage = 'queued' | 'uploading' | 'reading' | 'ready' | 'failed';
@@ -23,6 +28,7 @@ export function useTemplateQueue() {
     };
   }, []);
 
+  // Cada trabalho recebe seu cancelamento e libera a vaga mesmo se falhar.
   async function run(job: Work) {
     const controller = new AbortController();
     inFlight.current.set(job.id, controller);
@@ -39,11 +45,13 @@ export function useTemplateQueue() {
       pump();
     }
   }
+  // Limita a dois trabalhos simultâneos para não saturar leitura e conversão de modelos.
   function pump() {
     while (live.current && inFlight.current.size < 2 && pending.current.length) {
       void run(pending.current.shift()!);
     }
   }
+  // Evita repetir identificadores já pendentes ou em execução antes de iniciar a fila.
   function enqueue(jobs: Work[]) {
     const fresh = jobs.filter(job => !inFlight.current.has(job.id) && !pending.current.some(t => t.id === job.id));
     if (!fresh.length) return;

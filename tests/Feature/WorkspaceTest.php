@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * Testes / backend
+ * Cobre autenticação, isolamento por professor e operações da área de trabalho.
+ * Usa o ambiente de testes do Laravel; os cenários devem permanecer independentes de credenciais e
+ * dados de produção.
+ */
+
+
 namespace Tests\Feature;
 
 use App\Jobs\GenerateBatchStep;

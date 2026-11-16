@@ -1,3 +1,9 @@
+/*
+ * Interface / acompanhamento da geração
+ * Consulta o lote persistido no servidor e atualiza a interface quando uma prova termina. Pode
+ * solicitar a retomada de trabalho sem reserva vigente; o servidor controla quem pode executar cada
+ * etapa.
+ */
 import { apiFetch } from '@/lib/api-client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
@@ -13,6 +19,7 @@ export function useExamBatch(userId: string | undefined, onProgress: () => Promi
   const onProgressRef = useRef(onProgress);
   onProgressRef.current = onProgress;
   const checking = useRef(false), lastKick = useRef(0);
+  // Uma consulta por vez; mudanças no contador disparam atualização das provas na tela.
   const refresh = useCallback(async () => {
     if (!userId || checking.current) return;
     checking.current=true;
@@ -45,6 +52,7 @@ export function useExamBatch(userId: string | undefined, onProgress: () => Promi
     finally {checking.current=false;}
   },[userId]);
   const running=Boolean(batch && batch.completed<batch.exam_ids.length);
+  // O percentual combina provas concluídas e etapa conhecida da prova atual, sem cronômetro fictício.
   let progress = { percent: 0, label: 'Enviando o pedido' };
   if (batch && running) {
     const total = batch.exam_ids.length;

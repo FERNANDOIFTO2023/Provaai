@@ -1,3 +1,8 @@
+/*
+ * Interface / cabeçalho da área de trabalho
+ * Reúne navegação entre seções, conta e saída da sessão. Fecha o menu ao mudar de tela ou clicar
+ * fora, e anima a indicação da seção ativa.
+ */
 "use client";
 
 import { useEffect, useId, useRef } from "react";

@@ -1,3 +1,4 @@
+# Define o que fica fora do contexto de build Docker. Preserve a exclusão de credenciais e dependências locais para manter a imagem reproduzível.
 .git
 .venv
 **/__pycache__

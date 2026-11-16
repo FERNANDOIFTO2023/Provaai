@@ -1,3 +1,9 @@
+/*
+ * Estilos / workspace-header
+ * Cabeçalho da área de trabalho, identidade da conta e indicadores de operações.
+ * A ordem de carregamento em resources/js/app.tsx participa da cascata. Preserve foco visível,
+ * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
+ */
 .topbar.workspace-header {
   container-type: inline-size;
   container-name: workspace-header;
@@ -178,6 +184,7 @@
   outline: 2px solid #5210ce;
   outline-offset: 2px;
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 1250px) {
   .header-session-label {
     display: none;
@@ -187,6 +194,7 @@
     gap: 12px;
   }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 760px) {
   .topbar.workspace-header {
     height: 60px;
@@ -220,6 +228,7 @@
     padding: 8px;
   }
 }
+/* Acessibilidade: adapta animações à preferência de movimento do usuário. */
 @media (prefers-reduced-motion: reduce) {
   .workspace-header-nav button,
   .header-signout,

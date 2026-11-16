@@ -1,3 +1,8 @@
+/*
+ * Turmas / aparência e recorte
+ * Define as opções persistidas de cor e ícone, a janela proporcional da capa e a preparação do
+ * JPEG. Coordenadas normalizadas permitem reutilizar o recorte em diferentes tamanhos de tela.
+ */
 export const classColors = [
   { value: "sage", label: "Verde", hex: "#167d60" },
   { value: "peach", label: "Laranja", hex: "#bd5427" },
@@ -74,6 +79,7 @@ export function bannerGeometry(
   };
 }
 
+// Valida tipo e dimensões, reduz a imagem e grava JPEG sobre fundo branco antes do upload.
 export async function prepareBanner(file: File): Promise<Blob> {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
     throw new Error("Escolha uma foto JPG, PNG ou WebP.");

@@ -1,3 +1,10 @@
+/*
+ * Ferramentas / material audiovisual
+ * Captura telas da demonstração com Playwright para uso no material audiovisual. As rotas e os
+ * seletores precisam corresponder à aplicação disponível no endereço configurado.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
 import { chromium } from 'file:///C:/Users/R3/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright-core/index.mjs';
 const browser = await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 try {

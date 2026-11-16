@@ -1,3 +1,8 @@
+/*
+ * Interface / provas coletivas
+ * Filtra provas por turma e situação e agrupa o histórico por mês. A seleção para download
+ * considera as provas aprovadas; a revisão é aberta pelo callback do componente pai.
+ */
 'use client';
 import {useState} from 'react';
 import {ArrowLeft, ArrowRight, CheckCircle2, Clock, Download, FileText, Search, Sparkles} from './animated-icons';

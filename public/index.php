@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Inicialização / entrada HTTP
+ * Recebe as requisições encaminhadas pelo servidor web e inicia o Laravel. As regras da aplicação
+ * ficam em rotas, controladores e serviços, não neste ponto de entrada.
+ */
+
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 

@@ -1,3 +1,5 @@
+# Testes / limites da verificação matemática
+# Cobre resultados corretos, divergências, entradas não suportadas e limites do interpretador. Casos inconclusivos devem exigir revisão humana em vez de produzir aprovação automática.
 import importlib.util
 from pathlib import Path
 import unittest

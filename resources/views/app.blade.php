@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+{{--
+Views / shell da aplicação
+Entrega metadados, proteção CSRF e o ponto de montagem do React. Os arquivos compilados são resolvidos pela integração Laravel/Vite.
+--}}<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">

@@ -1,3 +1,5 @@
+# Operação / serviços e volumes
+# Descreve os serviços da instalação e os volumes persistentes. Os valores do ambiente de produção ficam fora do repositório; alterações de portas e volumes afetam o deploy.
 services:
   app:
     image: ${PROVAAI_IMAGE:-provaai-app:latest}

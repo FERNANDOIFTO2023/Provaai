@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Testes / configuração do PHPUnit
+Executa os cenários de backend com SQLite em memória e drivers de teste para sessão, e-mail e cache. Esses valores isolam os testes dos serviços reais.
+-->
+
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"

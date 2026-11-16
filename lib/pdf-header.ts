@@ -1,3 +1,8 @@
+/*
+ * Documentos / cabeçalho em imagem
+ * Renderiza somente a região superior da primeira página do PDF em um processo Node. Devolve pixels
+ * e medidas em milímetros, sem copiar objetos ou questões antigas do arquivo para a prova.
+ */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -14,8 +19,7 @@ export async function pdfHeader(bytes: Uint8Array, ratio = 0.25, fitBoundary = f
   headerRatio(ratio);
   if (!bytes.length || bytes.length > 20 * 1024 * 1024 || new TextDecoder().decode(bytes.slice(0,5)) !== '%PDF-')
     throw new Error('Use um PDF válido, sem senha e de até 20 MB.');
-  // Assets copiados pelo outputFileTracingIncludes, relativos à raiz do servidor.
-  // require.resolve é convertido em identificador numérico pelo Turbopack.
+  // O processo Node roda na raiz do projeto; worker, fontes e mapas vêm do pdfjs-dist instalado.
   const root = join(process.cwd(),'node_modules','pdfjs-dist');
   const {createCanvas} = await import('@napi-rs/canvas');
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');

@@ -1,3 +1,8 @@
+/*
+ * Interface / distribuição de questões
+ * Mantém a quantidade de questões objetivas e discursivas coerente com o total escolhido. As regras
+ * numéricas compartilhadas ficam em lib/question-mix.ts.
+ */
 'use client';
 
 import { useState } from 'react';

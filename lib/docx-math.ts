@@ -1,3 +1,8 @@
+/*
+ * Documentos / equações nativas do Word
+ * Converte LaTeX em MathML e depois em OMML, o formato de equações do Office. Repara estruturas
+ * conhecidas do conversor e recusa expressões que não possam ser exportadas corretamente.
+ */
 import JSZip from 'jszip';
 import { DOMParser, XMLSerializer, type Element, type Document } from '@xmldom/xmldom';
 import { mml2omml } from 'mathml2omml';
@@ -11,8 +16,8 @@ const supported = new Set('math semantics mrow mi mn mo mtext ms mspace mfrac ms
 const message = 'PROVAAI_INVALID_MATH: Confira as fórmulas na revisão da prova antes de baixar.';
 
 function repairOfficeStructures(doc: Document) {
-  // The converter can leave an integral's argument next to an empty m:e.
-  // Office renders that empty argument as a square placeholder.
+  // O conversor pode deixar o argumento de uma integral ao lado de um elemento m:e vazio.
+  // O Office exibe esse argumento vazio como um quadrado de preenchimento.
   for (const nary of Array.from(doc.getElementsByTagNameNS(M, 'nary'))) {
     const argument = Array.from(nary.childNodes).find(n => n.nodeType === 1 && n.localName === 'e');
     if (!argument || argument.hasChildNodes()) continue;
@@ -27,7 +32,7 @@ function repairOfficeStructures(doc: Document) {
       argument.appendChild(run);
     }
   }
-  // Matrix fences must stretch to all rows, rather than being ordinary glyphs.
+  // Delimitadores de matriz precisam acompanhar a altura das linhas, em vez de serem caracteres comuns.
   const pairs: Record<string, string> = { '(': ')', '[': ']', '{': '}', '∣': '∣', '|': '|', '∥': '∥', '‖': '‖' };
   for (const matrix of Array.from(doc.getElementsByTagNameNS(M, 'm'))) {
     const before = matrix.previousSibling as Element | null;
@@ -53,6 +58,7 @@ function repairOfficeStructures(doc: Document) {
   }
 }
 
+// Transforma uma fórmula reconhecida em equação nativa; falhas bloqueiam a exportação matemática.
 export function formulaToOmml(part: Extract<MathPart, { kind: 'math' }>): string {
   try {
     const rendered = renderFormula(part, 'mathml');
@@ -61,7 +67,7 @@ export function formulaToOmml(part: Extract<MathPart, { kind: 'math' }>): string
     for (const annotation of Array.from(doc.getElementsByTagNameNS(MML, 'annotation'))) annotation.parentNode!.removeChild(annotation);
     for (const element of Array.from(doc.getElementsByTagName('*'))) {
       if (!supported.has(element.localName!)) throw new Error(message);
-      // Preserve blackboard-bold sets even in Office converters without mathvariant support.
+      // Preserva símbolos de conjuntos mesmo em conversores Office sem suporte a mathvariant.
       if (element.getAttribute('mathvariant') === 'double-struck') {
         const special: Record<string, string> = { C: 'ℂ', H: 'ℍ', N: 'ℕ', P: 'ℙ', Q: 'ℚ', R: 'ℝ', Z: 'ℤ' };
         element.textContent = Array.from(element.textContent ?? '').map(c => special[c] ??
@@ -75,7 +81,7 @@ export function formulaToOmml(part: Extract<MathPart, { kind: 'math' }>): string
     const result = new DOMParser().parseFromString(omml, 'application/xml');
     if (result.documentElement?.namespaceURI !== M || result.documentElement.localName !== 'oMath' || !result.getElementsByTagNameNS(M, 't').length) throw new Error(message);
     repairOfficeStructures(result);
-    // Word and LibreOffice use this mathematical font for extensible symbols.
+    // Word e LibreOffice usam esta fonte matemática para símbolos extensíveis.
     for (const run of Array.from(result.getElementsByTagNameNS(M, 'r'))) {
       for (const previous of Array.from(run.childNodes).filter(n => n.nodeType === 1 && n.localName === 'rPr' && n.namespaceURI === W)) run.removeChild(previous);
       const properties = result.createElementNS(W, 'w:rPr');
@@ -92,6 +98,7 @@ export function formulaToOmml(part: Extract<MathPart, { kind: 'math' }>): string
   }
 }
 
+// Recria trechos de texto preservando estilo, espaços e quebras ao intercalar equações.
 function textRun(doc: Document, text: string, style?: Element): Element {
   const run = doc.createElementNS(W, 'w:r');
   if (style) run.appendChild(style.cloneNode(true));
@@ -105,7 +112,7 @@ function textRun(doc: Document, text: string, style?: Element): Element {
   return run;
 }
 
-/** Replace generated LaTeX runs with editable equations, preserving the DOCX layout. */
+/** Substitui trechos LaTeX por equações editáveis, preservando a diagramação do DOCX. */
 export async function formatDocxMath(bytes: Uint8Array): Promise<Uint8Array> {
   const zip = await JSZip.loadAsync(bytes);
   const source = await zip.file('word/document.xml')?.async('string');
@@ -115,7 +122,7 @@ export async function formatDocxMath(bytes: Uint8Array): Promise<Uint8Array> {
   let changed = false;
   for (const run of Array.from(doc.getElementsByTagNameNS(W, 'r'))) {
     const children = Array.from(run.childNodes).filter(n => n.nodeType === 1) as Element[];
-    // Do not rewrite drawings, fields, links, or existing native equations.
+    // Não reescreve desenhos, campos, links nem equações nativas já existentes.
     if (children.some(n => n.namespaceURI !== W || !['rPr', 't', 'br'].includes(n.localName!))) continue;
     const text = children.map(n => n.localName === 't' ? n.textContent : n.localName === 'br' ? '\n' : '').join('');
     if (!hasMath(text)) continue;

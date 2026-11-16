@@ -1,2 +1,3 @@
+# Dependências fixadas do verificador simbólico. Instale em ambiente Python isolado e execute os testes de tests/math_verifier ao mudar versões.
 sympy==1.14.0
 mpmath==1.3.0

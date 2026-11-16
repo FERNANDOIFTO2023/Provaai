@@ -1,8 +1,15 @@
+/*
+ * Ferramentas / material audiovisual
+ * Sintetiza e combina música e efeitos sonoros desta versão do vídeo. Os tempos e eventos precisam
+ * acompanhar a linha do tempo correspondente.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
 import {writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {events} from './timing-v3.mjs';
 
-// Original sound design: cues share timing-v3 with the animation.
+// Desenho sonoro original: efeitos compartilham timing-v3 com a animação.
 export const cues=events;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export async function createAudio(out,duration=28){
@@ -19,14 +26,14 @@ export async function createAudio(out,duration=28){
   for(let j=0;j<4;j++){const f=hz(notes[j]);add(music,start,2.6,t=>.035*Math.min(1,t/.24)*Math.min(1,(2.6-t)/.65)*(sine(f,t)+.22*sine(f*1.002,t)),(j-1.5)*.35)}
   if(start<25){for(const [j,b] of [0,.75,1.5,2.5,3.25].entries()){bell(start+b*.5,notes[(j+bar)%4]+12,.047,Math.sin(j*2+bar)*.6);bell(start+b*.5+.375,notes[(j+bar)%4]+12,.012,-Math.sin(j*2+bar)*.6)}}
  }
- // Restrained pulse under the foreground UI sounds, with space at the close.
+ // Pulsação discreta sob os sons da interface, deixando espaço no encerramento.
  for(let beat=4;beat<50;beat++){
   const at=beat*.5,root=chords[Math.floor(beat/8)%4][0]-12;
   if(beat%2===0){add(music,at,.24,t=>.15*Math.sin(2*Math.PI*(49*t+1.6*(1-Math.exp(-t*45))))*Math.exp(-t*22));add(music,at,.38,t=>.07*sine(hz(root),t)*Math.min(1,t/.01)*Math.exp(-t*9))}
   for(const off of [0,.25]){let prev=0;add(music,at+off,.055,t=>{const n=noise(),v=n-prev;prev=n;return .009*v*Math.exp(-t*78)},off?.45:-.4)}
   if(beat%4===2){let low=0;add(music,at,.12,t=>{low=.6*low+.4*noise();return .024*low*Math.exp(-t*34)},.1)}
  }
- // Center the sound envelope on peak visual velocity, not before scene onset.
+ // Centraliza a curva de volume no pico de velocidade visual, após o início da cena.
  function whoosh(at,len=.42,hard=false){let low=0,prev=0;add(fx,at-len/2,len,t=>{let n=noise();low=.82*low+.18*n;let hi=n-prev;prev=n;const e=Math.sin(Math.PI*t/len)**2;return e*((hard?.24:.15)*low+.018*hi)+(hard?.04:.025)*Math.sin(2*Math.PI*(110*t+360*t*t))*e},p=>-.75+1.5*p)}
  for(const [i,event] of cues.entries()){
   const {time:at,type,duration}=event;

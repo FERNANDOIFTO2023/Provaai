@@ -1,3 +1,10 @@
+/*
+ * Integração / cliente HTTP do Laravel
+ * Preserva a interface de consultas encadeadas usada pelos componentes, traduzindo-a para /api/data
+ * e /api/actions. Os nomes herdados da API não significam conexão direta ao banco.
+ * Requisições usam cookie de sessão e proteção CSRF. O marcador access_token serve à interface; não
+ * é uma credencial de acesso.
+ */
 export type User = { id: string; email?: string; user_metadata: { full_name?: string } };
 type Session = { access_token: string; refresh_token: string; user: User };
 type ApiError = { message: string; code?: string; status?: number };
@@ -6,6 +13,7 @@ type Listener = (event: string, session: Session | null) => void;
 const listeners = new Set<Listener>();
 let session: Session | null = null, checkedAt = 0;
 
+// Inclui CSRF e cookie da mesma origem em todas as chamadas autenticadas.
 export function apiFetch(url: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
@@ -22,6 +30,8 @@ async function request(url: string, body?: unknown, method='POST'): Promise<Resu
     return {data:result.data===undefined?result:result.data,error:null};
   } catch {return {data:null,error:{message:'Não foi possível conectar. Confira sua internet.'}};}
 }
+// As chamadas encadeadas apenas montam a requisição. A execução ocorre no then, quando há await.
+// O backend decide quais operações e campos são permitidos para cada recurso.
 class Query implements PromiseLike<Result> {
   private input: Record<string,any>={op:'select',filters:[]};
   private readonly resource: string;
@@ -41,6 +51,7 @@ class Query implements PromiseLike<Result> {
     return request('/api/data/'+encodeURIComponent(this.resource),this.input).then(onfulfilled,onrejected);
   }
 }
+// Reaproveita por até um minuto a consulta de sessão; force invalida essa economia de requisições.
 async function getSession(force=false) {
   if(force||Date.now()-checkedAt>60_000) {
     const result=await request('/api/auth/session',undefined,'GET');
@@ -71,6 +82,8 @@ export const apiClient = {
       try {const response=await apiFetch('/api/files/'+encodeURIComponent(bucket),{method:'POST',body:data});const result=await response.json();return response.ok?{data:result.data,error:null}:{data:null,error:{message:result.message||'Falha ao enviar arquivo.'}};}
       catch{return {data:null,error:{message:'Falha de conexão no envio.'}};}
     },
+    // Mantém o nome compatível com o cliente antigo, mas retorna uma rota protegida por sessão.
+    // Não cria URL pública assinada nem transforma o parâmetro de expiração em autorização.
     async createSignedUrl(path:string,_expires:number) {return {data:{signedUrl:'/api/files/'+encodeURIComponent(bucket)+'?path='+encodeURIComponent(path)},error:null};},
     remove: (paths:string[])=>request('/api/files/'+encodeURIComponent(bucket),{paths},'DELETE'),
   })},

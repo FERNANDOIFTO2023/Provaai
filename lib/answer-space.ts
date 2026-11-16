@@ -1,3 +1,8 @@
+/*
+ * Documentos / espaço de resposta
+ * Centraliza a identificação de matérias matemáticas e a altura das linhas de resposta. Word e
+ * geração padrão reutilizam essas medidas para manter espaço consistente.
+ */
 /** Use the requested subject, not symbols or an unrelated model, to choose the answer area. */
 export function isMathematics(subject: string): boolean {
   const normalized = subject.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();

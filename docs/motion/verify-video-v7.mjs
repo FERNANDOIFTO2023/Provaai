@@ -1,3 +1,10 @@
+/*
+ * Ferramentas / material audiovisual
+ * Confere propriedades dos artefatos e da sincronização audiovisual desta versão. Execute após
+ * gerar as entradas esperadas e consulte o relatório produzido pelo script.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
 import {spawnSync} from 'node:child_process';
 import {readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';

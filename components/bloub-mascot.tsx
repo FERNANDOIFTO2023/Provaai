@@ -1,3 +1,8 @@
+/*
+ * Interface / mascote
+ * Renderiza o Bloub e acompanha a posição do ponteiro para orientar o olhar. Eventos e animações
+ * devem respeitar a preferência de movimento reduzido e ser liberados na desmontagem.
+ */
 'use client';
 
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react';
@@ -25,7 +30,7 @@ export default function BloubMascot({
       shakeHead() {
         const group = reaction.current;
         if (!enabled || !group || group.getAnimations().length) return;
-        // This layer moves relative to the current float and gaze.
+        // Esta camada se move em relação à flutuação e à direção atual do olhar.
         group.animate(
           [
             'translateX(0) rotate(0deg)',

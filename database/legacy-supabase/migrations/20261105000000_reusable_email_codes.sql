@@ -1,3 +1,8 @@
+-- Legado / referência histórica do Supabase
+-- Códigos de acesso reutilizáveis com expiração e limitação de tentativas no legado.
+-- Não integra as migrações Laravel atuais. Consulte este arquivo para entender
+-- a origem dos dados e os comandos ExportLegacy e ImportLegacy antes de migrar.
+
 begin;
 
 create table public.provaai_email_codes (

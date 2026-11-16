@@ -1,3 +1,9 @@
+/*
+ * Testes / docx-layout
+ * Verifica preenchimento de modelos Word e preservação da diagramação necessária.
+ * Os cenários documentam comportamentos esperados. Ao mudar uma regra, confira primeiro se a
+ * expectativa representa uma garantia que deve ser preservada.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import JSZip from 'jszip';

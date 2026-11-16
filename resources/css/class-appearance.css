@@ -1,3 +1,9 @@
+/*
+ * Estilos / class-appearance
+ * Capa, seletor de cor e ícone e controles de recorte da turma.
+ * A ordem de carregamento em resources/js/app.tsx participa da cascata. Preserve foco visível,
+ * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
+ */
 .visually-hidden {
   position: absolute !important;
   width: 1px !important;
@@ -346,6 +352,7 @@
 .class-settings .class-lifecycle {
   margin-top: 20px;
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 600px) {
   .class-icon-picker {
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -380,6 +387,7 @@
     white-space: nowrap;
   }
 }
+/* Acessibilidade: adapta animações à preferência de movimento do usuário. */
 @media (prefers-reduced-motion: reduce) {
   .class-card,
   .class-card-edit,

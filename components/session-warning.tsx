@@ -1,3 +1,8 @@
+/*
+ * Interface / aviso de inatividade
+ * Informa o tempo restante e permite continuar a sessão explicitamente. O estado de adiamento
+ * sinaliza que existe trabalho em curso antes do encerramento.
+ */
 'use client';
 
 import { useEffect, useRef } from 'react';

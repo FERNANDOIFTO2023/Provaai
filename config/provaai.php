@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * Configuração / provaai
+ * Provedores de IA, executáveis auxiliares e acesso ao legado. Os valores variáveis vêm do
+ * ambiente; não coloque segredos diretamente neste arquivo.
+ * Ao alterar padrões, confira os serviços consumidores e a configuração do ambiente de teste.
+ */
+
+
 return [
     'gemini_key' => env('GEMINI_API_KEY'),
     'gemini_model' => env('GEMINI_MODEL', 'gemini-3.5-flash-lite'),

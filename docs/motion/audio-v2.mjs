@@ -1,7 +1,14 @@
+/*
+ * Ferramentas / material audiovisual
+ * Sintetiza e combina música e efeitos sonoros desta versão do vídeo. Os tempos e eventos precisam
+ * acompanhar a linha do tempo correspondente.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
 import {writeFile} from 'node:fs/promises';
 import path from 'node:path';
 
-// Original sound design: all cues have an explicit visual event in render-v2.
+// Desenho sonoro original: cada efeito corresponde a um evento visual explícito em render-v2.
 export const cues = [
  [0.08,'bloom'],[.92,'swoop'],[1.35,'click'],
  [1.98,'tick'],[2.12,'tick'],[2.28,'tick'],[2.44,'tick'],[3.8,'whip'],
@@ -28,7 +35,7 @@ export async function createAudio(out,duration=28){
   for(let j=0;j<4;j++){const f=hz(notes[j]);add(music,start,2.6,t=>.035*Math.min(1,t/.24)*Math.min(1,(2.6-t)/.65)*(sine(f,t)+.22*sine(f*1.002,t)),(j-1.5)*.35)}
   if(start<25){for(const [j,b] of [0,.75,1.5,2.5,3.25].entries()){bell(start+b*.5,notes[(j+bar)%4]+12,.047,Math.sin(j*2+bar)*.6);bell(start+b*.5+.375,notes[(j+bar)%4]+12,.012,-Math.sin(j*2+bar)*.6)}}
  }
- // Restrained pulse under the foreground UI sounds, with space at the close.
+ // Pulsação discreta sob os sons da interface, deixando espaço no encerramento.
  for(let beat=4;beat<50;beat++){
   const at=beat*.5,root=chords[Math.floor(beat/8)%4][0]-12;
   if(beat%2===0){add(music,at,.24,t=>.15*Math.sin(2*Math.PI*(49*t+1.6*(1-Math.exp(-t*45))))*Math.exp(-t*22));add(music,at,.38,t=>.07*sine(hz(root),t)*Math.min(1,t/.01)*Math.exp(-t*9))}

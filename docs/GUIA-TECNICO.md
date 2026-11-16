@@ -4,6 +4,8 @@ Atualizado em 10/11/2026. Laravel controla HTTP, autenticação, autorização, 
 
 ## Organização
 
+Para localizar os fluxos e entender os setores comentados em português, consulte o [Mapa do código para manutenção](MAPA-DO-CODIGO.md).
+
 | Caminho | Responsabilidade |
 | --- | --- |
 | `routes/web.php` | Página Blade e API de mesma origem, com sessão e CSRF. |

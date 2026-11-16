@@ -1,4 +1,10 @@
-/* Heroicons Animated renders its SVG inside a small wrapper. */
+/*
+ * Estilos / icon-motion
+ * Dimensões e comportamento visual do invólucro usado pelos ícones animados.
+ * A ordem de carregamento em resources/js/app.tsx participa da cascata. Preserve foco visível,
+ * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
+ */
+/* Heroicons Animated renderiza seu SVG dentro de um pequeno elemento de suporte. */
 .app-icon,
 .app-icon > div {
   display: inline-flex;
@@ -15,6 +21,7 @@
 .helper-note > .app-icon,
 .notice > .app-icon,
 .toast > .app-icon { flex-shrink: 0; }
+/* Acessibilidade: adapta animações à preferência de movimento do usuário. */
 @media (prefers-reduced-motion: reduce) {
   .app-icon.spin { animation: none; }
 }

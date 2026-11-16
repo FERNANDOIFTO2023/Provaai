@@ -1,3 +1,8 @@
+/*
+ * Interface / provas individuais
+ * Busca alunos já cadastrados e apresenta seu acompanhamento individual e histórico de provas. A
+ * inclusão nessa área preserva o vínculo do aluno com a turma de origem.
+ */
 'use client';
 import {useRef, useState, type CSSProperties} from 'react';
 import {Plus, Search, Sparkles, GraduationCap, Users, Clock, CheckCircle2, ArrowRight, BookOpen} from './animated-icons';

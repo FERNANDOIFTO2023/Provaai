@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Persistência / provas
+ * Converte o conteúdo e o retrato do perfil do aluno para estruturas PHP. O snapshot preserva os
+ * dados usados na preparação mesmo quando o cadastro do aluno muda.
+ */
+
+
 namespace App\Models;
 
 class Exam extends OwnedModel

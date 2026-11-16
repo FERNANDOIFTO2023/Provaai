@@ -1,3 +1,8 @@
+/*
+ * Matemática / validade do parecer
+ * Confere se o resultado automático ainda corresponde à matéria, instruções e questão editadas. Um
+ * relatório anterior não deve aparecer como atual após mudanças no conteúdo.
+ */
 import type { ExamContent } from './exam';
 
 /** Hide a saved result as soon as the teacher changes the checked inputs. */

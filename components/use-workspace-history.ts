@@ -1,10 +1,15 @@
+/*
+ * Interface / histórico do navegador
+ * Registra somente páginas estáveis por conta, permitindo Voltar e Avançar sem reabrir formulários.
+ * Ao fechar um diálogo, restaura a página de origem em vez de criar uma nova entrada de edição.
+ */
 'use client';
 import { useCallback, useEffect, useRef } from 'react';
 
 export type WorkspacePage = { view: string; current: string | null };
 type WorkspaceLocation = WorkspacePage & { modal: string | null };
 
-// Forms and progress dialogs are transient. Back/Forward restore pages, never drafts.
+// Formulários e progresso são transitórios. Voltar e Avançar restauram páginas, sem reabrir rascunhos.
 function pageOf(location: WorkspacePage): WorkspacePage {
   return {
     view: location.view === 'settings' ? 'about' : location.view,
@@ -26,7 +31,7 @@ export function useWorkspaceHistory(scope: string, location: WorkspaceLocation,
       initialRender.current = JSON.stringify(pageOf(latest.current.location));
       const page = pageOf(existing.location);
       last.current = JSON.stringify(page);
-      // Also sanitize entries saved by older versions that included open forms.
+      // Normaliza também entradas antigas do histórico que guardavam formulários abertos.
       window.history.replaceState({ ...window.history.state, provaai: { scope, location: page } }, '');
       latest.current.restore(page);
     } else {
@@ -49,7 +54,7 @@ export function useWorkspaceHistory(scope: string, location: WorkspaceLocation,
   const serialized = JSON.stringify(pageOf(location));
   useEffect(() => {
     if (!mounted.current || location.modal) return;
-    // On first mount a persisted entry is being restored; don't push the old render.
+    // Na primeira montagem, restaura a entrada persistida sem empilhar a tela anterior à restauração.
     if (initialRender.current === serialized) { initialRender.current = null; return; }
     initialRender.current = null;
     if (last.current === serialized) return;
@@ -57,8 +62,8 @@ export function useWorkspaceHistory(scope: string, location: WorkspaceLocation,
     window.history.pushState({ ...window.history.state, provaai: { scope, location: JSON.parse(serialized) } }, '');
   }, [serialized, scope, location.modal]);
 
-  // Opening a form can select a resource without navigating to its page.
-  // Cancel/close returns to the page where the form was opened.
+  // Abrir um formulário pode selecionar um recurso sem navegar para sua página.
+  // Cancelar ou fechar retorna à página em que o formulário foi aberto.
   return useCallback(() => {
     if (last.current) latest.current.restore(JSON.parse(last.current));
   }, []);

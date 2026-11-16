@@ -1,3 +1,8 @@
+/*
+ * Interface / prévia matemática
+ * Mostra o texto com fórmulas enquanto o professor edita. Reutiliza MathText para que a prévia e a
+ * leitura final tenham o mesmo tratamento de expressões.
+ */
 import { lazy, Suspense } from 'react';
 import { hasMath } from '../lib/math-text';
 

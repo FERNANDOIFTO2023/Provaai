@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Inicialização / HTTP e console
+ * Configura rotas, middleware e respostas de erro do Laravel. A API preserva strings vazias e
+ * responde erros em JSON para manter o contrato com o cliente React.
+ */
+
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;

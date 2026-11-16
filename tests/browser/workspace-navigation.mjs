@@ -1,4 +1,9 @@
-// Run with PLAYWRIGHT_MODULE pointing to playwright/index.mjs when it is not installed locally.
+/*
+ * Testes / histórico de navegação
+ * Exercita Voltar e Avançar no build real com API simulada e dados controlados. Verifica que
+ * formulários concluídos ou cancelados não reaparecem como páginas do histórico.
+ */
+// Use PLAYWRIGHT_MODULE para indicar playwright/index.mjs quando a biblioteca não estiver instalada localmente.
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';

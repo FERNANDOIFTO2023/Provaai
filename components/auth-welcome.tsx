@@ -1,3 +1,8 @@
+/*
+ * Interface / boas-vindas
+ * Apresenta a entrada por e-mail e o acesso à demonstração. O formulário de autenticação fica em
+ * EmailLogin e a troca de tela é delegada ao componente pai.
+ */
 'use client';
 
 import { useRef, useState } from 'react';

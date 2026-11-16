@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Inicialização / serviços e políticas
+ * Registra as políticas de propriedade dos modelos e a resolução dos caminhos de assets. É
+ * executado no bootstrap do Laravel antes do atendimento das requisições.
+ */
+
+
 namespace App\Providers;
 
 use App\Models\ClassRoom;
@@ -14,7 +21,7 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Ponto de registro de serviços no contêiner; atualmente não há vinculações adicionais.
      */
     public function register(): void
     {
@@ -22,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Bootstrap any application services.
+     * Configura caminhos de assets e políticas após registrar os serviços.
      */
     public function boot(): void
     {

@@ -1,3 +1,8 @@
+/*
+ * Provas / quantidade por tipo
+ * Calcula e valida a distribuição de questões objetivas e discursivas. O total e as parcelas devem
+ * permanecer inteiros e coerentes antes de iniciar a geração.
+ */
 export function questionMix(total: number, objectives = Math.floor(total / 2)) {
   if (
     !Number.isInteger(total) ||

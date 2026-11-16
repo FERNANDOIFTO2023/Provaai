@@ -1,3 +1,8 @@
+/*
+ * Testes / modelos e provas individuais
+ * Verifica busca, filtros e interações das coleções em tamanhos de tela distintos. Usa API simulada
+ * e registra evidências visuais; não valida serviços externos.
+ */
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile, mkdir } from 'node:fs/promises';

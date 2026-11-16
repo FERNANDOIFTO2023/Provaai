@@ -1,3 +1,5 @@
+# CI / ambiente isolado
+# Sobrescreve o Compose para validar instalação e migração no CI. Os dados desse ambiente são de teste e não devem apontar para serviços de produção.
 services:
   postgres:
     image: postgres:16-bookworm

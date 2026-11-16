@@ -1,3 +1,8 @@
+/*
+ * Configuração / compilação frontend
+ * Liga o Vite ao Laravel e define o ponto de entrada React e os aliases de importação. O manifesto
+ * gerado permite ao Blade localizar os arquivos compilados.
+ */
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';

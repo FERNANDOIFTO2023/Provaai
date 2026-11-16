@@ -1,4 +1,11 @@
-// Verifies the actual exported AAC against the source mix, not only cue labels.
+/*
+ * Ferramentas / material audiovisual
+ * Confere propriedades dos artefatos e da sincronização audiovisual desta versão. Execute após
+ * gerar as entradas esperadas e consulte o relatório produzido pelo script.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
+// Compara o AAC exportado com a mixagem de origem, além de conferir os rótulos dos eventos.
 import {readFile,writeFile} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import path from 'node:path';

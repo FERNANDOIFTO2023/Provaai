@@ -1,3 +1,8 @@
+-- Legado / referência histórica do Supabase
+-- Capa privada, recorte e opções de aparência das turmas no banco legado.
+-- Não integra as migrações Laravel atuais. Consulte este arquivo para entender
+-- a origem dos dados e os comandos ExportLegacy e ImportLegacy antes de migrar.
+
 begin;
 
 alter table public.sala_classes

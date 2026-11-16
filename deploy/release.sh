@@ -1,4 +1,6 @@
 #!/bin/bash
+# Operação / publicação da VM
+# Busca a revisão da branch configurada e só publica após o workflow de validação passar. O bloqueio de processo evita releases concorrentes; a recuperação restaura checkout e imagem, não desfaz migrações de banco.
 # Executado pelo timer da VM. O Compose e o arquivo de ambiente pertencem a esta instalação.
 set -euo pipefail
 cd "${PROVAAI_CHECKOUT:-/opt/provaai}"

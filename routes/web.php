@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Rotas / interface e API com sessão
+ * Entrega o shell React e organiza os endpoints de autenticação e dados. As rotas de negócio estão
+ * no grupo autenticado e usam a infraestrutura de sessão e CSRF do Laravel.
+ */
+
+
 use App\Http\Controllers\ActionsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentsController;
@@ -14,6 +21,7 @@ Route::get('/api/config', fn (AiService $ai) => response()->json(['aiConfigured'
 Route::get('/api/auth/session', [AuthController::class, 'session']);
 Route::post('/api/auth/code', [AuthController::class, 'code'])->middleware('throttle:30,1');
 Route::post('/api/auth/logout', [AuthController::class, 'logout']);
+// Todas as operações de dados e documentos abaixo exigem sessão autenticada.
 Route::middleware('auth')->group(function () {
     Route::post('/api/data/{resource}', [RecordsController::class, 'handle']);
     Route::post('/api/actions/{action}', [ActionsController::class, 'handle']);

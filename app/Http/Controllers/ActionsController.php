@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Backend / ações de negócio
+ * Executa operações compostas de turmas, alunos, cópias e geração em uma transação. O bloqueio do
+ * registro do professor serializa alterações concorrentes da mesma conta.
+ */
+
+
 namespace App\Http\Controllers;
 
 use App\Models\ClassRoom;
@@ -12,6 +19,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ActionsController extends Controller
 {
+    /** Despacha somente ações conhecidas, com transação e bloqueio por professor. */
     public function handle(Request $r, string $action)
     {
         $uid = $r->user()->id;
@@ -34,6 +42,7 @@ class ActionsController extends Controller
         });
     }
 
+    /** Arquiva por até um ano ou reativa antes do prazo, sem excluir os registros imediatamente. */
     private function classActive(string $uid, array $v)
     {
         Validator::make($v, ['p_class' => 'required|uuid', 'p_active' => 'required|boolean'])->validate();
@@ -49,6 +58,7 @@ class ActionsController extends Controller
         return $room;
     }
 
+    /** Impede exclusão durante geração e registra o motivo antes de remover a turma. */
     public function removeClass(ClassRoom $room, string $reason): void
     {
         abort_if(app(BatchService::class)->running($room->user_id), 409, 'Aguarde a geração em andamento.');
@@ -56,6 +66,7 @@ class ActionsController extends Controller
         $room->delete();
     }
 
+    /** Exige motivo de exclusão e busca a turma dentro da conta autenticada. */
     private function deleteClass(string $uid, array $v)
     {
         $v['p_reason'] = trim($v['p_reason'] ?? '');
@@ -66,6 +77,7 @@ class ActionsController extends Controller
         return null;
     }
 
+    /** Restaura em turma ativa; ao transferir, atribui um código válido na turma de destino. */
     private function reactivate(string $uid, array $v)
     {
         Validator::make($v, ['p_student' => 'required|uuid', 'p_class' => 'required|uuid'])->validate();
@@ -81,6 +93,7 @@ class ActionsController extends Controller
         return $student;
     }
 
+    /** Congela os dados do recurso no convite. Repetir o mesmo identificador não cria outro convite. */
     private function sendCopy(Request $r, array $v)
     {
         Validator::make($v, ['p_id' => 'required|uuid', 'p_kind' => 'required|in:class,student', 'p_resource' => 'required|uuid', 'p_email' => 'required|email|max:254'])->validate();
@@ -106,6 +119,7 @@ class ActionsController extends Controller
         return $invite->id;
     }
 
+    /** Confere o destinatário e cria registros independentes; um aceite repetido devolve o mesmo destino. */
     private function acceptCopy(Request $r, array $v)
     {
         Validator::make($v, ['p_invitation' => 'required|uuid', 'p_class' => 'nullable|uuid'])->validate();
@@ -132,6 +146,7 @@ class ActionsController extends Controller
         return $destination;
     }
 
+    /** Permite ao remetente revogar apenas um convite ainda não aceito. */
     private function cancelCopy(string $uid, array $v)
     {
         $invite = CopyInvitation::where('owner_id', $uid)->findOrFail($v['p_invitation'] ?? '');

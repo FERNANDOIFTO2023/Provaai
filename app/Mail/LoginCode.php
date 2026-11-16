@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Comunicação / e-mail de acesso
+ * Define assunto, versões HTML e texto e prazo apresentado ao destinatário. A constante de validade
+ * também é utilizada ao emitir o código no controlador.
+ */
+
+
 namespace App\Mail;
 
 use Illuminate\Mail\Mailable;

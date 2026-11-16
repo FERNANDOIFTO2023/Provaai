@@ -1,3 +1,8 @@
+/*
+ * Matemática / separação de texto e fórmulas
+ * Reconhece delimitadores matemáticos e preserva o texto ao redor. O cuidado com caracteres
+ * escapados impede interpretar delimitadores literais como início de fórmula.
+ */
 export type MathPart =
   | { kind: 'text'; text: string }
   | { kind: 'math'; text: string; source: string; display: boolean; closed: boolean };

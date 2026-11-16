@@ -1,4 +1,11 @@
-// Rebuild the soundtrack and copy V7's native 120fps video without re-encoding.
+/*
+ * Ferramentas / material audiovisual
+ * Combina os artefatos existentes com a trilha da nova versão. Requer os arquivos de entrada e o
+ * executável de processamento de mídia usados pelo script.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
+// Recria a trilha e copia o vídeo V7 de 120 quadros por segundo sem recodificar a imagem.
 import {mkdir,writeFile} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import path from 'node:path';

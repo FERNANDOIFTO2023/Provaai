@@ -1,4 +1,6 @@
 #!/bin/sh
+# Operação / inicialização do contêiner
+# Prepara o diretório privado e a origem dos assets antes de entregar o controle ao Supervisor. Deve funcionar com o volume de armazenamento montado pela instalação.
 set -eu
 
 # O volume montado pelo host tem permissões próprias após o build.

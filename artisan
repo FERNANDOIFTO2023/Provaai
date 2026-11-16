@@ -1,6 +1,13 @@
 #!/usr/bin/env php
 <?php
 
+/*
+ * Inicialização / comandos de console
+ * Carrega o Laravel para executar comandos administrativos, testes e tarefas agendadas. As ações de
+ * negócio do console são registradas em routes/console.php e app/Console/Commands.
+ */
+
+
 use Illuminate\Foundation\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 

@@ -1,3 +1,8 @@
+-- Legado / referência histórica do Supabase
+-- Arquivamento de alunos e participação em provas individuais sem duplicar o cadastro.
+-- Não integra as migrações Laravel atuais. Consulte este arquivo para entender
+-- a origem dos dados e os comandos ExportLegacy e ImportLegacy antes de migrar.
+
 begin;
 alter table public.sala_students add column archived_at timestamptz;
 alter table public.sala_exams add column purpose text not null default 'regular'

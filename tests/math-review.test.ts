@@ -1,3 +1,9 @@
+/*
+ * Testes / math-review
+ * Verifica invalidação de pareceres quando o conteúdo da prova muda.
+ * Os cenários documentam comportamentos esperados. Ao mudar uma regra, confira primeiro se a
+ * expectativa representa uma garantia que deve ser preservada.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { currentMathResult } from '../lib/math-review.ts';

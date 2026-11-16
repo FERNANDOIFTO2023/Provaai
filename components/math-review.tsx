@@ -1,3 +1,8 @@
+/*
+ * Interface / resultado da conferência
+ * Exibe o parecer matemático correspondente à versão atual da questão. Esse parecer auxilia a
+ * revisão humana e não substitui a aprovação do professor.
+ */
 import type { ExamContent } from '../lib/exam';
 import { isMathematics } from '../lib/answer-space';
 import { currentMathResult } from '../lib/math-review';

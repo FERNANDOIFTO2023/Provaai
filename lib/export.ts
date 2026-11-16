@@ -1,3 +1,8 @@
+/*
+ * Documentos / montagem e downloads
+ * Monta provas e gabaritos no layout padrão e organiza downloads individuais ou em ZIP. Para contas
+ * reais, a obtenção do arquivo pode ser delegada ao endpoint autenticado.
+ */
 import type { Exam } from './model.ts';
 import type { PdfHeader } from './pdf-header.ts';
 import { hasMath } from './math-text.ts';
@@ -22,6 +27,7 @@ export async function examFile(
     `Código: ${exam.profile_snapshot.code}     Data: ____/____/________`,
     exam.content.instructions,
   ];
+  // Setor Word: usa medidas em twips (1/1440 de polegada) e cabeçalho opcional na primeira página.
   if (format === 'docx') {
     const { Document, Packer, Paragraph, TextRun, HeadingLevel, Header, ImageRun, LineRuleType, TabStopType, LeaderType } = await import(
       'docx'
@@ -94,8 +100,8 @@ export async function examFile(
     const bytes = await formatDocxMath(new Uint8Array(await blob.arrayBuffer()));
     return new Blob([bytes as BlobPart], { type: blob.type });
   }
-  // Production PDF downloads use the server's DOCX → PDF pipeline, including equations.
-  // The lightweight demo PDF writer cannot typeset math; never export raw LaTeX silently.
+  // Downloads de PDF em produção usam a conversão DOCX → PDF do servidor, incluindo equações.
+  // O gerador simples de PDF da demonstração não diagrama fórmulas; não exporte LaTeX bruto sem avisar.
   if (hasMath(lines.join('\n')) || exam.content.questions.some(q =>
     [q.statement, ...(answerKey ? [q.answer] : q.options)].some(hasMath))) {
     throw new Error('Para baixar esta prova com fórmulas em PDF, use sua conta. Na demonstração, baixe o DOCX.');
@@ -148,6 +154,7 @@ export async function examFile(
   }
   return pdf.output('blob');
 }
+// Entrega uma URL temporária ao navegador e libera a referência após iniciar o download.
 export function downloadBlob(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -159,6 +166,7 @@ export function downloadBlob(blob: Blob, name: string) {
 export type FileProgress = (steps: number, label: string) => void;
 export type DownloadProgress = { completed: number; total: number; percent: number; label: string };
 
+// Setor de lote: gera arquivos em sequência e acrescenta uma etapa final quando há compactação.
 export async function downloadExams(
   exams: Exam[],
   format: 'pdf' | 'docx',
@@ -193,6 +201,7 @@ export async function downloadExams(
   }
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
+  // O manifesto relaciona identificador, código do aluno e arquivo para localizar cada prova no ZIP.
   const manifest = ['id,aluno_codigo,formato,arquivo'];
   for (const [index, e] of exams.entries()) {
     const file = `${safeName(e.profile_snapshot.code)}_${e.id}.${format}`;

@@ -1,3 +1,8 @@
+/*
+ * Provas / organização e busca
+ * Agrupa provas pelo mês no fuso de São Paulo e normaliza buscas sem acentos. Mantém separados o
+ * histórico coletivo e a seleção de alunos para provas individuais.
+ */
 import type {ClassRoom, Exam, Student} from './model.ts';
 
 export const EXAM_TIME_ZONE = 'America/Sao_Paulo';
@@ -5,6 +10,7 @@ export function examDate(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? 'Data não informada' : date.toLocaleDateString('pt-BR', {timeZone: EXAM_TIME_ZONE});
 }
+// Calcula chave e rótulo no mesmo fuso para não deslocar provas próximas da virada do mês.
 export function examMonths(exams: Exam[]) {
   const groups = new Map<string, {key: string; label: string; exams: Exam[]}>();
   const parts = new Intl.DateTimeFormat('en', {timeZone: EXAM_TIME_ZONE, year: 'numeric', month: '2-digit'});
@@ -34,6 +40,7 @@ export function searchStudents(students: Student[], classes: ClassRoom[], query:
   ));
 }
 
+// A lista ativa exige participação; a lista inativa oferece alunos arquivados para reativação.
 export function individualStudents(students: Student[], classes: ClassRoom[], members: string[], inactive: boolean, query: string) {
   const rooms = new Map(classes.map(room => [room.id, room]));
   const enrolled = new Set(members);

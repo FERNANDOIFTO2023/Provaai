@@ -1,3 +1,8 @@
+/*
+ * Interface / identidade da turma
+ * Relaciona as chaves de ícone persistidas aos componentes visuais e oferece o seletor. Ao ampliar
+ * as opções, confira também o catálogo e as validações no servidor.
+ */
 import {
   BookOpen,
   Users,

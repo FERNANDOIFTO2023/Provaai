@@ -1,7 +1,13 @@
+/*
+ * Domínio / dados compartilhados
+ * Descreve turmas, alunos, provas e modelos e reúne esquemas de formulário. Os dados fictícios ao
+ * final permitem explorar a demonstração sem gravar registros reais.
+ */
 import { z } from 'zod';
 import { classColorValues, classIconValues, type BannerCrop } from './class-appearance.ts';
 import type { ExamContent } from './exam.ts';
 export * from './exam.ts';
+// SETOR 1 — entidades e vínculos recebidos da API.
 export type ClassRoom = {
   icon?: typeof classIconValues[number];
   banner_path?: string | null;
@@ -73,6 +79,7 @@ export type DataSet = {
   exams: Exam[];
   templates: Template[];
 };
+// SETOR 2 — validação de formulários antes da requisição.
 export const classSchema = z.object({
   name: z.string().trim().min(2).max(80),
   grade: z.string().trim().min(1).max(80),
@@ -88,6 +95,7 @@ export const studentSchema = z.object({
   criteria: z.string().trim().max(2000),
   level: z.enum(['Em desenvolvimento', 'Intermediário', 'Avançado']),
 });
+// Converte erros conhecidos em mensagem para a interface sem exigir que a tela conheça o transporte.
 export function cleanError(error: unknown) {
   const e = error as { message?: string; code?: string };
   if (e.code === 'PGRST205' || e.message?.includes('schema cache'))
@@ -99,6 +107,7 @@ export function cleanError(error: unknown) {
     return 'Confirme seu e-mail antes de entrar.';
   return e.message || 'Não foi possível concluir. Tente novamente.';
 }
+// SETOR 3 — dados fictícios locais; não são uma carga inicial do banco.
 export function demoData(): DataSet {
   const now = '2026-10-29T12:00:00.000Z';
   const user = 'demo';

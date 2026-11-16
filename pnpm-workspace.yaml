@@ -1,2 +1,4 @@
+# Dependências / configuração do pnpm
+# Configura o gerenciador alternativo de dependências do projeto. Confira a política de scripts de instalação ao adicionar pacotes; não edite o arquivo de lock manualmente.
 allowBuilds:
   core-js: false

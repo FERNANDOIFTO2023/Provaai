@@ -1,3 +1,10 @@
+/*
+ * Ferramentas / material audiovisual
+ * Define a linha do tempo, eventos e pontos de sincronização desta versão do vídeo. Áudio, animação
+ * e verificações precisam usar a mesma referência temporal.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
 export const FPS=120,DURATION=30;
 export const frameTime=t=>Math.round(t*FPS)/FPS;
 export const stations=[

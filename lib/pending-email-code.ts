@@ -1,3 +1,8 @@
+/*
+ * Autenticação / código pendente
+ * Consulta o endpoint de login para solicitar, reutilizar ou verificar um código. A validade e a
+ * decisão de reaproveitamento são determinadas pelo servidor.
+ */
 import { apiFetch } from './api-client';
 
 type CodeResult = {

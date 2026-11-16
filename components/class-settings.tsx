@@ -1,3 +1,8 @@
+/*
+ * Interface / edição de turma
+ * Mantém o rascunho de cor, ícone, foto e recorte até a confirmação do formulário. A preparação da
+ * imagem ocorre localmente; o componente pai realiza o salvamento.
+ */
 "use client";
 import {
   useEffect,
@@ -95,6 +100,7 @@ export default function ClassSettings({
     },
     [],
   );
+  // Prepara uma nova imagem e reinicia o recorte do rascunho, sem salvar a turma automaticamente.
   async function choosePhoto(photo?: File) {
     if (!photo) return;
     const version = ++request.current;

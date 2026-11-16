@@ -1,3 +1,8 @@
+/*
+ * Turmas / ciclo de vida e filtros
+ * Reúne tipos de compartilhamento, prazo de exclusão e busca de alunos. São regras de apresentação;
+ * as ações persistidas precisam passar pelas validações do servidor.
+ */
 import type { ClassRoom, Student } from './model.ts';
 import { matchesSearch } from './exam-library.ts';
 

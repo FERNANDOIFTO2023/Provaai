@@ -1,3 +1,9 @@
+/*
+ * Testes / class-appearance
+ * Verifica opções visuais e consistência da geometria do recorte da turma.
+ * Os cenários documentam comportamentos esperados. Ao mudar uma regra, confira primeiro se a
+ * expectativa representa uma garantia que deve ser preservada.
+ */
 import test from "node:test";
 import assert from "node:assert/strict";
 import {

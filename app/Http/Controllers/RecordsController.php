@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * Backend / acesso aos registros
+ * Traduz operações do cliente em consultas limitadas a recursos e campos permitidos. O proprietário
+ * vem da sessão e os relacionamentos são conferidos antes de gravar.
+ * O formato genérico da requisição não concede acesso genérico ao banco: preserve as listas
+ * permitidas, os filtros de propriedade e as validações por recurso.
+ */
+
+
 namespace App\Http\Controllers;
 
 use App\Models\ClassRoom;
@@ -18,6 +27,7 @@ class RecordsController extends Controller
 {
     private const MODELS = ['sala_classes' => ClassRoom::class, 'sala_students' => Student::class, 'sala_exams' => Exam::class, 'sala_templates' => ExamTemplate::class, 'sala_exam_batches' => ExamBatch::class, 'sala_copy_invitations' => CopyInvitation::class];
 
+    /** Valida a operação, restringe a consulta ao proprietário e aplica as regras do recurso antes de salvar. */
     public function handle(Request $r, string $resource)
     {
         $input = $r->validate(['op' => 'required|in:select,insert,update,upsert,delete', 'filters' => 'array|max:10', 'order' => 'nullable|array', 'limit' => 'integer|min:1|max:1000', 'offset' => 'integer|min:0|max:100000', 'single' => 'nullable|in:single,maybe', 'values' => 'nullable|array', 'columns' => 'nullable|string|max:500']);
@@ -89,6 +99,7 @@ class RecordsController extends Controller
                     unset($data['path'],$data['filename']);
                 }
             }
+            // Setor de provas: confere vínculos e retira a aprovação quando o conteúdo relevante muda.
             if ($resource === 'sala_exams') {
                 if ($op === 'insert') {
                     $student = Student::ownedBy($uid)->findOrFail($data['student_id']);
@@ -110,6 +121,7 @@ class RecordsController extends Controller
                     app(ExamValidator::class)->validate($content);
                 }
                 if (! empty($content['questions'])) {
+                    // O parecer matemático é calculado no servidor; não se confia em um relatório enviado pelo cliente.
                     $data['content'] = app(\App\Services\MathVerificationService::class)->verify($data['subject'] ?? $record->subject, $content);
                     $validator = app(ExamValidator::class);
                     $others = Exam::ownedBy($uid)->where('class_id', $data['class_id'] ?? $record->class_id)->where('title', $data['title'] ?? $record->title)->where('id', '!=', $record->id ?? '')->pluck('content');
@@ -133,11 +145,13 @@ class RecordsController extends Controller
         });
     }
 
+    /** Exige caminho dentro da pasta do professor e rejeita travessia de diretórios e caracteres inesperados. */
     public function ownPath(string $path, string $uid): void
     {
         abort_unless(str_starts_with($path, $uid.'/') && ! str_contains($path, '..') && ! str_contains($path, '\\') && preg_match('~^[a-zA-Z0-9_./-]+$~D', $path), 422, 'Caminho inválido.');
     }
 
+    /** Busca o maior código A seguido de dígitos da turma; deve ser chamado sob o bloqueio de cadastro. */
     public function nextCode(string $classId): string
     {
         $max = 0;
@@ -150,6 +164,7 @@ class RecordsController extends Controller
         return 'A'.str_pad((string) ($max + 1), 3, '0', STR_PAD_LEFT);
     }
 
+    /** Adapta a coleção ao contrato de lista, single ou maybeSingle do cliente. */
     private function shape($rows, array $input)
     {
         if (($input['single'] ?? null) === 'single') {
@@ -159,6 +174,7 @@ class RecordsController extends Controller
 return isset($input['single']) ? $rows->first() : $rows;
     }
 
+    /** Trata preferências e participação individual, que são vínculos e não cadastros genéricos. */
     private function links(Request $r, string $table, string $uid, array $input)
     {
         $query = DB::table($table)->where('user_id', $uid);
@@ -186,6 +202,7 @@ return isset($input['single']) ? $rows->first() : $rows;
         return response()->json(['data' => null]);
     }
 
+    /** Distingue campos obrigatórios na criação de campos opcionais na atualização. */
     private function rules(string $table, bool $creating): array
     {
         $req = $creating ? 'required' : 'sometimes';

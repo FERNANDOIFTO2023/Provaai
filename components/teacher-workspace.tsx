@@ -1,3 +1,10 @@
+/*
+ * Interface / área do professor
+ * Coordena turmas, alunos, provas, modelos e compartilhamentos. Os componentes de tela recebem
+ * dados e callbacks daqui; a persistência passa pelo cliente HTTP.
+ * O modo de demonstração usa dados em memória. Validações locais orientam o usuário, mas permissões
+ * e integridade continuam sendo responsabilidade do Laravel.
+ */
 'use client';
 import { apiFetch } from '@/lib/api-client';
 import PdfHeaderSettings from './pdf-header-settings';
@@ -119,6 +126,8 @@ export default function TeacherWorkspace({
   onWorkChange: (working: boolean) => void;
   startNavigation: (change: () => void) => void;
 }) {
+  // SETOR 1 — estado da área de trabalho.
+  // Separa dados persistidos de busca, seleção e rascunhos transitórios dos diálogos.
   const [data, setData] = useState<DataSet>(() => (demo ? demoData() : empty)),
     [teacherTemplate, setTeacherTemplate] = useState<string | null>(null),
     [view, setView] = useState('classes'),
@@ -151,6 +160,8 @@ export default function TeacherWorkspace({
       (s) => !s.archived_at && (s.difficulties || s.criteria),
     ).length;
   const classListHeading = useRef<HTMLHeadingElement>(null);
+  // Lê todas as páginas de códigos antes de sugerir o próximo.
+  // O servidor ainda atribui e protege a numeração no momento da gravação.
   async function readStudentCodes(classId: string): Promise<string[]> {
     if (demo) return data.students.filter(student => student.class_id === classId).map(student => student.code);
     if (!user) throw new Error('Entre novamente para cadastrar o aluno.');
@@ -173,9 +184,13 @@ export default function TeacherWorkspace({
     }).catch(error => {
       if (!cancelled) { setGeneratedStudentCode(''); setError(cleanError(error)); }
     }).finally(() => { if (!cancelled) setStudentCodePending(false); });
-    return () => { cancelled = true; };
+    // SETOR 7 — composição visual.
+  // O JSX reúne navegação, telas e diálogos; as regras das ações estão nos setores acima.
+  return () => { cancelled = true; };
   }, [modal, current, editing?.id, user?.id, demo]);
   const [initialLoad, setInitialLoad] = useState(!demo);
+  // SETOR 2 — navegação e operações em andamento.
+  // O histórico guarda páginas, sem restaurar rascunhos de edição ao usar Voltar.
   const closeModal = useWorkspaceHistory(user?.id ?? 'demo', { view, current, modal }, location => {
     const restoredView = location.view === 'settings' ? 'about' : location.view;
     setView(sections.some(section => section.id === restoredView) ? restoredView : 'classes');
@@ -203,6 +218,7 @@ export default function TeacherWorkspace({
     uploads.dismiss();
   }, [uploads.tasks, uploading, uploadFailed]);
   const approved = data.exams.filter((e) => e.status === 'approved');
+  // Congela os dados selecionados para que edições posteriores não mudem o lote de download.
   function startDownload(items: Exam[], format: 'pdf'|'docx', answerKey = false) {
     if (busy || downloads.running.current || generation.busy) return;
     const snapshot = structuredClone(items);
@@ -211,6 +227,8 @@ export default function TeacherWorkspace({
     void downloads.start(snapshot.length, report =>
       downloadExams(snapshot, format, answerKey, demo ? undefined : fetchExamFile, report));
   }
+  // Carrega os dados da conta e só substitui o conjunto após conferir as respostas.
+  // Modelos são opcionais para evitar recarregá-los em toda atualização de provas.
   async function load(includeTemplates = false) {
     if (!user) return;
     const tables = ['sala_classes', 'sala_students', 'sala_exams', 'sala_recovery_students'];
@@ -237,6 +255,7 @@ export default function TeacherWorkspace({
     }));
     await loadInvitations();
   }
+  // Recarrega convites visíveis para a conta; o servidor filtra remetente e destinatário.
   async function loadInvitations() {
     if (!user || demo) return;
     const { data: rows, error } = await apiClient.from('sala_copy_invitations')
@@ -283,6 +302,7 @@ export default function TeacherWorkspace({
     const id = setTimeout(() => setMessage(''), 5000);
     return () => clearTimeout(id);
   }, [message]);
+  // Troca de seção e limpa o contexto transitório da tela anterior.
   function navigate(next: string) {
     startNavigation(() => {
       setView(next);
@@ -294,6 +314,7 @@ export default function TeacherWorkspace({
       setModal(null);
     });
   }
+  // Inicializa o diálogo e seus avisos sem tratá-lo como página navegável.
   function open(m: Modal) {
     setError('');
     if (m === 'generate' && active?.archived_at) { setError('Reative a turma antes de preparar provas.'); return; }
@@ -305,6 +326,7 @@ export default function TeacherWorkspace({
     if (m === 'generate') {setGenerationChoice(classTemplateChoice);setRecoveryStudent(null);}
     setModal(m);
   }
+  // Centraliza estado ocupado e apresentação de falhas das ações assíncronas.
   async function action(fn: () => Promise<void>) {
     if (busy) return;
     setBusy(true);
@@ -317,6 +339,8 @@ export default function TeacherWorkspace({
       setBusy(false);
     }
   }
+  // SETOR 3 — persistência e cadastros.
+  // Na demonstração altera apenas memória; com sessão, utiliza a resposta confirmada pelo backend.
   async function persist(
     kind: keyof DataSet,
     table: string,
@@ -355,6 +379,7 @@ export default function TeacherWorkspace({
       data.templates.some(t => t.id === id && t.processing_status === 'ready'));
   }
 
+  // Atualiza a preferência do professor, usada pelas turmas que herdam o modelo padrão.
   async function setDefaultTemplate(id: string | null) {
     if (!demo) {
       const { error } = await apiClient.from('sala_teacher_template_defaults')
@@ -370,6 +395,8 @@ export default function TeacherWorkspace({
     return <button type="button" className="button secondary" disabled={busy || !ready}
       onClick={() => void action(() => setDefaultTemplate(id))}>Definir como padrão</button>;
   }
+  // Valida dados e prepara o caminho da capa antes de salvar a turma.
+  // A imagem e o recorte precisam permanecer coerentes entre editor e cartão.
   async function saveClass(form: Record<string, FormDataEntryValue>, banner: BannerDraft) {
     await action(async () => {
       const parsed = classSchema.safeParse(form);
@@ -418,6 +445,7 @@ export default function TeacherWorkspace({
       setMessage(updating ? 'Configurações da turma salvas.' : 'Turma criada. Agora você pode cadastrar os alunos.');
     });
   }
+  // Valida o perfil e trata cadastro ou edição; a geração de código só se aplica ao novo aluno.
   async function saveStudent(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = Object.fromEntries(new FormData(e.currentTarget));
@@ -458,6 +486,9 @@ export default function TeacherWorkspace({
       setMessage(editing ? 'Perfil do aluno salvo.' : `Aluno cadastrado com o código ${savedCode}.`);
     });
   }
+  // SETOR 4 — preparação e revisão de provas.
+  // Distingue lote com IA de rascunhos manuais e exige alunos e modelo elegíveis.
+  // Provas individuais usam o mesmo cadastro do aluno, com purpose específico.
   async function createExams(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -556,6 +587,8 @@ export default function TeacherWorkspace({
     });
     setProgress('');
   }
+  // Salva primeiro o conteúdo como rascunho e só depois solicita aprovação explícita.
+  // Assim, alterações na questão não carregam automaticamente uma aprovação anterior.
   async function saveExam(approve = false) {
     if (!exam) return;
     await action(async () => {
@@ -602,6 +635,8 @@ export default function TeacherWorkspace({
       );
     });
   }
+  // SETOR 5 — modelos, envio e leitura.
+  // Incorpora a versão confirmada de um modelo sem duplicá-lo na coleção.
   function mergeTemplate(template: Template) {
     setData(previous => ({
       ...previous,
@@ -610,6 +645,7 @@ export default function TeacherWorkspace({
         : [template, ...previous.templates],
     }));
   }
+  // Confere a sessão e aguarda a confirmação de leitura do modelo pelo servidor.
   async function processTemplate(id: string, signal: AbortSignal) {
     const {
       data: { session },
@@ -629,6 +665,7 @@ export default function TeacherWorkspace({
       throw new Error(result.error?.message || 'Falha ao ler o modelo.');
     mergeTemplate(result.template);
   }
+  // Mantém o arquivo salvo quando a leitura falha, permitindo tentar novamente sem reenviar.
   async function readSavedTemplate(id: string, signal: AbortSignal) {
     try {
       await processTemplate(id, signal);
@@ -640,6 +677,7 @@ export default function TeacherWorkspace({
       throw new Error(`Arquivo salvo. ${reason} Use “Ler arquivo novamente” em Modelos.`);
     }
   }
+  // Cria um trabalho independente por arquivo com etapas de envio e leitura.
   function uploadTemplate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -665,6 +703,7 @@ export default function TeacherWorkspace({
     setTemplateFiles([]);
     open('uploads');
   }
+  // Dá retorno antecipado sobre formato e tamanho; o backend repete a conferência do arquivo.
   async function validateTemplateFile(file: File) {
     if (!file?.size || file.size > 20 * 1024 * 1024)
       throw new Error('Escolha um arquivo de até 20 MB.');
@@ -683,6 +722,7 @@ export default function TeacherWorkspace({
         'O conteúdo do arquivo não corresponde ao formato informado.',
       );
   }
+  // Envia o arquivo antes dos metadados e tenta remover o arquivo se o cadastro falhar.
   async function storeTemplateFile(id: string, file: File, name: string, signal: AbortSignal) {
     const ext = file.name.split('.').pop()!.toLowerCase();
     const path = `${uid}/${id}.${ext}`;
@@ -721,6 +761,7 @@ export default function TeacherWorkspace({
       throw e;
     }
   }
+  // Evita encerrar a tela durante um download e diferencia saída da demonstração de logout real.
   async function signout() {
     if (downloads.running.current) { setModal('downloads'); return; }
     if (busy) return;
@@ -733,6 +774,7 @@ export default function TeacherWorkspace({
       if (error) throw error;
     });
   }
+  // Seleciona o contexto da preparação sem navegar para outra página só para abrir o formulário.
   function prepareForClass(room: ClassRoom, student: Student | null = null) {
     if (room.archived_at) { setError('Reative a turma antes de preparar provas.'); return; }
     if (downloads.running.current) return;
@@ -742,7 +784,10 @@ export default function TeacherWorkspace({
     setError('');
     setModal('generate');
   }
+  // Clona a prova para que digitar no editor não altere a lista antes do salvamento.
   function reviewExam(item: Exam) {setExam(structuredClone(item));open('exam');}
+  // SETOR 6 — ciclo dos alunos e compartilhamentos.
+  // Inclui o aluno no acompanhamento individual sem removê-lo da turma de origem.
   async function addRecovery(student: Student, goToPage = false) {
     await action(async () => {
       if (student.archived_at) throw new Error('Restaure o aluno na turma antes de adicioná-lo.');
@@ -756,6 +801,7 @@ export default function TeacherWorkspace({
       setMessage(student.name + ' adicionado a Provas individuais. O vínculo com a turma foi mantido.');
     });
   }
+  // Arquiva ou restaura sem apagar provas e histórico do aluno.
   async function archiveStudent(student: Student, restore = false) {
     if (!restore && !window.confirm(`Retirar ${student.name} da turma? As provas e o histórico serão preservados. Você poderá restaurar o aluno depois.`)) return;
     await action(async () => {
@@ -768,6 +814,7 @@ export default function TeacherWorkspace({
       setMessage(restore ? 'Aluno restaurado na turma.' : 'Aluno retirado. O histórico foi preservado.');
     });
   }
+  // Valida a turma de destino e incorpora o registro retornado após reativação ou transferência.
   async function reactivateStudent(student: Student, classId: string) {
     if (busy || generation.busy || downloads.running.current) throw new Error('Aguarde a operação em andamento terminar.');
     const currentStudent = data.students.find(item => item.id === student.id);
@@ -797,6 +844,7 @@ export default function TeacherWorkspace({
     setShareTarget({ kind, id: resource.id, name: resource.name });
     open('share');
   }
+  // Envia um convite com identificador estável; o backend captura os dados a serem copiados.
   async function sendCopy(id: string, email: string) {
     await action(async () => {
       if (!shareTarget || demo) throw new Error('Entre na sua conta para compartilhar.');
@@ -807,6 +855,7 @@ export default function TeacherWorkspace({
       setMessage('Cópia disponível para o professor receber em Compartilhamentos.');
     });
   }
+  // Solicita o aceite e recarrega os registros criados para a conta destinatária.
   async function acceptCopy(invitation: CopyInvitation, classId: string) {
     await action(async () => {
       const { data: destination, error } = await apiClient.rpc('sala_accept_copy', { p_invitation: invitation.id, p_class: classId || null });
@@ -815,6 +864,7 @@ export default function TeacherWorkspace({
       setMessage('Cópia recebida. Você pode editá-la sem alterar a original.');
     });
   }
+  // Revoga o convite elegível e atualiza a listagem de compartilhamentos.
   async function cancelCopy(invitation: CopyInvitation) {
     await action(async () => {
       const { error } = await apiClient.rpc('sala_cancel_copy', { p_invitation: invitation.id });
@@ -822,6 +872,7 @@ export default function TeacherWorkspace({
       await loadInvitations(); setMessage('Convite cancelado.');
     });
   }
+  // Alterna arquivamento e reativação respeitando o prazo de retenção da turma.
   async function changeClassStatus(room: ClassRoom) {
     await action(async () => {
       if (classExpired(room)) throw new Error('O prazo de um ano para reativação terminou.');
@@ -836,6 +887,7 @@ export default function TeacherWorkspace({
       setMessage(archived_at ? 'Turma inativada. Você poderá reativá-la em até um ano.' : 'Turma reativada.');
     });
   }
+  // Exige justificativa para a exclusão definitiva e remove o contexto da turma após confirmação.
   async function deleteClass(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);

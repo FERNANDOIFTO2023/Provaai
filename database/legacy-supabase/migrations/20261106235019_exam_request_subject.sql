@@ -1,3 +1,8 @@
+-- Legado / referência histórica do Supabase
+-- Matéria informada na preparação da prova sem alterar a matéria cadastrada na turma.
+-- Não integra as migrações Laravel atuais. Consulte este arquivo para entender
+-- a origem dos dados e os comandos ExportLegacy e ImportLegacy antes de migrar.
+
 -- A matéria informada na preparação pertence à prova, sem alterar a turma.
 -- Clientes anteriores sem o campo continuam usando a matéria da turma.
 begin;

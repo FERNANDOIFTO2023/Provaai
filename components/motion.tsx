@@ -1,3 +1,8 @@
+/*
+ * Interface / movimento e estados do mascote
+ * Centraliza a configuração de animação e a representação visual dos estados do Bloub. A
+ * preferência de movimento reduzido precisa continuar válida para toda a árvore de componentes.
+ */
 'use client';
 
 import {

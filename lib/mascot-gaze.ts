@@ -1,3 +1,8 @@
+/*
+ * Interface / geometria do olhar
+ * Calcula o deslocamento limitado dos olhos em relação ao ponteiro. Mantém o cálculo independente
+ * do DOM para ser reutilizado e testado sem navegador.
+ */
 /** SVG-space offsets keep the eyes inside Bloub, regardless of viewport size. */
 export function gazeOffset(
   clientX: number,

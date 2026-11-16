@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * Banco / evolução do schema
+ * Acrescenta a etapa atual ao progresso do lote, permitindo distinguir geração e conferência na
+ * interface.
+ * up aplica a mudança e down a reverte. Em bancos já publicados, evolua o schema com uma nova
+ * migração em vez de reescrever esta.
+ */
+
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

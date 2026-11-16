@@ -1,3 +1,8 @@
+/*
+ * Interface / carregamento de tela
+ * Oferece uma indicação visual de transição enquanto a área do professor está carregando. O estado
+ * ativo é controlado por quem conhece o andamento da navegação.
+ */
 export default function ScreenLoader({ active = true }: { active?: boolean }) {
   return (
     <div className="screen-loader" data-active={active} aria-hidden={!active}>

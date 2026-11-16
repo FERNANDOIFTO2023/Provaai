@@ -1,3 +1,5 @@
+# CI / validação do projeto
+# Executa testes de frontend, backend e matemática e verifica a imagem com PostgreSQL isolado. Esse workflow é uma proteção adicional: a entrega local também precisa ser testada.
 name: Validate Laravel and frontend
 on: [push, pull_request]
 permissions:

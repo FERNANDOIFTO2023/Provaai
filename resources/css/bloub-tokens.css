@@ -1,3 +1,9 @@
+/*
+ * Estilos / bloub-tokens
+ * Variáveis compartilhadas de identidade visual, cores, medidas e movimento do Bloub.
+ * A ordem de carregamento em resources/js/app.tsx participa da cascata. Preserve foco visível,
+ * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
+ */
 :root {
   --color-brand: #2adfb8;
   --color-action: #5210ce;

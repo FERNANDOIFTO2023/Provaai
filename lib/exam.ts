@@ -1,3 +1,8 @@
+/*
+ * Provas / contrato do conteúdo
+ * Define os esquemas Zod de questões e a detecção de enunciados repetidos. O frontend usa este
+ * contrato para orientar a edição; ExamValidator repete as verificações no backend.
+ */
 import { z } from 'zod';
 export const questionSchema = z
   .object({

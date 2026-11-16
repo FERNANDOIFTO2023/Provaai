@@ -1,3 +1,9 @@
+/*
+ * Testes / pdf-header
+ * Verifica limites, recorte e renderização do cabeçalho de PDFs.
+ * Os cenários documentam comportamentos esperados. Ao mudar uma regra, confira primeiro se a
+ * expectativa representa uma garantia que deve ser preservada.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { jsPDF } from 'jspdf';

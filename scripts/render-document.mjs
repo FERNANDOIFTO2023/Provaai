@@ -1,9 +1,16 @@
+/*
+ * Processos / conversor Node
+ * Recebe um pedido JSON em arquivo privado criado pelo DocumentService e produz texto, cabeçalho ou
+ * documento. A última linha de stdout é a resposta JSON consumida pelo PHP; mensagens de falha vão
+ * para stderr.
+ */
 // Processo auxiliar de conversão. Não oferece HTTP, autenticação ou acesso ao banco.
 import { readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
 let worker;
+// Reutiliza um trabalhador de conversão dentro desta execução do processo auxiliar.
 async function convertOffice(bytes, outputFormat) {
   const require = createRequire(import.meta.url);
   const { createWorkerConverter } = require('@matbee/libreoffice-converter/server');
@@ -13,6 +20,7 @@ async function convertOffice(bytes, outputFormat) {
   return (await worker.convert(bytes, { outputFormat })).data;
 }
 
+// Despacha a operação informada pelo PHP e carrega apenas as bibliotecas necessárias.
 async function render(input) {
   if (input.operation === 'convert') {
     await writeFile(input.outputPath, await convertOffice(await readFile(input.docxPath), 'pdf'));
@@ -48,6 +56,7 @@ async function render(input) {
   return { ok: true };
 }
 
+// A saída estruturada precisa ser completamente escrita antes de encerrar o trabalhador.
 try {
   const result = await render(JSON.parse(await readFile(process.argv[2], 'utf8')));
   await new Promise((resolve, reject) => {

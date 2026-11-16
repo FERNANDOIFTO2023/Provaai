@@ -1,3 +1,8 @@
+/*
+ * Interface / entrada autenticada
+ * Alterna entre boas-vindas, demonstração e área do professor conforme a sessão. Reúne o aviso de
+ * inatividade e o indicador de carregamento durante a navegação.
+ */
 'use client';
 import { useEffect, useState, useTransition } from 'react';
 import AuthWelcome from './auth-welcome';

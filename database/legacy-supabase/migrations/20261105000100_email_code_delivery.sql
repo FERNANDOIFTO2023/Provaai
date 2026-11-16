@@ -1,3 +1,8 @@
+-- Legado / referência histórica do Supabase
+-- Registro do momento de entrega do código para controlar seu ciclo de validade.
+-- Não integra as migrações Laravel atuais. Consulte este arquivo para entender
+-- a origem dos dados e os comandos ExportLegacy e ImportLegacy antes de migrar.
+
 alter table public.provaai_email_codes add column last_delivered_at timestamptz;
 create function public.provaai_mark_code_delivery() returns trigger
 language plpgsql set search_path = '' as $$

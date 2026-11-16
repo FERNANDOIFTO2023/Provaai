@@ -1,6 +1,13 @@
+/*
+ * Ferramentas / material audiovisual
+ * Desenha os quadros e monta a versão correspondente do vídeo demonstrativo. Os helpers de desenho
+ * trabalham sobre o contexto Canvas e a codificação usa ferramentas locais.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
 /** Provaai — Cada aluno, uma possibilidade.
- * Deterministic 60fps motion film. All animation is evaluated from time,
- * including the original stereo score. No network or live data at render time.
+ * Filme determinístico de 60 quadros por segundo. Toda animação é calculada a partir do tempo,
+ * incluindo a trilha estéreo original. A renderização não consulta rede nem dados ao vivo.
  */
 import {createCanvas, loadImage, GlobalFonts} from '@napi-rs/canvas';
 import {mkdir, writeFile, readFile} from 'node:fs/promises';
@@ -63,7 +70,7 @@ function screen(img,x,y,w,h,rotation=0,alpha=1,crop){
 }
 function bloub(x,y,size,t,alpha=1){group(x,y,1,Math.sin(t*1.6)*.055,alpha,()=>{ctx.scale(1+Math.sin(t*2.8)*.025,1-Math.sin(t*2.8)*.025);ctx.drawImage(imgs.bloub,-size/2,-size/2,size,size)})}
 
-// 00–05.5: typography is the hero; a small living brand mark starts the story.
+// 0–5,5 s: tipografia em destaque; a marca animada inicia a apresentação.
 function opening(t){
  ambient(t,'#FBFAFC');
  const enter=spring(t-.12,6);
@@ -86,7 +93,7 @@ function opening(t){
  if(swipe>0){ctx.fillStyle=C.purple;ctx.beginPath();ctx.moveTo(1920*(1-swipe),0);ctx.bezierCurveTo(2100*(1-swipe),350,1500*(1-swipe),750,1920*(1-swipe),1080);ctx.lineTo(1920,1080);ctx.lineTo(1920,0);ctx.fill()}
 }
 
-// 05.5–10.5: real public demo capture, moving as a product surface.
+// 5,5–10,5 s: captura real da demonstração pública, animada como superfície do produto.
 function classroom(t){
  ambient(t,'#F1EBFA');credit();
  const p=spring(t,.85*8),z=ease((t-2.8)/1.7);
@@ -103,7 +110,7 @@ function classroom(t){
  group(1120,905,Math.max(.01,spring(t-1.5)),.018, out(t-1.4),()=>{shadow(()=>box(-260,-42,520,84,25,C.ink),25,'#00000020',10);circle(-213,0,15,C.mint);check(-213,0,.5,C.ink);text('Mais tempo para ensinar.',-180,10,29,'white')});
 }
 
-// 10.5–15.5: pedagogical profile cards, based on the demo's exact data.
+// 10,5–15,5 s: cartões de perfis pedagógicos baseados nos dados da demonstração.
 function profiles(t){
  ambient(t,'#DFF9F2');credit();
  reveal('Um olhar para',960,234,83,t,C.ink,'center');
@@ -132,7 +139,7 @@ function profiles(t){
 function input(labelText,value,x,y,w,t,delay=0){
  const p=out((t-delay)/.55);group(x,y+25*(1-p),1,0,p,()=>{text(labelText,0,0,22,C.muted,'normal');box(0,17,w,66,15,'#F6F4FA',C.line);text(value,21,61,29,C.ink,'normal')});
 }
-// 15.5–21: editable UI details interpreted from the real preparation form.
+// 15,5–21 s: detalhes editáveis da interface representados a partir do formulário real.
 function prepare(t){
  ambient(t,C.purple);credit(true);
  const glow=ctx.createRadialGradient(1600,300,0,1600,300,950);glow.addColorStop(0,'#8C54EE');glow.addColorStop(1,C.purple);ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
@@ -176,7 +183,7 @@ function documentCard(x,y,w,h,t,mode='review',rotation=0){
   }else {line(left,h/2-130,w/2-52,h/2-130,C.line);text('Espaço para os cálculos',left,h/2-95,21,C.muted,'normal');}
  });
 }
-// 21–26: editorial review and human approval, with a readable question.
+// 21–26 s: revisão e aprovação humana, mantendo a questão legível.
 function review(t){
  ambient(t,'#FAF9FC');credit();
  label('03 / REVISE',100,276);
@@ -200,7 +207,7 @@ function fileCard(x,y,rot,title,tag,color,t,i){
   circle(105,162,27,color);line(105,148,105,170,'white',3);line(97,163,105,171,'white',3);line(113,163,105,171,'white',3);
  });
 }
-// 26–30.5: files burst outward on musical accents and settle in a small fan.
+// 26–30,5 s: arquivos se expandem nos acentos musicais e se acomodam em leque.
 function exportsScene(t){
  ambient(t,C.ink);credit(true);
  reveal('Do seu jeito.',960,232,87,t,'white','center');
@@ -211,7 +218,7 @@ function exportsScene(t){
  group(960,1005,1,0,out(t-1.4),()=>text('PDF, Word e gabarito. Individual ou em lote.',0,0,30,'#C8D1D9','normal','center'));
  const a=ease((t-3.8)/.7);if(a>0)circle(960,540,a*1200,C.purple);
 }
-// 30.5–36: distinct brand resolve, no fade-to-black truncation.
+// 30,5–36 s: encerramento da marca sem corte por escurecimento abrupto.
 function ending(t){
  ambient(t,C.purple);
  for(let i=0;i<3;i++){const r=240+i*150+Math.sin(t*.5+i)*10;ctx.beginPath();ctx.ellipse(960,470,r,r*.72,0,0,Math.PI*2);ctx.strokeStyle='#FFFFFF10';ctx.lineWidth=1.5;ctx.stroke()}
@@ -225,13 +232,13 @@ function ending(t){
 
 const scenes=[{start:0,end:5.5,draw:opening},{start:5.5,end:10.5,draw:classroom},{start:10.5,end:15.5,draw:profiles},{start:15.5,end:21,draw:prepare},{start:21,end:26,draw:review},{start:26,end:30.5,draw:exportsScene},{start:30.5,end:36,draw:ending}];
 function frame(t){ctx.resetTransform();ctx.globalAlpha=1;ctx.clearRect(0,0,W,H);const ix=scenes.findIndex(s=>t>=s.start&&t<s.end);const s=scenes[Math.max(0,ix)];s.draw(t-s.start);
- // Short overlapping transitions; outgoing content carries velocity into the cut.
+ // Transições curtas sobrepostas; o conteúdo de saída mantém sua velocidade durante o corte.
  const next=scenes[ix+1],dur=.38;
  if(next&&t>s.end-dur&&ix!==0&&ix!==5){const p=ease((t-s.end+dur)/dur);ctx.save();ctx.globalAlpha=p;ctx.translate(0,80*(1-p));next.draw(0);ctx.restore()}
 }
 
-// Original instrumental: warm A-major/F#-minor harmony, syncopated plucks,
-// soft percussion and quiet transition sweeps. No copyrighted audio assets.
+// Instrumental original: harmonia em Lá maior/Fá sustenido menor e notas sincopadas,
+// percussão suave e sons discretos nas transições, sem reutilizar gravações de terceiros.
 async function score(){
  const sr=48000,n=sr*DURATION,L=new Float32Array(n),R=new Float32Array(n),bpm=110,beat=60/bpm;
  let seed=1927;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296*2-1};

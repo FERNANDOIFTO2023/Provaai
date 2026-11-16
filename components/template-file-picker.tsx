@@ -1,3 +1,8 @@
+/*
+ * Interface / seleção de modelos
+ * Acumula arquivos escolhidos ou arrastados sem duplicar a mesma seleção. Esta etapa organiza a
+ * lista; leitura e persistência ocorrem no fluxo de envio.
+ */
 import { useState } from 'react';
 import { Upload, X } from './animated-icons';
 import { Field } from './workspace-ui';

@@ -1,3 +1,5 @@
+# Operação / imagem de produção
+# Compila o frontend em uma etapa Node e monta a aplicação PHP com dependências de documentos e matemática. O runtime inclui Node e Python porque as conversões são acionadas pelo backend.
 FROM node:24-bookworm-slim AS frontend
 WORKDIR /app
 COPY package.json package-lock.json ./

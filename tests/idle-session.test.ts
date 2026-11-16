@@ -1,3 +1,9 @@
+/*
+ * Testes / idle-session
+ * Verifica transições de inatividade, sincronização e falhas do armazenamento local.
+ * Os cenários documentam comportamentos esperados. Ao mudar uma regra, confira primeiro se a
+ * expectativa representa uma garantia que deve ser preservada.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { activityKey, idleStatus, readActivity, writeActivity, IDLE_LIMIT_MS, IDLE_WARNING_MS } from '../lib/idle-session.ts';

@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+{{--
+Views / e-mail HTML
+Apresenta o código temporário com estilos compatíveis com clientes de e-mail. Os valores são fornecidos pelo Mailable; preserve o escape do Blade ao alterar o conteúdo.
+--}}<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">

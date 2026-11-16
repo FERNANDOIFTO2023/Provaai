@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Serviços / ponte para o verificador matemático
+ * Descarta pareceres recebidos do navegador ou da IA e executa o verificador Python com prazo
+ * limitado. Falha ou notação não coberta exige revisão humana, sem declarar a questão correta.
+ */
+
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
@@ -9,9 +16,10 @@ use Throwable;
 
 class MathVerificationService
 {
+    /** Recalcula o parecer para matérias reconhecidas e associa cada resultado à entrada exata conferida. */
     public function verify(string $subject, array $content): array
     {
-        // Reports supplied by the browser or the language model are never trusted.
+        // Pareceres fornecidos pelo navegador ou pelo modelo de linguagem não são considerados confiáveis.
         unset($content['mathReview']);
         if (! preg_match('/\b(matematicas?|mathematics|math|calculo|algebra|geometria|aritmetica|trigonometria|estatistica)\b/', Str::lower(Str::ascii($subject))) || empty($content['questions'])) {
             return $content;
@@ -36,7 +44,7 @@ class MathVerificationService
             }
             $results = $decoded;
         } catch (Throwable $e) {
-            // No student content, subprocess output or credentials in the log.
+            // Não inclui conteúdo dos alunos, saída do subprocesso nem credenciais nos registros.
             Log::warning('math_verification_unavailable', ['exception' => $e::class]);
         }
         $content['mathReview'] = ['version' => 1, 'subject' => $subject, 'instructions' => $content['instructions'] ?? '', 'results' => []];

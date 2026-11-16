@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Testes / fábrica de professores
+ * Gera contas fictícias para cenários automatizados. Estados da fábrica permitem variar a
+ * verificação do e-mail sem depender de usuários reais.
+ */
+
+
 namespace Database\Factories;
 
 use App\Models\User;
@@ -13,12 +20,12 @@ use Illuminate\Support\Str;
 class UserFactory extends Factory
 {
     /**
-     * The current password being used by the factory.
+     * Senha com hash reutilizada pela fábrica durante a execução dos testes.
      */
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
+     * Define o estado padrão do usuário fictício.
      *
      * @return array<string, mixed>
      */
@@ -34,7 +41,7 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Produz uma conta fictícia cujo e-mail ainda não foi verificado.
      */
     public function unverified(): static
     {

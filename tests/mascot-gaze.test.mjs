@@ -1,3 +1,9 @@
+/*
+ * Testes / mascot-gaze
+ * Verifica limites e direção do deslocamento dos olhos do mascote.
+ * Os cenários documentam comportamentos esperados. Ao mudar uma regra, confira primeiro se a
+ * expectativa representa uma garantia que deve ser preservada.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { gazeOffset } from '../lib/mascot-gaze.ts';

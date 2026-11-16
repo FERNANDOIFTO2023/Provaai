@@ -1,4 +1,10 @@
-/* Model library and individual assessments share the existing Provaai tokens. */
+/*
+ * Estilos / collections
+ * Biblioteca de modelos e acompanhamento individual, incluindo filtros, cartões e estados vazios.
+ * A ordem de carregamento em resources/js/app.tsx participa da cascata. Preserve foco visível,
+ * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
+ */
+/* A biblioteca de modelos e as provas individuais compartilham as variáveis visuais do Provaai. */
 .section-kicker { font-size: 10px; font-weight: 750; letter-spacing: 1.4px; color: var(--color-action); }
 .library-overview { display: flex; align-items: center; gap: 18px; padding: 22px 26px; background: #fff; border: 1px solid var(--border); border-radius: 18px; }
 .overview-symbol { display: grid; place-items: center; flex-shrink: 0; width: 52px; height: 52px; background: var(--wash); color: var(--color-action); border-radius: 16px; }
@@ -122,12 +128,14 @@
 .student-first-exam { border-top: 1px solid #eeeaf3; padding-top: 17px; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
 .student-first-exam > span:nth-child(2) { flex: 1; }
 .model-tools summary:focus-visible, .student-exam-history summary:focus-visible { outline: 3px solid var(--color-action); outline-offset: 3px; border-radius: 4px; }
+/* Acessibilidade: adapta animações à preferência de movimento do usuário. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .model-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px #32234b0c; border-color: #b9a5da; }
   .model-card:hover .model-paper { transform: rotate(0deg) translateY(10px); }
   .recovery-results > div:hover { background: #faf8fd; }
 }
 @keyframes collection-enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 1000px) {
   .individual-workspace .recovery-add { grid-template-columns: 1fr; gap: 20px; }
   .recovery-add-intro h2, .recovery-add-intro p { max-width: none; }
@@ -136,6 +144,7 @@
   .individual-summary .summary-icon { width: 36px; height: 36px; }
   .library-total { max-width: 145px; }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 600px) {
   .library-overview { padding: 18px; gap: 12px; flex-wrap: wrap; }
   .library-overview h2 { font-size: 17px; }
@@ -163,6 +172,7 @@
   .individual-workspace .exam-row > .status { grid-column: 2; grid-row: 2; margin: 0; justify-self: start; }
   .individual-workspace .exam-row > .button { grid-column: 3; grid-row: 2; margin: 0; }
 }
+/* Acessibilidade: adapta animações à preferência de movimento do usuário. */
 @media (prefers-reduced-motion: reduce) {
   .model-card, .model-paper, .format-switch button, .recovery-results > div, .individual-workspace .recovery-card, .history-review-count > span { animation: none; transition: none; }
 }

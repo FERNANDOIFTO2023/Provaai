@@ -1,5 +1,10 @@
-// Regenerate the email-safe raster versions of the existing Bloub SVG.
-// Run: node docs/email/render-assets.mjs (FFMPEG_PATH may override the binary).
+/*
+ * Ferramentas / imagens do e-mail
+ * Gera versões rasterizadas do Bloub a partir do SVG existente, usando Canvas e FFmpeg. É uma
+ * ferramenta de preparação de assets, não uma etapa do envio de códigos.
+ */
+// Regenera as versões rasterizadas do SVG do Bloub para uso em clientes de e-mail.
+// Execute: node docs/email/render-assets.mjs (FFMPEG_PATH pode indicar outro executável).
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
@@ -13,7 +18,7 @@ await mkdir(output, { recursive: true });
 const mascot = await loadImage(await readFile(path.join(root, 'public/bloub/static/bloub-feliz.svg')));
 const canvas = createCanvas(192, 192);
 const ctx = canvas.getContext('2d');
-// Same bounce keyframes as public/bloub/animated/bloub-feliz.svg.
+// Usa os mesmos quadros-chave do salto em public/bloub/animated/bloub-feliz.svg.
 const keys = [[0,0,1,1],[.15,5,1.04,.94],[.30,-15,.98,1.03],[.42,2,1.03,.97],[.55,0,1,1],[1,0,1,1]];
 function draw(t) {
   const next = keys.findIndex((key, index) => index > 0 && key[0] >= t);

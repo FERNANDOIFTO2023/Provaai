@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * Banco / evolução do schema
+ * Cria os registros de negócio, vínculos de propriedade, códigos de acesso e auditoria de exclusão.
+ * up aplica a mudança e down a reverte. Em bancos já publicados, evolua o schema com uma nova
+ * migração em vez de reescrever esta.
+ */
+
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -8,6 +16,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Código temporário: guarda resumo, validade e tentativas por e-mail.
         Schema::create('login_codes', function (Blueprint $t) {
             $t->string('email')->primary();
             $t->string('digest');
@@ -15,6 +24,7 @@ return new class extends Migration
             $t->unsignedInteger('attempts')->default(0);
             $t->timestamps();
         });
+        // Arquivos privados e resultado da leitura do modelo.
         Schema::create('sala_templates', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->foreignUuid('user_id')->constrained()->cascadeOnDelete();
@@ -28,6 +38,7 @@ return new class extends Migration
             $t->double('pdf_header_ratio')->default(.25);
             $t->timestamps();
         });
+        // Turma, identidade visual, preferência de modelo e prazo de arquivamento.
         Schema::create('sala_classes', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->foreignUuid('user_id')->constrained()->cascadeOnDelete();
@@ -45,6 +56,7 @@ return new class extends Migration
             $t->timestamp('deletion_due_at')->nullable()->index();
             $t->timestamps();
         });
+        // Perfil pedagógico; a restrição composta impede código duplicado na mesma turma.
         Schema::create('sala_students', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->foreignUuid('user_id')->constrained()->cascadeOnDelete();
@@ -58,6 +70,7 @@ return new class extends Migration
             $t->timestamps();
             $t->unique(['class_id', 'code']);
         });
+        // Prova e snapshot do perfil usados na preparação, independentes das edições futuras do cadastro.
         Schema::create('sala_exams', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->foreignUuid('user_id')->constrained()->cascadeOnDelete();
@@ -75,16 +88,19 @@ return new class extends Migration
             $t->timestamps();
             $t->index(['user_id', 'class_id', 'subject']);
         });
+        // Uma preferência de modelo por professor; null representa ausência de modelo externo.
         Schema::create('sala_teacher_template_defaults', function (Blueprint $t) {
             $t->foreignUuid('user_id')->primary()->constrained()->cascadeOnDelete();
             $t->foreignUuid('template_id')->nullable()->constrained('sala_templates')->nullOnDelete();
             $t->timestamps();
         });
+        // Participação em provas individuais sem criar um segundo cadastro do aluno.
         Schema::create('sala_recovery_students', function (Blueprint $t) {
             $t->foreignUuid('student_id')->primary()->constrained('sala_students')->cascadeOnDelete();
             $t->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $t->timestamps();
         });
+        // Um lote por professor e reserva temporária para impedir execução simultânea de uma etapa.
         Schema::create('sala_exam_batches', function (Blueprint $t) {
             $t->foreignUuid('user_id')->primary()->constrained()->cascadeOnDelete();
             $t->uuid('batch_id')->unique();
@@ -97,6 +113,7 @@ return new class extends Migration
             $t->timestamp('lease_until')->nullable();
             $t->timestamps();
         });
+        // Convite guarda os dados no momento do envio e o estado de aceite ou revogação.
         Schema::create('sala_copy_invitations', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->foreignUuid('owner_id')->constrained('users')->cascadeOnDelete();
@@ -111,6 +128,7 @@ return new class extends Migration
             $t->timestamp('revoked_at')->nullable();
             $t->timestamps();
         });
+        // Registro de auditoria sem vínculo com exclusão em cascata da turma, preservando seu motivo.
         Schema::create('class_deletion_audits', function (Blueprint $t) {
             $t->id();
             $t->uuid('user_id')->index();

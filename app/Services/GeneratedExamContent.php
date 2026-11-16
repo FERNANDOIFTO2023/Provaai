@@ -1,9 +1,17 @@
 <?php
 
+/*
+ * Serviços / contrato da resposta da IA
+ * Define o esquema solicitado ao provedor e resolve indicações explícitas de alternativas. Não
+ * inventa uma resposta ausente nem corrige contradições por aproximação.
+ */
+
+
 namespace App\Services;
 
 class GeneratedExamContent
 {
+    /** Monta o esquema JSON conforme total e distribuição; objetivas indicam a resposta por índice de zero a três. */
     public function schema(int $count, int $objective): array
     {
         $common = [
@@ -38,7 +46,7 @@ class GeneratedExamContent
             ]];
     }
 
-    /** Resolve only an explicit option selection; never invent an answer or an option. */
+    /** Resolve apenas uma seleção explícita de alternativa; nunca inventa resposta nem opção. */
     public function prepare(array $content): array
     {
         if (! is_array($content['questions'] ?? null) || ! array_is_list($content['questions'])) {
@@ -65,8 +73,8 @@ class GeneratedExamContent
                         $matches[] = $position;
                     }
                 }
-                // Some providers return a letter instead of repeating the option.
-                // A literal option containing that letter always takes precedence.
+                // Alguns provedores devolvem uma letra em vez de repetir o texto da opção.
+                // Uma opção cujo texto literal seja essa letra tem precedência.
                 if ($matches === [] && preg_match('/^(?:alternativa\s+)?([A-D])(?:[).])?$/iu', trim($answer), $match)) {
                     $matches[] = ord(strtoupper($match[1])) - ord('A');
                 }
@@ -86,9 +94,10 @@ class GeneratedExamContent
         return $content;
     }
 
+    /** Normaliza apresentação sem fundir símbolos matemáticos que possam ter significados diferentes. */
     public static function optionKey(string $text): string
     {
-        // NFC preserves mathematical glyphs and case; NFKC/lowercase can merge x/X or superscripts.
+        // NFC preserva símbolos e maiúsculas; NFKC ou conversão para minúsculas podem confundir x/X e expoentes.
         $text = trim(\Normalizer::normalize($text, \Normalizer::FORM_C));
         $math = strpbrk($text, '\\+-*/=^_{}<>') !== false || preg_match('/^[\p{L}]$|[\p{Sm}\p{No}]/u', $text);
         foreach ([['\\(', '\\)'], ['\\[', '\\]'], ['$$', '$$']] as [$open, $close]) {

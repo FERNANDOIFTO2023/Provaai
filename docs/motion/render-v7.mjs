@@ -1,4 +1,11 @@
-/** Model B: a continuous camera journey. Native 120fps, no frame interpolation. */
+/*
+ * Ferramentas / material audiovisual
+ * Desenha os quadros e monta a versão correspondente do vídeo demonstrativo. Os helpers de desenho
+ * trabalham sobre o contexto Canvas e a codificação usa ferramentas locais.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
+/** Modelo B: percurso contínuo de câmera em 120 quadros por segundo, sem interpolação de quadros. */
 import {createCanvas,loadImage,GlobalFonts} from '@napi-rs/canvas';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {spawn} from 'node:child_process';
@@ -153,7 +160,7 @@ function render(t){
  g.resetTransform();g.globalAlpha=1;g.filter='none';g.fillStyle=BG;g.fillRect(0,0,W,H);
  const cam=cameraAt(t);
  glow(430-Math.sin(t*.24)*140,350,560,P,.025);glow(1540+Math.sin(t*.3)*150,760,590,M,.05);
- // World-space camera: all panels share one coordinate system and keep spatial continuity.
+ // Câmera no espaço da cena: painéis compartilham coordenadas e mantêm continuidade espacial.
  g.save();g.translate(960,540);g.rotate(cam.r);g.scale(cam.z,cam.z);g.translate(-cam.x,-cam.y);
  for(let i=0;i<stations.length-1;i++){
   const a=stations[i],b=stations[i+1];if(Math.abs((a.x+b.x)/2-cam.x)>3400)continue;
@@ -166,7 +173,7 @@ function render(t){
  }
  g.restore();
 }
-// Half-frame exposure only during fast travel. Every output frame is evaluated at 120Hz.
+// Exposição de meio quadro só em deslocamentos rápidos; cada quadro de saída é calculado a 120 Hz.
 const accum=createCanvas(W,H),ag=accum.getContext('2d');
 function frame(t){if(!cameraAt(t).travel){render(t);return}ag.clearRect(0,0,W,H);for(const offset of [-.2/FPS,.2/FPS]){render(Math.max(0,t+offset));ag.globalCompositeOperation='lighter';ag.globalAlpha=.5;ag.drawImage(canvas,0,0)}ag.globalCompositeOperation='source-over';ag.globalAlpha=1;g.resetTransform();g.globalAlpha=1;g.clearRect(0,0,W,H);g.drawImage(accum,0,0)}
 const marks=[1.9,3.7,5.55,8.8,11.9,14.95,18.6,19.3,21.5,22.7,24.9,28.7];

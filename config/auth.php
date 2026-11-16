@@ -1,19 +1,21 @@
 <?php
 
+/*
+ * Configuração / auth
+ * Guardas de sessão e provedor de usuários. Os valores variáveis vêm do ambiente; não coloque
+ * segredos diretamente neste arquivo.
+ * Ao alterar padrões, confira os serviços consumidores e a configuração do ambiente de teste.
+ */
+
+
 use App\Models\User;
 
 return [
 
     /*
-    |--------------------------------------------------------------------------
-    | Authentication Defaults
-    |--------------------------------------------------------------------------
-    |
-    | This option defines the default authentication "guard" and password
-    | reset "broker" for your application. You may change these values
-    | as required, but they're a perfect start for most applications.
-    |
-    */
+     * Guarda e mecanismo de redefinição de senha usados por padrão pelo Laravel. O login por
+     * código da aplicação fica no AuthController.
+     */
 
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'web'),
@@ -21,21 +23,9 @@ return [
     ],
 
     /*
-    |--------------------------------------------------------------------------
-    | Authentication Guards
-    |--------------------------------------------------------------------------
-    |
-    | Next, you may define every authentication guard for your application.
-    | Of course, a great default configuration has been defined for you
-    | which utilizes session storage plus the Eloquent user provider.
-    |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
-    |
-    | Supported: "session"
-    |
-    */
+     * Define como a requisição é autenticada. A guarda web usa sessão e obtém a conta pelo
+     * provedor users.
+     */
 
     'guards' => [
         'web' => [
@@ -45,21 +35,9 @@ return [
     ],
 
     /*
-    |--------------------------------------------------------------------------
-    | User Providers
-    |--------------------------------------------------------------------------
-    |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
-    |
-    | If you have multiple user tables or models you may configure multiple
-    | providers to represent the model / table. These providers may then
-    | be assigned to any extra authentication guards you have defined.
-    |
-    | Supported: "database", "eloquent"
-    |
-    */
+     * Define como as contas são recuperadas. O provedor Eloquent usa o modelo configurado para
+     * representar o professor.
+     */
 
     'providers' => [
         'users' => [
@@ -74,23 +52,9 @@ return [
     ],
 
     /*
-    |--------------------------------------------------------------------------
-    | Resetting Passwords
-    |--------------------------------------------------------------------------
-    |
-    | These configuration options specify the behavior of Laravel's password
-    | reset functionality, including the table utilized for token storage
-    | and the user provider that is invoked to actually retrieve users.
-    |
-    | The expiry time is the number of minutes that each reset token will be
-    | considered valid. This security feature keeps tokens short-lived so
-    | they have less time to be guessed. You may change this as needed.
-    |
-    | The throttle setting is the number of seconds a user must wait before
-    | generating more password reset tokens. This prevents the user from
-    | quickly generating a very large amount of password reset tokens.
-    |
-    */
+     * Configuração padrão do framework para tokens de redefinição. expire usa minutos; throttle
+     * usa segundos. Esse mecanismo é distinto do código de acesso por e-mail do Provaai.
+     */
 
     'passwords' => [
         'users' => [
@@ -102,15 +66,9 @@ return [
     ],
 
     /*
-    |--------------------------------------------------------------------------
-    | Password Confirmation Timeout
-    |--------------------------------------------------------------------------
-    |
-    | Here you may define the number of seconds before a password confirmation
-    | window expires and users are asked to re-enter their password via the
-    | confirmation screen. By default, the timeout lasts for three hours.
-    |
-    */
+     * Tempo em segundos pelo qual uma confirmação de senha é considerada recente nas
+     * funcionalidades que a exigirem.
+     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 

@@ -1,4 +1,11 @@
-// Audio-only revision. Anchors come from the unchanged V7 visual formulas/trace.
+/*
+ * Ferramentas / material audiovisual
+ * Define a linha do tempo, eventos e pontos de sincronização desta versão do vídeo. Áudio, animação
+ * e verificações precisam usar a mesma referência temporal.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
+// Revisão apenas de áudio. As âncoras vêm das fórmulas e do registro visual preservados da V7.
 import {readFile} from 'node:fs/promises';
 import {events as original,FPS,DURATION,action} from './timing-v7.mjs';
 export {FPS,DURATION};
@@ -32,7 +39,7 @@ export const events=original.filter(e=>e.type!=='type').map(e=>{
 });
 const text='Matemática. Frações. 7º ano.';
 for(let i=0;i<text.length;i++)if(i%2===0&&text[i]!==' ')events.push({id:`type-${i}`,time:firstFrame(7.5+1.1*(i+1)/text.length),type:'type',pan:-.25+.5*i/text.length});
-// The center of the file descent previously had no directional sound.
+// Acrescenta referência sonora direcional ao trecho central da descida do arquivo.
 events.push({id:'download-descent',time:quantize(20.2+action.download+.65/2),type:'paper',pan:.25,duration:.32});
 events.sort((a,b)=>a.time-b.time);
 export const anchors=Object.entries(replacements).map(([id,visual])=>({id,reason:anchorNotes[id],previous:original.find(e=>e.id===id).time,visualTarget:visual,audioCue:events.find(e=>e.id===id).time,quantizationMs:1000*(events.find(e=>e.id===id).time-visual)}));

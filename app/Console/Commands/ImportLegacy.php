@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Migração / importação do legado
+ * Valida identidades, vínculos e hashes antes de importar o manifesto para o Laravel. Sem --apply
+ * apenas confere; a gravação exige destino vazio e preserva os UUIDs originais.
+ */
+
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -17,6 +24,7 @@ class ImportLegacy extends Command
 
     private const TABLES = ['sala_templates', 'sala_classes', 'sala_students', 'sala_exams', 'sala_teacher_template_defaults', 'sala_recovery_students', 'sala_copy_invitations'];
 
+    /** Valida todo o backup antes de escrever e remove arquivos já copiados se a importação falhar. */
     public function handle(): int
     {
         $path = realpath($this->argument('manifest'));

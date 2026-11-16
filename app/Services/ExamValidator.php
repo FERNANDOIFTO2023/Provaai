@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Serviços / integridade da prova
+ * Valida estrutura, distribuição, alternativas e gabarito antes do salvamento. Uma resposta da IA
+ * também passa por este contrato; formato JSON válido por si só não basta.
+ */
+
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Validator;
@@ -7,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class ExamValidator
 {
+    /** Confere campos, questões únicas, quatro alternativas distintas e correspondência exata do gabarito. */
     public function validate(array $content, ?int $count = null, ?int $objective = null): array
     {
         Validator::make($content, [
@@ -47,11 +55,13 @@ class ExamValidator
         return $content;
     }
 
+    /** Normaliza enunciados para detectar repetição textual; não verifica equivalência matemática. */
     public function normalize(string $text): string
     {
         return mb_strtolower(preg_replace('/\s+/u', ' ', trim(\Normalizer::normalize($text, \Normalizer::FORM_KC))));
     }
 
+    /** Expõe a falha no campo content, preservando o formato de validação esperado pela API. */
     public function fail(string $message): never
     {
         throw ValidationException::withMessages(['content' => $message]);

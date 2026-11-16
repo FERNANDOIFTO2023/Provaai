@@ -1,6 +1,13 @@
+/*
+ * Estilos / bloub
+ * Identidade visual de entrada e área do professor, com ajustes responsivos e animações do mascote.
+ * A ordem de carregamento em resources/js/app.tsx participa da cascata. Preserve foco visível,
+ * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
+ */
 @import './bloub-tokens.css';
 
-/* Sala × Bloub — the supplied brand kit, shared by login and the workspace. */
+/* Sala × Bloub — identidade visual compartilhada pela entrada e pela área de trabalho. */
+/* SETOR — Identidade: sobreposições das variáveis base com a paleta do Bloub. */
 :root {
   --wash: #eee8fa;
   --cream: var(--color-canvas);
@@ -164,12 +171,13 @@ select:focus {
   font-size: 13px;
 }
 
+/* SETOR — Mascote: estados compactos usados em mensagens e áreas auxiliares. */
 .bloub-mood {
   display: block;
   object-fit: contain;
 }
 
-/* Entry: a roomy welcome, a focused login, and the original Bloub silhouette. */
+/* Setor de entrada: boas-vindas, formulário de login e silhueta original do Bloub. */
 .auth-shell {
   grid-template-columns: 53% 47%;
   min-height: 100svh;
@@ -430,7 +438,7 @@ select:focus {
   text-align: center;
 }
 
-/* Workspace: the same type, violet and mint palette, rounded controls and calmer surfaces. */
+/* Setor de trabalho: tipografia, paleta violeta e menta, controles arredondados e superfícies. */
 .sidebar {
   background: var(--color-canvas);
   border-color: var(--border);
@@ -1043,6 +1051,7 @@ td {
   color: var(--muted);
   font-size: 13px;
 }
+/* Acessibilidade: adapta animações à preferência de movimento do usuário. */
 @media (prefers-reduced-motion: no-preference) {
   .loader-character img {
     animation: calm-breath 3s ease-in-out infinite;
@@ -1127,6 +1136,7 @@ td {
   animation: none !important;
   transition: none !important;
 }
+/* Acessibilidade: adapta animações à preferência de movimento do usuário. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1137,11 +1147,13 @@ td {
   }
 }
 
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (min-width: 1500px) {
   .banner-art {
     margin-right: 30px;
   }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 1150px) {
   .sidebar {
     width: 218px;
@@ -1182,6 +1194,7 @@ td {
     font-size: 28px;
   }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 900px) and (min-width: 761px) {
   .auth-story {
     padding-inline: 26px;
@@ -1205,6 +1218,7 @@ td {
     grid-template-columns: 1fr 1fr;
   }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 760px) {
   .auth-shell {
     grid-template-columns: 1fr;
@@ -1403,6 +1417,7 @@ td {
     font-size: 12px;
   }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 480px) {
   .class-grid,
   .template-grid {
@@ -1472,6 +1487,7 @@ td {
     padding: 22px;
   }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 350px) {
   .auth-story {
     padding-inline: 18px;
@@ -1513,7 +1529,7 @@ td {
   }
 }
 
-/* Palette 7: violet actions, mint accents, ink and warm paper. */
+/* Paleta 7: ações em violeta, detalhes em menta, texto escuro e fundo de papel. */
 .auth-story {
   color: var(--color-canvas);
   background: var(--color-action);
@@ -1634,11 +1650,13 @@ td {
   background: var(--color-canvas);
   border-color: var(--muted);
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 1050px) {
   .session-label {
     display: none;
   }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 760px) {
   .topbar {
     flex-wrap: wrap;
@@ -1659,7 +1677,7 @@ td {
   }
 }
 
-/* Keep artwork and sign-in actions in view, while allowing larger text to reflow. */
+/* Mantém ilustração e ações de entrada visíveis, permitindo reorganização com texto ampliado. */
 .auth-intro {
   padding-block: 12px;
 }
@@ -1682,6 +1700,7 @@ td {
   margin: 6px 0 0;
 }
 
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (min-width: 761px) and (max-height: 700px) {
   .auth-story {
     padding-block: 16px;
@@ -1698,6 +1717,7 @@ td {
   }
 }
 
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 760px) {
   .auth-shell {
     grid-template-rows: auto 1fr;
@@ -1800,6 +1820,7 @@ td {
   }
 }
 
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 760px) and (max-height: 600px) {
   .auth-story {
     --art-size: 64px;
@@ -1844,6 +1865,7 @@ td {
 .recovery-card .exam-row {padding:16px 8px;}
 .exam-library .actions {flex-wrap:wrap;}
 .exam-row-info {min-width:0;overflow-wrap:anywhere;}
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media(max-width:760px) {
   .library-filters {align-items:stretch;flex-direction:column;}
   .library-filters .search {min-width:0;}
@@ -1874,6 +1896,7 @@ td {
   color: var(--muted);
   margin-top: 10px;
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 440px) {
   .count-fields {
     grid-template-columns: 1fr 1fr;

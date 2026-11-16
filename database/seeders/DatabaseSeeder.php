@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Banco / dados iniciais
+ * Ponto de entrada do preenchimento inicial do Laravel. Antes de habilitar novos registros aqui,
+ * diferencie dados de desenvolvimento de dados necessários em produção.
+ */
+
+
 namespace Database\Seeders;
 
 use App\Models\User;
@@ -11,7 +18,7 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Preenche os dados iniciais configurados para a aplicação.
      */
     public function run(): void
     {

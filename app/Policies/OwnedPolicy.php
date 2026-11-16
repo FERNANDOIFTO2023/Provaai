@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Autorização / propriedade
+ * Autoriza leitura e mutações somente quando a conta corresponde ao proprietário do registro. É uma
+ * verificação complementar aos escopos de consulta dos controladores.
+ */
+
+
 namespace App\Policies;
 
 use App\Models\OwnedModel;

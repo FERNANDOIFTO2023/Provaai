@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Backend / autenticação por e-mail
+ * Emite e verifica códigos temporários, controla tentativas e cria a sessão Laravel. Armazena um
+ * resumo HMAC do código; o navegador recebe apenas um marcador público para o relógio de atividade.
+ */
+
+
 namespace App\Http\Controllers;
 
 use App\Mail\LoginCode;
@@ -15,6 +22,7 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    /** Serializa solicitações por e-mail, reaproveita código válido e verifica expiração e tentativas. */
     public function code(Request $r)
     {
         $data = $r->validate(['action' => 'required|in:request,verify', 'email' => 'required|email|max:254', 'code' => 'nullable|regex:/^\d{6,10}$/']);
@@ -52,11 +60,13 @@ class AuthController extends Controller
         });
     }
 
+    /** Associa código e e-mail à chave do servidor para não armazenar o código em texto puro. */
     private function digest(string $email, string $code): string
     {
         return hash_hmac('sha256', $email.':'.$code, config('app.key'));
     }
 
+    /** Limita envios por e-mail e só persiste o resumo do novo código após o envio concluir. */
     private function send(string $email, bool $rotated = false)
     {
         $key = 'email-send:'.hash('sha256', $email);
@@ -78,11 +88,13 @@ class AuthController extends Controller
         return response()->json(['reused' => false, 'rotated' => $rotated, 'expiresAt' => $expires->toIso8601String()]);
     }
 
+    /** Retorna a sessão atual sem permitir cache da resposta. */
     public function session(Request $r)
     {
         return response()->json(['session' => $r->user() ? $this->sessionData($r) : null])->header('Cache-Control', 'no-store');
     }
 
+    /** Produz os dados públicos da conta e o marcador usado para sincronizar a inatividade. */
     private function sessionData(Request $r): array
     {
         $user = $r->user();
@@ -98,6 +110,7 @@ class AuthController extends Controller
         return ['access_token' => $marker, 'refresh_token' => '', 'user' => ['id' => $user->id, 'email' => $user->email, 'user_metadata' => ['full_name' => $user->name]]];
     }
 
+    /** Encerra a autenticação, invalida a sessão e renova o token CSRF. */
     public function logout(Request $r)
     {
         Auth::logout();

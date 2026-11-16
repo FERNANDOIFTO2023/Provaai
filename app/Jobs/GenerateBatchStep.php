@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Fila / etapa de geração
+ * Obtém a reserva de uma prova, executa a geração e registra conclusão ou erro. O BatchService
+ * agenda a etapa seguinte e impede que entregas duplicadas processem a mesma reserva.
+ */
+
+
 namespace App\Jobs;
 
 use App\Services\AiService;
@@ -18,6 +25,7 @@ class GenerateBatchStep implements ShouldQueue
 
     public function __construct(public string $userId, public string $batchId) {}
 
+    /** Executa uma única prova reservada e finaliza a etapa mesmo quando a geração retorna erro. */
     public function handle(BatchService $batches, AiService $ai): void
     {
         $step = $batches->claim($this->userId, $this->batchId);

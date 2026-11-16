@@ -1,3 +1,9 @@
+/*
+ * Documentos / preenchimento de modelo Word
+ * Abre a estrutura ZIP/XML do DOCX, preenche identificação e substitui o conteúdo didático pela
+ * prova. Preserva os elementos de diagramação compatíveis e transforma fórmulas em equações
+ * editáveis.
+ */
 import JSZip from 'jszip';
 import { DOMParser, XMLSerializer, type Element as XmlElement } from '@xmldom/xmldom';
 import type { Exam } from './model.ts';
@@ -15,6 +21,7 @@ const write = (node: ReturnType<typeof parse>) => new XMLSerializer().serializeT
 
 export async function fillDocxLayout(bytes: Uint8Array, exam: Exam, room: string, teacher: string, key: boolean) {
   const zip = await JSZip.loadAsync(bytes);
+  // Setor de entrada: limita o ZIP expandido, recusa objetos ativos e remove vínculos externos.
   let expanded = 0;
   for (const part of Object.values(zip.files)) {
     expanded += (part as unknown as {_data?:{uncompressedSize:number}})._data?.uncompressedSize ?? 0;
@@ -43,6 +50,7 @@ export async function fillDocxLayout(bytes: Uint8Array, exam: Exam, room: string
   const section = blocks.findLast(n=>n.localName === 'sectPr') ?? null;
   const title = key ? 'Gabarito · ' + exam.title : exam.title;
   let anchor = -1, hasTitle = false, hasStudent = false;
+  // Reconhece campos vazios de identificação; não sobrescreve livremente qualquer texto do modelo.
   const fields = [
     {pattern:/^(?:nome (?:do|da|do\(a\)) )?(?:estudante|alun[oa](?:\(a\))?)\s*:/i,value:exam.profile_snapshot.name,student:true},
     {pattern:/^turma\s*:/i,value:room},
@@ -71,8 +79,8 @@ export async function fillDocxLayout(bytes: Uint8Array, exam: Exam, room: string
   for (const [index, block] of blocks.entries()) {
     if (block !== section && index > anchor) body.removeChild(block);
   }
-  // The model's body appears once. Collapse retained section breaks so a first-page
-  // header cannot restart later in the same exam.
+  // O corpo do modelo aparece uma vez. Remove quebras de seção retidas para impedir que o
+  // cabeçalho da primeira página reapareça no meio da mesma prova.
   for (const properties of Array.from(doc.getElementsByTagNameNS(W, 'sectPr'))) {
     if (properties !== section) properties.parentNode!.removeChild(properties);
   }
@@ -99,6 +107,7 @@ export async function fillDocxLayout(bytes: Uint8Array, exam: Exam, room: string
       if (!titlePage.parentNode) section.appendChild(titlePage);
     }
   }
+  // Constrói parágrafos Word com controle de quebra e espaço de resposta em twips.
   function paragraph(text: string, options: {bold?:boolean;keepNext?:boolean;lines?:boolean} = {}) {
     const p = doc.createElementNS(W,'w:p');
     const props=doc.createElementNS(W,'w:pPr');
@@ -140,6 +149,7 @@ export async function fillDocxLayout(bytes: Uint8Array, exam: Exam, room: string
     p.appendChild(run);
     body.insertBefore(p, section);
   }
+  // Setor de conteúdo: acrescenta identificação ausente, instruções e questões da prova atual.
   if (!hasTitle) paragraph(title,{bold:true,keepNext:true});
   if (!hasStudent) paragraph('Aluno: '+exam.profile_snapshot.name+(room?' · Turma: '+room:''));
   if (exam.content.instructions) paragraph(exam.content.instructions);

@@ -1,3 +1,8 @@
+-- Legado / referência histórica do Supabase
+-- Lotes de geração e reservas temporárias de execução na infraestrutura antiga.
+-- Não integra as migrações Laravel atuais. Consulte este arquivo para entender
+-- a origem dos dados e os comandos ExportLegacy e ImportLegacy antes de migrar.
+
 create table public.sala_exam_batches (
   user_id uuid primary key references auth.users(id) on delete cascade,
   batch_id uuid not null default gen_random_uuid(), title text not null,

@@ -1,3 +1,8 @@
+/*
+ * Interface / diretório de alunos
+ * Combina filtros de turma, situação e busca com ações sobre cada aluno. Edição, compartilhamento,
+ * arquivamento e reativação são delegados ao componente pai.
+ */
 'use client';
 import { useState } from 'react';
 import type { ClassRoom, Exam, Student } from '@/lib/model';

@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * Serviços / geração e revisão por IA
+ * Monta o contexto pedagógico, chama o provedor e valida a resposta antes de persistir. A
+ * conferência de conteúdo e a verificação matemática mantêm a prova como rascunho para revisão
+ * humana.
+ */
+
+
 namespace App\Services;
 
 use App\Models\Exam;
@@ -12,11 +20,13 @@ use RuntimeException;
 
 class AiService
 {
+    /** Informa disponibilidade de configuração; não testa a validade das chaves no provedor. */
     public function configured(): bool
     {
         return config('provaai.provider') === 'mistral' ? (bool) config('provaai.mistral_key') : (bool) (config('provaai.gemini_key') || config('provaai.groq_key'));
     }
 
+    /** Gera somente rascunho vazio sob bloqueio; valida estrutura, repetição e aderência antes de salvar. */
     public function generate(string $userId, string $examId, ?\Closure $reportStage = null): Exam
     {
         $lock = Cache::lock('generate:'.$examId, 150);
@@ -53,6 +63,7 @@ class AiService
                     $exclude[] = $q['statement'];
                 }
             }
+            // Envia somente os campos pedagógicos do perfil; nome e código do aluno ficam fora deste contexto.
             $context = ['purpose' => $exam->purpose === 'recovery' ? 'Prova individual' : 'Prova coletiva', 'title' => $exam->title, 'subject' => $exam->subject, 'topics' => $exam->topics,
                 'count' => $exam->question_count, 'distribution' => ['objective' => $objective, 'essay' => $exam->question_count - $objective],
                 'profile' => array_intersect_key($exam->profile_snapshot, array_flip(['difficulties', 'criteria', 'level'])),
@@ -73,6 +84,7 @@ class AiService
                 }
             }
             $reportStage?->__invoke('reviewing');
+            // A segunda chamada confere matéria e tópicos. Ela não aprova a prova para download.
             $review = $this->ask($provider, 'review', ['subject' => $exam->subject, 'topics' => $exam->topics, 'instructions' => $content['instructions'], 'questions' => $content['questions']]);
             if (($review['aligned'] ?? null) !== true || ! isset($review['offTopicQuestions'],$review['missingTopics']) || $review['offTopicQuestions'] !== [] || $review['missingTopics'] !== []) {
                 throw new RuntimeException('A conferência não confirmou a matéria e os conteúdos. O rascunho foi preservado.');
@@ -89,6 +101,7 @@ class AiService
         }
     }
 
+    /** Executa geração ou revisão com prazos próprios e fallback de Gemini para Groq quando configurado. */
     private function ask(string &$provider, string $stage, array $context): array
     {
         $instruction = file_get_contents(resource_path('prompts/'.$stage.'.txt'));
@@ -145,6 +158,7 @@ class AiService
                     if (! $hasFallback) {
                         throw new RuntimeException('O Gemini demorou demais ou está indisponível.');
                     }
+                    // A troca vale também para as próximas etapas desta geração, pois provider é passado por referência.
                     $provider = 'groq';
                     Log::info('ai_fallback', ['from' => 'gemini', 'to' => 'groq', 'stage' => $stage]);
                 }
@@ -178,6 +192,7 @@ class AiService
         }
     }
 
+    /** Exige uma resposta JSON estruturada e converte falhas do provedor em mensagem compreensível. */
     private function decode(string $text): array
     {
         try {

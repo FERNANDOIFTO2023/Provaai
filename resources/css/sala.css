@@ -1,3 +1,10 @@
+/*
+ * Estilos / sala
+ * Estrutura base da aplicação: navegação, formulários, diálogos, listas e distribuição das telas.
+ * A ordem de carregamento em resources/js/app.tsx participa da cascata. Preserve foco visível,
+ * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
+ */
+/* SETOR — Fundação: variáveis de cor, tipografia e medidas compartilhadas. */
 :root {
   --cream: #f8f8f4;
   --white: #fff;
@@ -324,6 +331,7 @@ nav button:hover {
   font-size: 12px;
   margin: 0;
 }
+/* SETOR — Controles: estados visuais das ações reutilizadas nas telas. */
 .button {
   border: 1px solid transparent;
   border-radius: 6px;
@@ -1150,6 +1158,7 @@ input[type='checkbox'] {
   color: #8a9580;
   line-height: 1.7;
 }
+/* SETOR — Diálogos: sobreposição e formulários abertos sobre a página atual. */
 .dialog {
   border: 1px solid #dde4d3;
   border-radius: 12px;
@@ -1496,6 +1505,7 @@ input[type='checkbox'] {
   color: #9ba68e;
   margin-top: 20px;
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (min-width: 1500px) {
   .class-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1507,6 +1517,7 @@ input[type='checkbox'] {
     margin-right: 80px;
   }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 1150px) {
   .sidebar {
     width: 210px;
@@ -1549,6 +1560,7 @@ input[type='checkbox'] {
     font-size: 55px;
   }
 }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 760px) {
   .sidebar {
     transform: translateX(-100%);
@@ -1774,6 +1786,7 @@ input[type='checkbox'] {
     display: none;
   }
 }
+/* Acessibilidade: adapta animações à preferência de movimento do usuário. */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
@@ -1808,6 +1821,7 @@ input[type='checkbox'] {
 .section-heading > select { max-width: 100%; padding: 10px 12px; border: 1px solid #d7d1df; border-radius: 9px; background: white; }
 .class-content > .status { margin: 4px 0 10px; }
 .section-nav { overflow-x: auto; min-width: 0; }
+/* Responsividade: adapta a composição à condição de largura ou altura abaixo. */
 @media (max-width: 700px) {
   .page-heading .actions { flex-wrap: wrap; }
   .section-heading { flex-wrap: wrap; }

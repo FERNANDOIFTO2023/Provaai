@@ -1,3 +1,9 @@
+/*
+ * Estilos / math-review
+ * Estados visuais dos pareceres matemáticos apresentados durante a revisão da prova.
+ * A ordem de carregamento em resources/js/app.tsx participa da cascata. Preserve foco visível,
+ * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
+ */
 .math-review {
   margin-top: 12px;
   padding: 12px 14px;

@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Migração / exportação do legado
+ * Lê usuários, registros e arquivos do Supabase e escreve um manifesto com hashes em pasta nova.
+ * Não altera a origem; o resultado contém dados privados e deve permanecer fora do Git.
+ */
+
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -12,6 +19,7 @@ class ExportLegacy extends Command
 
     protected $description = 'Exporta dados e arquivos vinculados do legado Supabase, sem alterá-lo.';
 
+    /** Pagina os dados, copia os arquivos referenciados e grava o manifesto somente ao concluir a coleta. */
     public function handle(): int
     {
         $url = rtrim((string) config('provaai.legacy_url'), '/');

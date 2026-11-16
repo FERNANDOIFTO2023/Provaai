@@ -1,18 +1,19 @@
 <?php
 
+/*
+ * Configuração / services
+ * Credenciais de integrações externas suportadas pelo Laravel. Os valores variáveis vêm do
+ * ambiente; não coloque segredos diretamente neste arquivo.
+ * Ao alterar padrões, confira os serviços consumidores e a configuração do ambiente de teste.
+ */
+
+
 return [
 
     /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Resend, Postmark, AWS, and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
+     * Configura integrações externas disponíveis no framework. As chaves específicas dos
+     * provedores de IA do Provaai ficam em config/provaai.php.
+     */
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),

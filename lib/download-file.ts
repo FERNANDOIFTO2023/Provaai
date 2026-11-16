@@ -1,3 +1,8 @@
+/*
+ * Documentos / transferência autenticada
+ * Solicita a exportação aprovada ao Laravel e acompanha preparação e recebimento dos bytes. As
+ * consultas de progresso são auxiliares e não devem interromper uma transferência válida.
+ */
 import { apiFetch } from './api-client.ts';
 import type { Exam } from './model';
 import type { FileProgress } from './export';

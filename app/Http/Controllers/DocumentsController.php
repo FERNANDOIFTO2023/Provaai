@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Backend / arquivos privados e exportação
+ * Valida uploads, processamento de modelos e downloads vinculados ao professor autenticado. A prova
+ * precisa estar aprovada antes de ser exportada; conversão e cache ficam no DocumentService.
+ */
+
+
 namespace App\Http\Controllers;
 
 use App\Models\Exam;
@@ -11,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 
 class DocumentsController extends Controller
 {
+    /** Lê Word ou renderiza cabeçalho de PDF; uma simples prévia não altera o modelo salvo. */
     public function process(Request $r, DocumentService $documents)
     {
         $v = $r->validate(['templateId' => 'required|uuid', 'headerRatio' => 'nullable|numeric|min:0.05|max:0.45', 'preview' => 'sometimes|boolean']);
@@ -45,6 +53,7 @@ class DocumentsController extends Controller
         }
     }
 
+    /** Exige prova aprovada e informa etapas opcionais de progresso durante a conversão. */
     public function export(Request $r, DocumentService $documents)
     {
         $v = $r->validate(['id' => 'required|uuid', 'format' => 'required|in:pdf,docx', 'answerKey' => 'sometimes|boolean', 'progressId' => 'sometimes|uuid']);
@@ -70,12 +79,14 @@ class DocumentsController extends Controller
             ->header('X-Document-Length', strlen($bytes))->header('Cache-Control', 'private, no-store');
     }
 
+    /** Consulta progresso dentro da chave da conta, sem expor operações de outro professor. */
     public function progress(Request $r, string $id)
     {
         return response()->json(['stage' => Cache::get('download:'.$r->user()->id.':'.$id)])
             ->header('Cache-Control', 'private, no-store');
     }
 
+    /** Confere pasta, tamanho e assinatura do arquivo antes de gravar no disco privado. */
     public function upload(Request $r, string $bucket)
     {
         $this->bucket($bucket);
@@ -96,6 +107,7 @@ class DocumentsController extends Controller
         return response()->json(['data' => ['path' => $v['path']]]);
     }
 
+    /** Valida propriedade do caminho e entrega o arquivo privado sem cache público. */
     public function download(Request $r, string $bucket)
     {
         $this->bucket($bucket);
@@ -106,6 +118,7 @@ class DocumentsController extends Controller
         return Storage::disk('local')->response($bucket.'/'.$path, null, ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
     }
 
+    /** Valida todos os caminhos antes de excluir e protege arquivos ainda vinculados a modelos. */
     public function remove(Request $r, string $bucket)
     {
         $this->bucket($bucket);
@@ -121,6 +134,7 @@ class DocumentsController extends Controller
 return response()->json(['data' => null]);
     }
 
+    /** Restringe as áreas de armazenamento expostas pela API às duas categorias previstas. */
     private function bucket(string $bucket): void
     {
         abort_unless(in_array($bucket,['sala-templates', 'class-banners']),404);

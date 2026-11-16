@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Persistência / modelos de prova
+ * Mapeia o arquivo privado e seus metadados de processamento. A proporção do cabeçalho é armazenada
+ * como número para o recorte do PDF.
+ */
+
+
 namespace App\Models;
 
 class ExamTemplate extends OwnedModel

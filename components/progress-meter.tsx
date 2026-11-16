@@ -1,3 +1,8 @@
+/*
+ * Interface / progresso
+ * Anima a apresentação de um percentual recebido, mantendo o valor acessível por ARIA. A operação
+ * que chama este componente é responsável por medir o progresso real.
+ */
 import { useEffect } from 'react';
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
 

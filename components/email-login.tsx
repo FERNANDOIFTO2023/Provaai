@@ -1,3 +1,8 @@
+/*
+ * Interface / login por código
+ * Coordena as etapas de solicitar e verificar o código recebido por e-mail. Expiração, tentativa
+ * inválida e reenvio têm estados próprios para orientar a próxima ação.
+ */
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -61,6 +66,7 @@ export default function EmailLogin({
     }
   }
 
+  // Centraliza bloqueio de envio, estado visual e tratamento de erro entre as etapas de login.
   async function run(task: () => Promise<void>, verifying = false) {
     if (pending.current) return;
     pending.current = true;
@@ -83,6 +89,7 @@ export default function EmailLogin({
     }
   }
 
+  // Solicita ou reutiliza o código conforme a resposta do servidor.
   async function send() {
     await run(async () => {
       const { address, deadline, reused } = await requestOrReuseCode(sentTo || email);
@@ -97,6 +104,7 @@ export default function EmailLogin({
     });
   }
 
+  // Valida a etapa atual e confirma a sessão somente após verificar o código.
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!sentTo) {

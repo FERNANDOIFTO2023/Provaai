@@ -1,3 +1,8 @@
+/*
+ * Inicialização / aplicação React
+ * Carrega os estilos na ordem de precedência e monta a aplicação dentro do elemento criado pelo
+ * Blade. StrictMode ajuda a detectar efeitos sem limpeza durante o desenvolvimento.
+ */
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import TeacherApp from '../../components/teacher-app';

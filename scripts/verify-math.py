@@ -1,3 +1,6 @@
+# Processos / verificação simbólica
+# Recebe JSON pela entrada padrão e responde um resultado por questão. Interpreta uma lista limitada de nós da AST, sem executar o texto recebido como código Python.
+# Somente aritmética e equações reais de primeiro ou segundo grau no formato reconhecido são conferidas; os demais casos precisam de revisão humana.
 """Bounded checking of explicit arithmetic and real linear/quadratic equations.
 
 Input is data, never Python code: AST nodes are interpreted by a small allowlist.
@@ -19,13 +22,14 @@ class Unsupported(ValueError):
     pass
 
 
+# Interpreta somente operações permitidas e limita tamanho, profundidade e grau para controlar custo.
 def expression(source, variable=False):
     if not isinstance(source, str) or len(source) > 256:
         raise Unsupported()
     source = source.strip().replace("−", "-").replace("×", "*").replace("÷", "/")
     source = source.replace(r"\cdot", "*").replace(r"\times", "*").replace(r"\div", "/")
     source = source.replace(r"\left", "").replace(r"\right", "")
-    # Decimal comma is accepted only between digits; no thousands separator.
+    # Aceita vírgula decimal apenas entre dígitos; não interpreta separador de milhar.
     source = re.sub(r"(?<=\d),(?=\d)", ".", source)
     for _ in range(12):
         previous = source
@@ -47,6 +51,7 @@ def expression(source, variable=False):
     if len(list(ast.walk(tree))) > 80:
         raise Unsupported()
 
+    # Percorre a AST manualmente. Não substituir por eval, exec ou parsing genérico de expressões recebidas.
     def visit(node, depth=0):
         if depth > 16:
             raise Unsupported()
@@ -92,14 +97,16 @@ def expression(source, variable=False):
     return visit(tree.body)
 
 
+# Remove apenas delimitadores que envolvem toda a expressão; preserva o restante do texto.
 def unbox(text):
     text = text.strip()
     match = re.fullmatch(MATH, text, re.S)
     return next(x for x in match.groups() if x is not None) if match else text
 
 
+# Extrai o resultado final e, para equações, representa as raízes como conjunto sem duplicações.
 def values(text, equation):
-    # Only the final result is checked, not the reasoning preceding this label.
+    # Confere apenas o resultado final; o raciocínio antes deste rótulo continua sujeito à revisão humana.
     text = re.split(r"Resposta final:\s*", text, flags=re.I)[-1].strip()
     text = unbox(text.removesuffix("."))
     if equation:
@@ -117,8 +124,9 @@ def values(text, equation):
     return {expression(text)}
 
 
+# Reconhece o enunciado completo e compara o resultado calculado com o gabarito e as alternativas.
 def check(question):
-    # Anchoring the complete statement avoids checking a fragment of a word problem.
+    # Exigir o enunciado completo evita conferir só um fragmento de um problema contextualizado.
     match = re.fullmatch(
         r"\s*(Calcule(?: o valor de)?|Resolva(?: a equação)?(?: nos reais)?)\s*:?\s*"
         + MATH + r"\s*[.!]?\s*", question["statement"], re.I | re.S,
@@ -174,12 +182,13 @@ def check(question):
     }
 
 
+# Produz um parecer por questão e converte entradas não cobertas em necessidade de revisão.
 def verify(payload):
     questions = payload.get("questions", [])
     if not isinstance(questions, list) or len(questions) > 30:
         raise Unsupported()
-    # Instructions may change domain, rounding or precision. Only neutral instructions
-    # are accepted; an unfamiliar instruction must not silently disappear from the check.
+    # Instruções podem mudar domínio, arredondamento ou precisão. Só instruções neutras
+    # são aceitas; uma instrução desconhecida não pode desaparecer silenciosamente da conferência.
     neutral = r"\s*(?:(?:Leia com atenção|Responda(?: às questões)?|Mostre (?:os cálculos|seu raciocínio)|Apresente (?:os cálculos|seu raciocínio))[.!]?\s*)*"
     if not re.fullmatch(neutral, payload.get('instructions', ''), re.I):
         return [{"status": "needs_review", "message": "As instruções desta prova exigem conferência manual do domínio e da precisão."} for _ in questions]
@@ -192,12 +201,13 @@ def verify(payload):
     return results
 
 
+# Protocolo do subprocesso: limita recursos e entrada, lê JSON e escreve apenas o resultado em stdout.
 if __name__ == "__main__":
     try:
         import resource
         resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024,) * 2)
         resource.setrlimit(resource.RLIMIT_CPU, (4, 4))
-    except ImportError:  # Windows; PHP still enforces a wall-clock timeout.
+    except ImportError:  # No Windows, o PHP ainda impõe um limite de tempo total ao processo.
         pass
     raw = sys.stdin.buffer.read(300001)
     if len(raw) > 300000:

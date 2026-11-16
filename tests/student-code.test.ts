@@ -1,3 +1,9 @@
+/*
+ * Testes / student-code
+ * Verifica numeração de alunos e repetição de salvamento após conflito.
+ * Os cenários documentam comportamentos esperados. Ao mudar uma regra, confira primeiro se a
+ * expectativa representa uma garantia que deve ser preservada.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { nextStudentCode, saveWithStudentCode } from '../lib/student-code.ts';

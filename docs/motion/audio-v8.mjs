@@ -1,3 +1,10 @@
+/*
+ * Ferramentas / material audiovisual
+ * Sintetiza e combina música e efeitos sonoros desta versão do vídeo. Os tempos e eventos precisam
+ * acompanhar a linha do tempo correspondente.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
 import {readFile,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
@@ -25,14 +32,14 @@ export async function createAudio(out){
    put(music,when,.8,t=>amp*(1-Math.exp(-t*350))*Math.exp(-t*7)*(sin(freq,t)+.3*sin(freq*2,t)+.08*sin(freq*3,t)),j%2?.35:-.35);
    bell(when+.1875,note,.008,j%2?-.45:.45,music);
   }
-  // Syncopated harmonic bass is audible on small speakers, not just a sub tone.
+  // O baixo harmônico sincopado permanece audível em alto-falantes pequenos, além das frequências graves.
   if(at<28)for(const [j,off] of [0,.75,1,1.625].entries()){
    const f=hz(notes[0]-12+(j===3?12:0));
    put(music,at+off,.32,t=>.085*(1-Math.exp(-t*300))*Math.exp(-t*10)*(sin(f,t)+.4*sin(f*2,t)+.17*sin(f*3,t)));
   }
   if(at>=4&&at<26)notes.forEach((m,j)=>put(music,at+.25,.45,t=>.012*(1-Math.exp(-t*170))*Math.exp(-t*8)*(sin(hz(m),t)+.25*sin(hz(m)*2,t)),(j-1.5)*.3));
  }
- // 120 BPM groove with offbeat hats, a soft backbeat, and subtle bar variations.
+ // Ritmo de 120 BPM com chimbal no contratempo, marcação suave e pequenas variações por compasso.
  for(let beat=1;beat<56;beat++){
   const at=beat*.5;put(music,at,.3,t=>.125*Math.sin(2*Math.PI*(49*t+1.1*(1-Math.exp(-t*40))))*Math.exp(-t*19));
   if(beat%2===1){let lp=0;put(music,at,.16,t=>{lp=.55*lp+.45*noise();return (lp*.062+.016*sin(175,t))*Math.exp(-t*28)*Math.min(1,t/.002)},.1)}
@@ -54,7 +61,7 @@ export async function createAudio(out){
     low+=.26*(v-low);dc+=.01*(low-dc);
     sample[k]=(low-dc)*Math.min(1,k/(SR*.025),(count-1-k)/(SR*.045));peak=Math.max(peak,Math.abs(sample[k]));
    }
-   // Align the strongest 10ms energy window with the existing visual cue.
+   // Alinha a janela de maior energia de 10 ms com o evento visual existente.
    const win=480;for(let k=0;k<count;k++){energy+=sample[k]**2;if(k>=win)energy-=sample[k-win]**2;if(energy>best){best=energy;peakIndex=Math.max(0,k-win/2)}}
    const peakOffset=peakIndex/SR,amp=e.type==='paper'?.032:e.type==='whip'?.085:.07,gain=amp/Math.max(peak,.001);
    put(fx,at-peakOffset,len,(t,k)=>sample[k]*gain,p=>pan*.55*(1-2*p));
@@ -66,7 +73,7 @@ export async function createAudio(out){
   if(e.type==='chime')[78,85,90].forEach((m,j)=>bell(at+j*.055,m,.065,(j-1)*.4));
   if(e.type==='download')[90,85,81,78].forEach((m,j)=>bell(at+j*.04,m,.05,.45-j*.3));
  }
- // Short stereo early reflections add space without masking the attack.
+ // Reflexões estéreo curtas acrescentam espaço sem encobrir o início do som.
  for(let c=0;c<2;c++)for(let i=N-1;i>=4800;i--)fx[c][i]+=.055*fx[1-c][i-3600]+.025*fx[c][i-4800];
  const mix=[new Float32Array(N),new Float32Array(N)];
  const priorities=events.filter(e=>['click','chime','download'].includes(e.type));

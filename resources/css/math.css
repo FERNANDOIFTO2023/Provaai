@@ -1,3 +1,9 @@
+/*
+ * Estilos / math
+ * Apresentação de texto matemático, equações KaTeX e erros de sintaxe.
+ * A ordem de carregamento em resources/js/app.tsx participa da cascata. Preserve foco visível,
+ * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
+ */
 .math-preview {
   min-width: 0;
   margin: 8px 0 16px;

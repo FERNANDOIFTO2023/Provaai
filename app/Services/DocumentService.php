@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Serviços / conversão de documentos
+ * Orquestra o processo Node, os arquivos temporários privados e o cache das conversões. Recebe
+ * entidades já autorizadas pelo chamador e mantém a limpeza dos temporários mesmo em falhas.
+ */
+
+
 namespace App\Services;
 
 use App\Models\ClassRoom;
@@ -14,6 +21,7 @@ use Symfony\Component\Process\Process;
 
 class DocumentService
 {
+    /** Escreve o pedido em arquivo privado, chama Node com limite de tempo e lê a última linha JSON. */
     public function run(array $input): array
     {
         $folder = storage_path('app/private/work');
@@ -43,6 +51,7 @@ class DocumentService
         }
     }
 
+    /** Resolve o caminho físico de um modelo existente no armazenamento privado. */
     public function path(ExamTemplate $template): string
     {
         $path = 'sala-templates/'.$template->path;
@@ -53,6 +62,7 @@ class DocumentService
         return Storage::disk('local')->path($path);
     }
 
+    /** Valida a proporção e reaproveita o recorte pelo hash do PDF, evitando conversões concorrentes. */
     public function header(ExamTemplate $template, float $ratio, bool $fitBoundary = false): array
     {
         if ($ratio < .05 || $ratio > .45) {
@@ -77,6 +87,7 @@ class DocumentService
         });
     }
 
+    /** Reutiliza o DOCX como base do PDF e inclui dados da prova e do modelo na chave de cache. */
     public function export(Exam $exam, User $user, string $format, bool $answerKey, ?callable $layoutReady = null): string
     {
         $template = $exam->template_id ? ExamTemplate::ownedBy($user->id)->findOrFail($exam->template_id) : null;
@@ -112,6 +123,7 @@ class DocumentService
         });
     }
 
+    /** Obtém os bytes do arquivo produzido e garante remoção do temporário na saída. */
     private function renderFile(array $request): string
     {
         $output = storage_path('app/private/').Str::uuid().'.bin';
@@ -124,6 +136,7 @@ class DocumentService
         }
     }
 
+    /** Compartilha conversões sob bloqueio e retém apenas documentos dentro do limite de tamanho. */
     private function cachedDocument(string $key, callable $render): string
     {
         if ($cached = Cache::get($key)) {

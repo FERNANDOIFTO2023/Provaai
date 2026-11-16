@@ -1,3 +1,8 @@
+/*
+ * Documentos / reaproveitamento em memória
+ * Evita renderizações simultâneas para a mesma chave e limita retenção por bytes e prazo. Quem
+ * chama precisa autorizar o acesso antes de consultar esse cache.
+ */
 // Cache em memória, limitado por tamanho e tempo. A autorização ocorre antes da consulta.
 export function createExportCache(maxBytes = 24 * 1024 * 1024, ttlMs = 5 * 60 * 1000) {
   const entries = new Map<string, { bytes: Uint8Array; expires: number }>();
@@ -11,6 +16,7 @@ export function createExportCache(maxBytes = 24 * 1024 * 1024, ttlMs = 5 * 60 * 
     for (const [id, entry] of entries) if (entry.expires <= Date.now()) remove(id);
     const cached = entries.get(key);
     if (cached) return cached.bytes;
+    // Reutiliza a promessa pendente, evitando executar o mesmo render mais de uma vez em paralelo.
     const existing = pending.get(key);
     if (existing) return existing;
     const work = Promise.resolve().then(render).then(bytes => {

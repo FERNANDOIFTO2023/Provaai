@@ -1,7 +1,14 @@
 <?php
 
-// Render the production views in memory with a fictitious code and recipient.
-// No email is delivered and no login code is stored.
+/*
+ * Ferramentas / prévia do e-mail
+ * Renderiza as views reais com código e destinatário fictícios usando o transporte de e-mail em
+ * memória. Atualiza as prévias locais sem entregar uma mensagem a terceiros.
+ */
+
+
+// Renderiza em memória as views de produção com código e destinatário fictícios.
+// Não entrega e-mail nem persiste um código de login.
 require __DIR__.'/../../vendor/autoload.php';
 $app = require __DIR__.'/../../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();

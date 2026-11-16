@@ -1,3 +1,8 @@
+/*
+ * Autenticação / relógio de atividade
+ * Define os prazos e as transições entre sessão ativa, aviso, adiamento e expiração. Usa
+ * armazenamento local com alternativa em memória; isso não substitui autenticação no servidor.
+ */
 export const IDLE_LIMIT_MS = 30 * 60 * 1000;
 export const IDLE_WARNING_MS = 2 * 60 * 1000;
 export const ACTIVITY_PREFIX = 'provaai:activity:v1:';

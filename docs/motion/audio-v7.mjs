@@ -1,3 +1,10 @@
+/*
+ * Ferramentas / material audiovisual
+ * Sintetiza e combina música e efeitos sonoros desta versão do vídeo. Os tempos e eventos precisam
+ * acompanhar a linha do tempo correspondente.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
 import {readFile,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
@@ -18,7 +25,7 @@ export async function createAudio(out){
   notes.forEach((m,j)=>put(music,at,3.1,t=>.027*Math.min(1,t/.35)*Math.min(1,(3.1-t)/.85)*(sin(hz(m),t)+.18*sin(hz(m)*1.002,t)),(j-1.5)*.4));
   if(at<27)for(let j=0;j<4;j++)bell(at+[0,.625,1.125,1.75][j],notes[(j+bar)%4]+12,.026,j%2?.5:-.5,music);
  }
- // Sparse rounded groove, leaving the transient range to interface effects.
+ // Ritmo suave e espaçado, reservando os ataques curtos para os efeitos da interface.
  for(let beat=2;beat<54;beat++){
   const at=beat*.5;if(beat%2===0)put(music,at,.35,t=>.14*Math.sin(2*Math.PI*(46*t+1.2*(1-Math.exp(-t*35))))*Math.exp(-t*18));
   if(beat%4===2){let lp=0;put(music,at,.14,t=>{lp=.7*lp+.3*noise();return lp*.035*Math.exp(-t*25)},.18)}
@@ -42,7 +49,7 @@ export async function createAudio(out){
   if(e.type==='chime')[78,85,90].forEach((m,j)=>bell(at+j*.055,m,.065,(j-1)*.4));
   if(e.type==='download')[90,85,81,78].forEach((m,j)=>bell(at+j*.04,m,.05,.45-j*.3));
  }
- // Short stereo early reflections add space without masking the attack.
+ // Reflexões estéreo curtas acrescentam espaço sem encobrir o início do som.
  for(let c=0;c<2;c++)for(let i=N-1;i>=4800;i--)fx[c][i]+=.1*fx[1-c][i-3600]+.04*fx[c][i-4800];
  const mix=[new Float32Array(N),new Float32Array(N)];
  for(let i=0;i<N;i++){const t=i/SR,duck=events.reduce((v,e)=>Math.max(v,Math.max(0,1-Math.abs(t-e.time)/.22)),0),fade=Math.min(1,t/.1,(DURATION-t)/1.0);for(let c=0;c<2;c++)mix[c][i]=(music[c][i]*(.8-.24*duck)+fx[c][i])*fade;}

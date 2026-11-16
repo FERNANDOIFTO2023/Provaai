@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Persistência / conta do professor
+ * Fornece a identidade autenticável usada pela sessão Laravel e pelos registros da conta. Os
+ * atributos sensíveis ficam ocultos na serialização e a senha, quando definida, recebe hash.
+ */
+
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -18,7 +25,7 @@ class User extends Authenticatable
     use HasFactory, \Illuminate\Database\Eloquent\Concerns\HasUuids, Notifiable;
 
     /**
-     * Get the attributes that should be cast.
+     * Define as conversões dos atributos ao ler e gravar o modelo.
      *
      * @return array<string, string>
      */

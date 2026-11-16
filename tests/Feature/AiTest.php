@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * Testes / backend
+ * Cobre geração, revisão, respostas inválidas e indisponibilidade dos provedores de IA.
+ * Usa o ambiente de testes do Laravel; os cenários devem permanecer independentes de credenciais e
+ * dados de produção.
+ */
+
+
 namespace Tests\Feature;
 
 use App\Models\ClassRoom;

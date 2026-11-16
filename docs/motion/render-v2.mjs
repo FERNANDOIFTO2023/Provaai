@@ -1,6 +1,13 @@
-/** Provaai motion V2. 28s / 60fps. Frame-accurate transitions and sound cues.
- * The user-supplied reference informs pacing and visual grammar only.
- * No images, music, logos or speech are reused from that reference.
+/*
+ * Ferramentas / material audiovisual
+ * Desenha os quadros e monta a versão correspondente do vídeo demonstrativo. Os helpers de desenho
+ * trabalham sobre o contexto Canvas e a codificação usa ferramentas locais.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
+/** Provaai motion V2. 28s / 60fps. Transições e efeitos sonoros alinhados aos quadros.
+ * A referência fornecida pelo usuário orienta apenas ritmo e linguagem visual.
+ * Não reutiliza imagens, músicas, marcas ou falas dessa referência.
  */
 import {createCanvas,loadImage,GlobalFonts} from '@napi-rs/canvas';
 import {writeFile,mkdir} from 'node:fs/promises';
@@ -45,14 +52,14 @@ function pathDraw(points,p,color='#D5D2DA',width=3){let total=0;const lens=[];fo
 function icon(kind,x,y,size,color=P){group(x,y,size/64,0,1,()=>{if(kind==='grid'){for(let j=0;j<4;j++)rect(-26+(j%2)*32,-26+Math.floor(j/2)*32,22,22,6,null,color)}else if(kind==='users'){dot(-10,-14,10,color);dot(15,-8,8,color);g.beginPath();g.arc(-10,18,18,Math.PI,0);g.strokeStyle=color;g.lineWidth=5;g.stroke();g.beginPath();g.arc(17,20,12,Math.PI,0);g.stroke()}else if(kind==='star'){star(0,0,31,color)}else{rect(-22,-29,44,58,8,null,color);for(let i=0;i<3;i++)line(-12,-9+i*12,i===2?3:12,-9+i*12,color,4)}})}
 function brand(x,y,size=92,color=INK){const word='Provaai',width=measure(word,size,true);group(x,y,1,0,1,()=>{g.drawImage(symbol,-width/2-size*.95,-size*.47,size*.75,size*.75);txt(word,-size*.04,0,size,color,'bold');dot(width/2+size*.15,size*.25,size*.065,M)})}
 
-// 0–1.6: small logo floats in, then physically expands into the primary button.
+// 0–1,6 s: a marca pequena entra flutuando e se expande até formar o botão principal.
 function intro(t){bg();const p=spr(t-.03,9),m=ease((t-.78)/.58);glow(960,540,180,P,.11*(1-m));glow(990,555,150,M,.15*(1-m));
  group(960,540,Math.max(.001,p),0,1,()=>{group(0,0,1,0,m,()=>shadow(()=>rect(-mix(56,158,m),-mix(56,47,m),mix(112,316,m),mix(112,94,m),mix(42,25,m),'#F3F2F5','#DAD7E2'),30,12));group(mix(0,-99,m),0,mix(1,.43,m),-.08*(1-m),1,()=>bloub(0,0,126,t));group(32,0,1,0,ease((m-.35)/.65),()=>txt('Criar prova',0,0,34,INK,'normal'));});
  const c=out((t-1.08)/.22);group(0,0,1,0,c,()=>cursor(mix(1240,1085,c),mix(800,568,c),.8,Math.sin(clamp((t-1.32)/.16)*Math.PI)));pulse(1075,565,t-1.35);
 }
 function mixColor(a,b,p){const aa=a.match(/\w\w/g).map(x=>parseInt(x,16)),bb=b.match(/\w\w/g).map(x=>parseInt(x,16));return '#'+aa.map((v,i)=>Math.round(mix(v,bb[i],p)).toString(16).padStart(2,'0')).join('')}
 
-// 1.6–4: connected system, staggered endpoints and travelling energy.
+// 1,6–4 s: sistema conectado, pontos surgindo em sequência e energia percorrendo os vínculos.
 function network(t){bg();const z=1+ease(t/2.4)*.08;group(960,540,z,0,1,()=>{
  const nodes=[[-490,-255,'Turmas','grid',P],[490,-255,'Perfis','users','#0C9E83'],[-490,255,'Questões','star',P],[490,255,'Modelos','doc','#0C9E83']];
  nodes.forEach(([x,y,label,kind,color],i)=>{const p=out((t-.12-i*.12)/.62),pts=[[x*.28,0],[x*.5,0],[x*.5,y*.5],[x,y*.5],[x,y]];pathDraw(pts,p);if(p>.1&&p<1){const end=pathDraw(pts,p,color,4);dot(...end,5,color)}const a=spr(t-.33-i*.12,10);group(x,y,Math.max(.001,a),.05*(1-a),out(t-.2-i*.12),()=>{glow(0,0,105,color,.1);shadow(()=>rect(-64,-64,128,128,32,'white'),24,9);icon(kind,0,0,64,color);txt(label,0,102,30,INK)});});
@@ -60,7 +67,7 @@ function network(t){bg();const z=1+ease(t/2.4)*.08;group(960,540,z,0,1,()=>{
  });
 }
 
-// 4–6.4: word-by-word build; a fast macro lens selects the word aluno.
+// 4–6,4 s: composição palavra por palavra; a aproximação seleciona a palavra aluno.
 function words(t){bg();const zoom=ease((t-1.16)/.58),s=mix(1,2.6,zoom),shift=-196*zoom;
  group(960+shift,540,s,-.018*zoom,1,()=>{
  const entries=[['Cada',-315,0],['aluno',-15,.2],['importa.',355,.43]];
@@ -69,7 +76,7 @@ function words(t){bg();const zoom=ease((t-1.16)/.58),s=mix(1,2.6,zoom),shift=-19
  });
 }
 
-// 6.4–9.6: the selected word resolves into the input surface; type, configure, click.
+// 6,4–9,6 s: a palavra selecionada se transforma no campo; digitação, configuração e clique.
 function prompt(t){bg();glow(950,545,430,P,.12);glow(1200,580,320,M,.18);
  const p=spr(t+.13,8),grow=ease((t-.85)/.5),height=mix(190,400,grow);
  group(960,540,Math.max(.01,p)*mix(1.04,1,ease(t/2)),.015*Math.exp(-t*3),1,()=>{
@@ -82,7 +89,7 @@ function prompt(t){bg();glow(950,545,430,P,.12);glow(1200,580,320,M,.18);
  const a=out((t-1.9)/.39);group(0,0,1,0,a,()=>{cursor(mix(1580,1320,a),mix(870,606,a),.85,Math.sin(clamp((t-2.32)/.18)*Math.PI));pulse(1310,599,t-2.38,M)});
 }
 
-// 9.6–12: profiles orbit, spread and send their criteria to one shared point.
+// 9,6–12 s: perfis orbitam, se distribuem e enviam critérios para um ponto comum.
 function people(t){bg();heading('Um jeito para cada aluno.',960,225,65,t,INK,.12);
  const names=['Ana Clara','Bruno Henrique','Camila Oliveira'],initials=['AC','BH','CO'],labels=['Enunciados curtos','Exemplos do cotidiano','Uma questão de desafio'];
  for(let i=0;i<3;i++){const p=spr(t-.12-i*.16,9),x=500+i*460,y=560+Math.sin(t*1.5+i)*6;
@@ -94,7 +101,7 @@ function people(t){bg();heading('Um jeito para cada aluno.',960,225,65,t,INK,.12
  group(960,885,Math.max(.01,spr(t-1.15)),0,out(t-1.1),()=>{dot(0,0,41,P);star(0,0,25,M,t*.2)});
 }
 
-// 12–15: dark generation surface, flowing light, cards forming in sequence.
+// 12–15 s: tela escura de geração, luz em movimento e cartões se formando em sequência.
 function drafting(t){bg('#10131D');glow(960,850,800,P,.6);glow(1380,560,500,M,.13);
  heading('A IA prepara.',960,207,76,t,'white');
  const p=spr(t-.08,8);group(960,595,Math.max(.01,p),-.012*Math.sin(t),1,()=>{
@@ -104,7 +111,7 @@ function drafting(t){bg('#10131D');glow(960,850,800,P,.6);glow(1380,560,500,M,.1
  group(960,958,1,0,out(t-1.6),()=>txt('Você revisa e aprova.',0,0,33,'#BFC6D9'));
 }
 
-// 15–18: a physical paper, cursor interaction, and an approval that becomes a seal.
+// 15–18 s: folha, interação do cursor e aprovação que se transforma em selo.
 function review(t){bg();const macro=ease((t-1.45)/.5),p=spr(t+.12,8);group(960,585,Math.max(.01,p)*mix(.9,1.12,macro),-.015*(1-macro),1,()=>{
  shadow(()=>rect(-410,-375,820,750,35,'white','#EBE8F0'),45,20);
  txt('Você decide.',0,-280,57,INK,'bold');txt('Frações no cotidiano',0,-213,27,GRAY);
@@ -121,7 +128,7 @@ function sheet(tag,x,y,r,s,t,color){group(x,y,s,r,1,()=>{
  for(let j=0;j<5;j++)rect(-110,43+j*23,(j%3===2?120:220)*out((t-j*.05)/.35),6,3,j===0?'#A59AAE':'#DFDAE6');
  dot(105,144,22,color);line(105,134,105,153,'white',2.5);line(98,146,105,153,'white',2.5);line(112,146,105,153,'white',2.5);
  })}
-// 18–20.8: three file formats fan outward and are pulled into a download tray.
+// 18–20,8 s: três formatos de arquivo se abrem em leque e seguem para a bandeja de download.
 function files(t){bg();heading('Pronta para imprimir.',960,230,68,t);
  const pull=ease((t-1.3)/.68);
  for(const i of [0,2,1]){const p=spr(t-.12-i*.14,9),x=mix(960,540+i*420,p),y=mix(800,562,p),scale=mix(.5,1,p);
@@ -130,13 +137,13 @@ function files(t){bg();heading('Pronta para imprimir.',960,230,68,t);
  if(t>1.77)pulse(960,880,t-1.77,M);
 }
 
-// 20.8–23: briefly reveal the actual product, then punch into its brand header.
+// 20,8–23 s: revela o produto real e aproxima o cabeçalho da marca.
 function product(t){bg();const p=spr(t+.08,7),z=ease((t-1.4)/.65);heading('Tudo no seu Provaai.',960,121,58,t,INK,.1);
  const ww=1320,hh=ww*screen.height/screen.width;
  group(960+z*520,600+z*330,Math.max(.01,p)*mix(.96,1.8,z),mix(-.035,0,ease(t)),1,()=>{shadow(()=>rect(-ww/2,-hh/2,ww,hh,25,'white'),40,17);g.save();g.beginPath();g.roundRect(-ww/2,-hh/2,ww,hh,25);g.clip();g.drawImage(screen,-ww/2,-hh/2,ww,hh);g.restore()});
 }
 
-// 23–25: kinetic two-line statement with different arrival direction and tempo.
+// 23–25 s: frase em duas linhas, com direções e ritmos distintos de entrada.
 function tagline(t){bg();const p=out(t/.5),q=out((t-.5)/.55);group(mix(-800,960,p),440,1,0,1,()=>txt('Mais tempo.',0,0,110,INK,'bold'));group(mix(2600,960,q),581,1,0,1,()=>txt('Para ensinar.',0,0,110,P,'bold'));
  const a=out((t-.9)/.5);line(960-360*a,682,960+360*a,682,M,8);star(1440,414,27*spr(t-.9),M,t*.3);
 }

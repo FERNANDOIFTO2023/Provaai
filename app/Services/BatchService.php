@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * Serviços / geração em lote
+ * Cria rascunhos e coordena uma prova por etapa com reserva temporária de execução (lease). A
+ * identidade do lote e da reserva impede que um trabalhador antigo finalize uma etapa que já foi
+ * retomada.
+ */
+
+
 namespace App\Services;
 
 use App\Jobs\GenerateBatchStep;
@@ -14,6 +22,7 @@ use Illuminate\Support\Str;
 
 class BatchService
 {
+    /** Considera ativo o lote que ainda possui posições não concluídas, incluindo tentativas que podem falhar. */
     public function running(string $uid): bool
     {
         $b = ExamBatch::find($uid);
@@ -21,6 +30,7 @@ class BatchService
         return $b && $b->completed < count($b->exam_ids);
     }
 
+    /** Confere turma, alunos, distribuição e modelo antes de criar os rascunhos do lote. */
     public function begin(string $uid, array $input): string
     {
         abort_if($this->running($uid), 409, 'Aguarde o lote em andamento.');
@@ -55,6 +65,7 @@ class BatchService
         return $this->enqueue($uid, $v['title'], $ids);
     }
 
+    /** Reaproveita um rascunho vazio elegível, preservando seu vínculo e aplicando apenas edições permitidas. */
     private function retryDraft(string $uid, array $input): string
     {
         Validator::make($input, ['retry' => 'required|uuid'])->validate();
@@ -85,6 +96,7 @@ class BatchService
         return $this->enqueue($uid, $exam->title, [$exam->id]);
     }
 
+    /** Substitui o progresso da conta por uma nova identidade de lote e despacha após o commit da transação. */
     private function enqueue(string $uid, string $title, array $ids): string
     {
         $batchId = (string) Str::uuid();
@@ -96,6 +108,7 @@ class BatchService
         return $batchId;
     }
 
+    /** Solicita retomada apenas quando há trabalho restante e a reserva expirou ou não existe. */
     public function kick(string $uid): void
     {
         $b = ExamBatch::find($uid);
@@ -104,6 +117,7 @@ class BatchService
         }
     }
 
+    /** Reserva atomicamente a próxima prova por 150 segundos e devolve o identificador da reserva. */
     public function claim(string $uid, string $batchId): ?array
     {
         return DB::transaction(function () use ($uid, $batchId) {
@@ -120,12 +134,14 @@ class BatchService
         });
     }
 
+    /** Atualiza a fase somente se lote e reserva ainda pertencem a este trabalhador. */
     public function setStage(string $uid, string $batchId, string $lease, string $stage): void
     {
         ExamBatch::where('user_id', $uid)->where('batch_id', $batchId)->where('lease', $lease)
             ->update(['stage' => $stage]);
     }
 
+    /** Confere a reserva antes de avançar o contador, registrar falha e agendar a próxima prova. */
     public function finish(string $uid, string $batchId, string $lease, ?string $error): void
     {
         DB::transaction(function () use ($uid, $batchId, $lease, $error) {

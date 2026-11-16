@@ -1,3 +1,8 @@
+/*
+ * Interface / recorte do PDF
+ * Permite testar uma proporção de cabeçalho antes de salvá-la no modelo. A prévia vem do servidor e
+ * sua URL temporária é liberada quando deixa de ser usada.
+ */
 'use client';
 import { apiFetch } from '@/lib/api-client';
 import { useEffect, useState } from 'react';

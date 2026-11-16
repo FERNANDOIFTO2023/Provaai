@@ -1,3 +1,8 @@
+/*
+ * Alunos / numeração
+ * Calcula o próximo código a partir dos já utilizados e permite repetir o salvamento em caso de
+ * colisão. A unicidade definitiva continua protegida pelo banco e pelo backend.
+ */
 /** Codes are scoped to a class, including its archived students. */
 export function nextStudentCode(codes: readonly string[]): string {
   const used = new Set(codes.map(code => code.trim().toUpperCase()));
@@ -14,7 +19,7 @@ export function nextStudentCode(codes: readonly string[]): string {
   return `A${String(highest + 1).padStart(3, '0')}`;
 }
 
-/** The unique constraint decides the winner if another tab saves the same code. */
+/** A restrição de unicidade resolve a disputa se outra aba tentar salvar o mesmo código. */
 export async function saveWithStudentCode<T>(
   suggested: string,
   readCodes: () => Promise<string[]>,

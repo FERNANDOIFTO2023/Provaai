@@ -1,3 +1,8 @@
+-- Legado / referência histórica do Supabase
+-- Estrutura original de turmas, alunos, provas e modelos, com políticas de acesso do Supabase.
+-- Não integra as migrações Laravel atuais. Consulte este arquivo para entender
+-- a origem dos dados e os comandos ExportLegacy e ImportLegacy antes de migrar.
+
 -- Provaai. Execute uma vez em um projeto Supabase novo.
 begin;
 

@@ -1,4 +1,11 @@
-// Inspect actual decoded button colors, independently of audio cue labels.
+/*
+ * Ferramentas / material audiovisual
+ * Confere propriedades dos artefatos e da sincronização audiovisual desta versão. Execute após
+ * gerar as entradas esperadas e consulte o relatório produzido pelo script.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
+// Inspeciona as cores dos botões nos quadros decodificados, independentemente dos rótulos de áudio.
 import {readFile,writeFile} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import path from 'node:path';

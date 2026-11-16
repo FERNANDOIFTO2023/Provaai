@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * Testes / backend
+ * Cobre integração com o verificador e descarte de pareceres não confiáveis.
+ * Usa o ambiente de testes do Laravel; os cenários devem permanecer independentes de credenciais e
+ * dados de produção.
+ */
+
+
 namespace Tests\Feature;
 
 use App\Services\MathVerificationService;

@@ -1,3 +1,8 @@
+/*
+ * Interface / ciclo do download
+ * Controla exclusão de downloads simultâneos, progresso, conclusão e erros. A referência de
+ * execução bloqueia cliques repetidos antes da próxima renderização do React.
+ */
 'use client';
 
 import { useEffect, useRef, useState } from 'react';

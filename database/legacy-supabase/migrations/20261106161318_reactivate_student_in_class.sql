@@ -1,3 +1,8 @@
+-- Legado / referência histórica do Supabase
+-- Reativação em outra turma preservando o vínculo histórico das provas já criadas.
+-- Não integra as migrações Laravel atuais. Consulte este arquivo para entender
+-- a origem dos dados e os comandos ExportLegacy e ImportLegacy antes de migrar.
+
 begin;
 
 -- A prova conserva a turma em que foi criada, mesmo após a transferência do aluno.

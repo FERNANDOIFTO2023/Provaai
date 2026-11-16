@@ -1,3 +1,4 @@
+# Exclui dependências, arquivos gerados, bancos locais e credenciais do versionamento. Novos artefatos devem ser classificados antes de adicionar regras que escondam código-fonte.
 node_modules/
 .office-runtime/
 .next/

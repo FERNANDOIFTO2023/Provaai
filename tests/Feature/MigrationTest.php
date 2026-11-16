@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * Testes / backend
+ * Cobre validação e importação do legado sem misturar proprietários.
+ * Usa o ambiente de testes do Laravel; os cenários devem permanecer independentes de credenciais e
+ * dados de produção.
+ */
+
+
 namespace Tests\Feature;
 
 use App\Models\User;

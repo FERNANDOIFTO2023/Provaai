@@ -1,3 +1,8 @@
+/*
+ * Interface / elementos compartilhados
+ * Reúne diálogo, campo e estado vazio usados nas telas. Alterações aqui afetam várias áreas;
+ * preserve os rótulos acessíveis e o fechamento controlado do diálogo.
+ */
 import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from './animated-icons';
 import { BloubMood } from './motion';

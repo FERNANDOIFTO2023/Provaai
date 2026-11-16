@@ -1,3 +1,8 @@
+/*
+ * Interface / biblioteca de modelos
+ * Combina busca, filtro por formato e cartões de modelos. As ilustrações identificam o tipo de
+ * arquivo; as ações e a escolha do padrão são fornecidas pelo componente pai.
+ */
 'use client';
 import { useState, type ReactNode } from 'react';
 import { BookOpen, Check, FileText, Search, Sparkles } from './animated-icons';

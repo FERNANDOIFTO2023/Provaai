@@ -1,4 +1,11 @@
-// One clock for visual actions and audio. Seconds are quantized to 60fps.
+/*
+ * Ferramentas / material audiovisual
+ * Define a linha do tempo, eventos e pontos de sincronização desta versão do vídeo. Áudio, animação
+ * e verificações precisam usar a mesma referência temporal.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
+// Relógio único para ações visuais e áudio. Os segundos são ajustados à grade de 60 quadros por segundo.
 export const FPS=60;
 export const frameTime=t=>Math.round(t*FPS)/FPS;
 export const transitions=[

@@ -1,5 +1,12 @@
-// Reuse the site's original SVG layers and CSS keyframe values.
-// Canvas does not execute SVG CSS animation, so evaluate it on the film clock.
+/*
+ * Ferramentas / material audiovisual
+ * Carrega as partes do mascote e oferece desenho por pose para os renderizadores de vídeo. As
+ * transformações são aplicadas aos elementos visuais sem modificar os arquivos de origem.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
+// Reutiliza as camadas SVG e os valores dos quadros-chave CSS originais do site.
+// Canvas não executa animação CSS do SVG; por isso os movimentos usam o relógio do filme.
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {loadImage} from '@napi-rs/canvas';
@@ -7,7 +14,7 @@ import {DOMParser,XMLSerializer} from '@xmldom/xmldom';
 const clamp=v=>Math.max(0,Math.min(1,v));
 const lerp=(a,b,p)=>a+(b-a)*p;
 const identity=()=>({x:0,y:0,rotation:0,sx:1,sy:1});
-// CSS ease-in-out = cubic-bezier(.42,0,.58,1), as used by the site.
+// A curva ease-in-out equivale a cubic-bezier(.42,0,.58,1), como no site.
 function cssEase(x){x=clamp(x);let a=0,b=1;const curve=(t,c1,c2)=>3*(1-t)**2*t*c1+3*(1-t)*t*t*c2+t**3;for(let i=0;i<18;i++){const t=(a+b)/2;if(curve(t,.42,.58)<x)a=t;else b=t}return curve((a+b)/2,0,1)}
 function parseTransform(text){const v=identity();for(const [,name,args] of text.matchAll(/(translateX|translateY|rotate|scaleX|scaleY|scale)\(([^)]+)\)/g)){const numbers=args.split(',').map(parseFloat);if(name==='translateX')v.x=numbers[0];if(name==='translateY')v.y=numbers[0];if(name==='rotate')v.rotation=numbers[0];if(name==='scaleX')v.sx=numbers[0];if(name==='scaleY')v.sy=numbers[0];if(name==='scale'){v.sx=numbers[0];v.sy=numbers[1]??numbers[0]}}return v}
 function keyframes(css,name){const start=css.indexOf('@keyframes '+name);if(start<0)throw new Error(`Missing animation ${name}`);const opening=css.indexOf('{',start);let depth=1,end=opening+1;for(;depth>0&&end<css.length;end++){if(css[end]==='{')depth++;if(css[end]==='}')depth--}const body=css.slice(opening+1,end-1),frames=[];for(const [,selectors,rules] of body.matchAll(/([^{}]+)\{([^{}]+)\}/g)){const transform=rules.match(/transform\s*:\s*([^;}]+)/)?.[1]??'';for(const selector of selectors.split(',')){const percent=parseFloat(selector);if(Number.isFinite(percent))frames.push({p:percent/100,...parseTransform(transform)})}}if(!frames.some(f=>f.p===0))frames.push({p:0,...identity()});if(!frames.some(f=>f.p===1))frames.push({p:1,...identity()});return frames.sort((a,b)=>a.p-b.p)}
@@ -30,12 +37,12 @@ export async function loadBloub(root){
   draw(ctx,{x,y,size,time=0,mood='curioso',lookX=0,lookY=0,pose=null}){
    const asset=assets[mood==='login'?'curioso':mood];if(!asset)throw new Error(`Unknown Bloub mood ${mood}`);
    ctx.save();ctx.translate(x,y);ctx.scale(size/250,size/250);
-   // Film choreography bypasses the site's infinite loops; V5 stays reproducible.
+   // A coreografia substitui as repetições infinitas do site e mantém a V5 reproduzível.
    if(pose){
     transform(ctx,{...identity(),...pose});
     ctx.drawImage(asset.body,-125,-125,250,250);
     const happy=clamp(pose.happy??0);
-    // Close the lids through the expression change, avoiding double/ghost eyes.
+    // Fecha as pálpebras durante a troca de expressão para evitar sobreposição de olhos.
     ctx.translate(pose.eyeX??0,pose.eyeY??0);
     ctx.scale(1,(pose.blink??1)*(.06+.94*Math.abs(2*happy-1)));
     ctx.drawImage(happy<.5?assets.curioso.face:assets.feliz.face,-125,-125,250,250);
@@ -47,7 +54,7 @@ export async function loadBloub(root){
    ctx.save();if(mood==='login'){ctx.translate(lookX*11,lookY*7);transform(ctx,sample(blinkFrames,time,6.4),0)}else if(asset.faceFrames)transform(ctx,sample(asset.faceFrames,time,asset.duration),0);
    ctx.drawImage(asset.face,-125,-125,250,250);ctx.restore();ctx.restore();
   },
-  // Expose exact source timing for the render's visual review and reproducibility.
+  // Expõe os tempos exatos da origem para revisão visual e reprodução da renderização.
   metadata:Object.fromEntries(Object.entries(assets).map(([m,a])=>[m,{duration:a.duration,frames:a.frames,faceFrames:a.faceFrames}]))
  };
 }

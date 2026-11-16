@@ -1,3 +1,8 @@
+/*
+ * Operação / conferência da origem
+ * Verifica respostas HTTP da instalação para diagnosticar a publicação. Execute contra a origem
+ * pretendida e diferencie falhas da aplicação de falhas de acesso ou proxy.
+ */
 import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 
 const value = process.env.PROVAAI_ORIGIN;
@@ -19,6 +24,8 @@ if (backend !== 'laravel') throw new Error('A origem não está servindo o backe
 if (process.env.VERCEL_ENV === 'production' && aiConfigured !== true) {
   throw new Error('A origem de produção ainda não configurou a IA.');
 }
+// Após conferir a origem, gera a configuração de proxy da Vercel.
+// O tráfego da aplicação será encaminhado ao backend validado, sem cache público da API.
 const output = '.vercel/output';
 await mkdir(output + '/static', {recursive: true});
 await copyFile('public/favicon.svg', output + '/static/favicon.svg');

@@ -1,3 +1,8 @@
+/*
+ * Interface / compartilhamento por cópia
+ * Apresenta convites recebidos e enviados e coleta o destinatário ou a turma de destino. Aceitar um
+ * convite cria uma cópia independente; não estabelece edição compartilhada do original.
+ */
 'use client';
 import { useRef, useState, type FormEvent } from 'react';
 import type { ClassRoom } from '@/lib/model';

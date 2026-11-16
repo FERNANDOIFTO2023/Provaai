@@ -1,3 +1,9 @@
+/*
+ * Testes / exam-months
+ * Verifica agrupamento mensal e busca no fuso de São Paulo.
+ * Os cenários documentam comportamentos esperados. Ao mudar uma regra, confira primeiro se a
+ * expectativa representa uma garantia que deve ser preservada.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { examMonths, examDate } from '../lib/exam-library.ts';

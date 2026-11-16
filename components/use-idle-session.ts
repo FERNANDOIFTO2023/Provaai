@@ -1,3 +1,8 @@
+/*
+ * Interface / ciclo da sessão
+ * Sincroniza autenticação, atividade do usuário e aviso de expiração entre abas. Operações em curso
+ * podem adiar a saída; a autorização real permanece no cookie de sessão do Laravel.
+ */
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -25,6 +30,7 @@ export function useIdleSession() {
     let logoutTimer: ReturnType<typeof setTimeout> | undefined;
     let lastWrite = 0;
 
+    // Marca o encerramento para as demais abas antes de limpar a conta da interface.
     function expire() {
       const key = keyRef.current;
       if (key) writeActivity(key, { lastActivity: Date.now(), ended: true });
@@ -34,7 +40,7 @@ export function useIdleSession() {
       setUser(null);
       setExpired(true);
       setReady(true);
-      // O callback de autenticação é síncrono: sair fora dele evita o lock do SDK.
+      // Adia o logout para fora da notificação síncrona de autenticação, evitando reentrância nos ouvintes.
       clearTimeout(logoutTimer);
       logoutTimer = setTimeout(() => {
         if (!keyRef.current) void apiClient.auth.signOut({ scope: 'local' }).catch(() => {});
@@ -51,6 +57,7 @@ export function useIdleSession() {
       });
     }
 
+    // Renovação implícita só vale durante atividade normal; no aviso, é necessária confirmação explícita.
     function renew(explicit = false) {
       const key = keyRef.current;
       if (!key) return;
@@ -95,6 +102,7 @@ export function useIdleSession() {
     const interact = (event: Event) => {
       if (event.isTrusted && document.visibilityState === 'visible') renew();
     };
+    // Escuta interação real e sincroniza o relógio entre abas; remove todos os ouvintes ao desmontar.
     const events = ['pointerdown', 'pointermove', 'keydown', 'input', 'scroll'] as const;
     for (const event of events) window.addEventListener(event, interact, { capture: true, passive: true });
     const checkVisible = () => { if (document.visibilityState === 'visible') check(); };

@@ -1,3 +1,8 @@
+/*
+ * Interface / ícones animados
+ * Adapta os ícones da biblioteca à API de tamanho e estilo usada no projeto. Centraliza os gatilhos
+ * de interação para manter comportamento consistente nos controles.
+ */
 'use client';
 
 import { useEffect, useRef, type ComponentType, type HTMLAttributes, type RefAttributes } from 'react';

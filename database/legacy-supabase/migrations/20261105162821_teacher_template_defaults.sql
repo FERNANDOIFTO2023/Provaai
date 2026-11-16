@@ -1,3 +1,8 @@
+-- Legado / referência histórica do Supabase
+-- Preferência de modelo por professor, protegida por políticas de acesso por linha.
+-- Não integra as migrações Laravel atuais. Consulte este arquivo para entender
+-- a origem dos dados e os comandos ExportLegacy e ImportLegacy antes de migrar.
+
 create table public.sala_teacher_template_defaults (
   user_id uuid primary key default auth.uid() references auth.users(id) on delete cascade,
   template_id uuid,

@@ -1,3 +1,8 @@
+/*
+ * Autenticação / adaptação de respostas
+ * Reúne chamadas compatíveis com a interface de autenticação por código e mensagens de erro. Não
+ * armazena credenciais nem decide permissões; essa responsabilidade é do provedor chamado.
+ */
 type EmailAuth = { signInWithOtp: (input: any) => Promise<any>; verifyOtp: (input: any) => Promise<any> };
 
 export async function requestEmailCode(auth: EmailAuth, email: string) {

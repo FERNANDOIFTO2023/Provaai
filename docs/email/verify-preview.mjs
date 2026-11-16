@@ -1,4 +1,9 @@
-// PLAYWRIGHT_MODULE can point to an installed playwright-core/index.mjs.
+/*
+ * Ferramentas / verificação da prévia
+ * Abre a prévia local em larguras diferentes e verifica conteúdo e ausência de rolagem horizontal.
+ * Requer Playwright e navegador configurados; não testa entrega de e-mail.
+ */
+// PLAYWRIGHT_MODULE pode apontar para um playwright-core/index.mjs instalado.
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');

@@ -1,5 +1,12 @@
-// One-shot acting tied to UI changes. Coordinates are in the original 250px rig.
-// No repeating curious/happy SVG loop is used by the V6 film.
+/*
+ * Ferramentas / material audiovisual
+ * Define movimentos e transições do mascote para composição das cenas. Os parâmetros temporais são
+ * consumidos pelas ferramentas de renderização.
+ * Este código prepara materiais em docs/motion; não é carregado pela aplicação web. Confira
+ * caminhos de assets e executáveis antes de regenerar arquivos.
+ */
+// Atuação única associada às mudanças da interface; coordenadas usam a estrutura original de 250 px.
+// O filme V6 não usa repetição contínua dos SVGs curioso e feliz.
 import {action,visualFx as FX} from './timing-v6.mjs';
 const base={x:0,y:0,rotation:0,sx:1,sy:1,eyeX:0,eyeY:0,blink:1,happy:0};
 const clamp=v=>Math.max(0,Math.min(1,v));

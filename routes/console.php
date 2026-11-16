@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Rotas / manutenção agendada
+ * Remove turmas cujo prazo de arquivamento terminou e retoma lotes sem execução ativa. As rotinas
+ * reutilizam os serviços de negócio para preservar auditoria e controle de concorrência.
+ */
+
+
 use App\Http\Controllers\ActionsController;
 use App\Models\ClassRoom;
 use App\Models\ExamBatch;

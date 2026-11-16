@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * Banco / evolução do schema
+ * Cria contas, tokens de redefinição e sessões utilizados pela infraestrutura de autenticação.
+ * up aplica a mudança e down a reverte. Em bancos já publicados, evolua o schema com uma nova
+ * migração em vez de reescrever esta.
+ */
+
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -7,7 +15,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Aplica as alterações de estrutura ao banco.
      */
     public function up(): void
     {
@@ -38,7 +46,7 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Reverte as alterações estruturais desta migração.
      */
     public function down(): void
     {

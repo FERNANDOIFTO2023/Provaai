@@ -1,3 +1,8 @@
+/*
+ * Matemática / renderização
+ * Configura o KaTeX usado na prévia e na exportação. Uma fórmula não suportada precisa gerar erro
+ * legível, sem aceitar recursos inseguros do conteúdo recebido.
+ */
 import katex from 'katex';
 import type { MathPart } from './math-text.ts';
 
@@ -15,7 +20,7 @@ export function renderFormula(part: Extract<MathPart, { kind: 'math' }>, output:
       macros: {},
     });
   } catch {
-    // Never expose parser messages as HTML; they may contain the user's input.
+    // Não exponha mensagens do analisador como HTML: elas podem conter o texto digitado pelo usuário.
     throw new Error(formulaError);
   }
 }

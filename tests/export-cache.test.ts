@@ -1,3 +1,9 @@
+/*
+ * Testes / export-cache
+ * Verifica expiração, limite de memória e compartilhamento de conversões em andamento.
+ * Os cenários documentam comportamentos esperados. Ao mudar uma regra, confira primeiro se a
+ * expectativa representa uma garantia que deve ser preservada.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createExportCache } from '../lib/export-cache.ts';

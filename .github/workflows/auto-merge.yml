@@ -1,3 +1,5 @@
+# CI / integração após aprovação
+# Agenda a integração do PR quando as exigências do GitHub forem satisfeitas. Por usar pull_request_target com permissão de escrita, nunca deve executar código fornecido pelo PR.
 name: Enable auto-merge after approval
 
 on:
@@ -15,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      # Never check out or execute PR code with this privileged token.
-      # GitHub enforces owner approval and required checks before merging.
+      # Nunca faça checkout nem execute código do PR com este token privilegiado.
+      # O GitHub exige a aprovação do proprietário e as verificações obrigatórias antes da integração.
       - name: Schedule merge when all requirements pass
         env:
           GH_TOKEN: ${{ github.token }}

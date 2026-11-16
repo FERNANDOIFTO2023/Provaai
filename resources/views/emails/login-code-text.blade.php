@@ -1,4 +1,7 @@
-PROVAAI
+{{--
+Views / e-mail em texto
+Oferece a versão sem HTML do mesmo código e prazo apresentados no e-mail visual. Mantenha as instruções consistentes com a view HTML e o Mailable.
+--}}PROVAAI
 
 Seu código chegou.
 
