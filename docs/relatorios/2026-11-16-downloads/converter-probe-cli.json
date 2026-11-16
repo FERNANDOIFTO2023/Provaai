@@ -1,0 +1,743 @@
+{
+  "node": "v24.22.1",
+  "platform": "win32",
+  "samples": [
+    {
+      "round": 1,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 6014,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 328
+        },
+        {
+          "phase": "init-done",
+          "ms": 2967
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2967
+        },
+        {
+          "phase": "convert-done",
+          "ms": 5407
+        },
+        {
+          "phase": "render-done",
+          "ms": 5409
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 5411
+        },
+        {
+          "phase": "exit",
+          "ms": 5411
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 5306,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 244
+        },
+        {
+          "phase": "init-done",
+          "ms": 3054
+        },
+        {
+          "phase": "convert-start",
+          "ms": 3054
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4879
+        },
+        {
+          "phase": "render-done",
+          "ms": 4880
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4882
+        },
+        {
+          "phase": "exit",
+          "ms": 4882
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4757,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 186
+        },
+        {
+          "phase": "init-done",
+          "ms": 2345
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2345
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4422
+        },
+        {
+          "phase": "render-done",
+          "ms": 4423
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4424
+        },
+        {
+          "phase": "exit",
+          "ms": 4424
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 5435,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 239
+        },
+        {
+          "phase": "init-done",
+          "ms": 2192
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2192
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4967
+        },
+        {
+          "phase": "render-done",
+          "ms": 4972
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4973
+        },
+        {
+          "phase": "exit",
+          "ms": 4973
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 5637,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 319
+        },
+        {
+          "phase": "init-done",
+          "ms": 3158
+        },
+        {
+          "phase": "convert-start",
+          "ms": 3170
+        },
+        {
+          "phase": "convert-done",
+          "ms": 5380
+        },
+        {
+          "phase": "render-done",
+          "ms": 5381
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 5383
+        },
+        {
+          "phase": "exit",
+          "ms": 5383
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4697,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 197
+        },
+        {
+          "phase": "init-done",
+          "ms": 2424
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2424
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4472
+        },
+        {
+          "phase": "render-done",
+          "ms": 4473
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4474
+        },
+        {
+          "phase": "exit",
+          "ms": 4474
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "mode": "cli",
+      "code": null,
+      "timedOut": true,
+      "elapsedMs": 20104,
+      "output": "",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 233
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4575,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 211
+        },
+        {
+          "phase": "init-done",
+          "ms": 2310
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2310
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4363
+        },
+        {
+          "phase": "render-done",
+          "ms": 4367
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4376
+        },
+        {
+          "phase": "exit",
+          "ms": 4376
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4586,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 213
+        },
+        {
+          "phase": "init-done",
+          "ms": 2226
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2226
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4285
+        },
+        {
+          "phase": "render-done",
+          "ms": 4286
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4288
+        },
+        {
+          "phase": "exit",
+          "ms": 4288
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4706,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 192
+        },
+        {
+          "phase": "init-done",
+          "ms": 2500
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2501
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4412
+        },
+        {
+          "phase": "render-done",
+          "ms": 4414
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4415
+        },
+        {
+          "phase": "exit",
+          "ms": 4415
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4644,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 228
+        },
+        {
+          "phase": "init-done",
+          "ms": 2251
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2251
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4435
+        },
+        {
+          "phase": "render-done",
+          "ms": 4436
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4437
+        },
+        {
+          "phase": "exit",
+          "ms": 4437
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4724,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 185
+        },
+        {
+          "phase": "init-done",
+          "ms": 2385
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2385
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4515
+        },
+        {
+          "phase": "render-done",
+          "ms": 4517
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4518
+        },
+        {
+          "phase": "exit",
+          "ms": 4519
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4375,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 188
+        },
+        {
+          "phase": "init-done",
+          "ms": 2222
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2222
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4127
+        },
+        {
+          "phase": "render-done",
+          "ms": 4129
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4130
+        },
+        {
+          "phase": "exit",
+          "ms": 4130
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4000,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 171
+        },
+        {
+          "phase": "init-done",
+          "ms": 2026
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2026
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3694
+        },
+        {
+          "phase": "render-done",
+          "ms": 3695
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 3696
+        },
+        {
+          "phase": "exit",
+          "ms": 3696
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4556,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 162
+        },
+        {
+          "phase": "init-done",
+          "ms": 2236
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2236
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4347
+        },
+        {
+          "phase": "render-done",
+          "ms": 4348
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4349
+        },
+        {
+          "phase": "exit",
+          "ms": 4349
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3951,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 178
+        },
+        {
+          "phase": "init-done",
+          "ms": 1889
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1889
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3754
+        },
+        {
+          "phase": "render-done",
+          "ms": 3756
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 3758
+        },
+        {
+          "phase": "exit",
+          "ms": 3758
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4272,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 178
+        },
+        {
+          "phase": "init-done",
+          "ms": 2211
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2211
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4100
+        },
+        {
+          "phase": "render-done",
+          "ms": 4101
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4102
+        },
+        {
+          "phase": "exit",
+          "ms": 4102
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4032,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 157
+        },
+        {
+          "phase": "init-done",
+          "ms": 1858
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1858
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3866
+        },
+        {
+          "phase": "render-done",
+          "ms": 3867
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 3868
+        },
+        {
+          "phase": "exit",
+          "ms": 3868
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4435,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 150
+        },
+        {
+          "phase": "init-done",
+          "ms": 1863
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1863
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3809
+        },
+        {
+          "phase": "render-done",
+          "ms": 3810
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 3812
+        },
+        {
+          "phase": "exit",
+          "ms": 3812
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "mode": "cli",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3971,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 175
+        },
+        {
+          "phase": "init-done",
+          "ms": 1928
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1928
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3792
+        },
+        {
+          "phase": "render-done",
+          "ms": 3802
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 3803
+        },
+        {
+          "phase": "exit",
+          "ms": 3803
+        }
+      ]
+    }
+  ],
+  "limits": "Ensaio local sequencial, com dados fictícios. O teto de 20 s não mede um timeout de 120 s; apenas identifica execuções presas para comparação. Sem medição de produção."
+}

@@ -66,13 +66,18 @@ class DocumentsTest extends TestCase
         $e = new Exam;
         $e->forceFill(['user_id' => $u->id, 'class_id' => $r->id, 'student_id' => $s->id, 'template_id' => $t->id, 'title' => 'Fotossíntese', 'subject' => 'Ciências', 'topics' => 'Plantas', 'question_count' => 1, 'status' => 'approved',
             'profile_snapshot' => ['name' => $s->name, 'code' => $s->code], 'content' => ['instructions' => 'Responda.', 'questions' => [['type' => 'essay', 'statement' => 'Explique a fotossíntese.', 'options' => [], 'answer' => 'RESPOSTA RESERVADA', 'objective' => 'Compreender', 'points' => 10]]]])->save();
-        $pdf = $this->postJson('/api/export/exam', ['id' => $e->id, 'format' => 'pdf'])->assertOk()->assertHeader('Content-Type', 'application/pdf')->getContent();
+        $pdfResponse = $this->postJson('/api/export/exam', ['id' => $e->id, 'format' => 'pdf'])->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        // As etapas também precisam acompanhar a conversão real, inclusive o cabeçalho do modelo.
+        $this->assertStringContainsString('header_render;dur=', $pdfResponse->headers->get('Server-Timing'));
+        $this->assertStringContainsString('pdf_convert;dur=', $pdfResponse->headers->get('Server-Timing'));
+        $pdf = $pdfResponse->getContent();
         $this->assertStringStartsWith('%PDF-', $pdf);
         // A geração do PDF já deve ter deixado pronto o Word com o cabeçalho.
         $this->partialMock(DocumentService::class)->shouldNotReceive('run');
         $response = $this->postJson('/api/export/exam', ['id' => $e->id, 'format' => 'docx'])->assertOk();
         $docx = $response->getContent();
         $response->assertHeader('X-Document-Length', (string) strlen($docx));
+        $this->assertStringContainsString('docx_cache;desc="hit"', $response->headers->get('Server-Timing'));
         $this->assertStringStartsWith('PK',$docx);
     }
 }

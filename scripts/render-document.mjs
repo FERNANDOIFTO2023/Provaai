@@ -6,18 +6,15 @@
  */
 // Processo auxiliar de conversão. Não oferece HTTP, autenticação ou acesso ao banco.
 import { readFile, writeFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { createOfficeConverter } from './office-converter.mjs';
 
-let worker;
-// Reutiliza um trabalhador de conversão dentro desta execução do processo auxiliar.
+let converter;
+// Reutiliza o motor somente dentro deste processo isolado. O PHP já executa este CLI
+// fora do servidor HTTP: não é necessário o wrapper WorkerConverter, que não permite
+// configurar o loader para impedir a inicialização automática concorrente de main().
 async function convertOffice(bytes, outputFormat) {
-  const require = createRequire(import.meta.url);
-  const { createWorkerConverter } = require('@matbee/libreoffice-converter/server');
-  const root = dirname(require.resolve('@matbee/libreoffice-converter/package.json'));
-  // O processo CLI encerra o worker depois de gravar o arquivo e confirmar a saída.
-  worker ??= await createWorkerConverter({ wasmPath: join(root, 'wasm') });
-  return (await worker.convert(bytes, { outputFormat })).data;
+  converter ??= await createOfficeConverter();
+  return (await converter.convert(bytes, { outputFormat })).data;
 }
 
 // Despacha a operação informada pelo PHP e carrega apenas as bibliotecas necessárias.

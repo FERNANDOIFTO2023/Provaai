@@ -1,0 +1,2127 @@
+{
+  "node": "v24.22.1",
+  "platform": "win32",
+  "samples": [
+    {
+      "round": 1,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3221,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 178
+        },
+        {
+          "phase": "loading:0",
+          "ms": 179
+        },
+        {
+          "phase": "loading:0",
+          "ms": 180
+        },
+        {
+          "phase": "loading:2",
+          "ms": 180
+        },
+        {
+          "phase": "loading:12",
+          "ms": 263
+        },
+        {
+          "phase": "loading:14",
+          "ms": 263
+        },
+        {
+          "phase": "loading:20",
+          "ms": 275
+        },
+        {
+          "phase": "loading:35",
+          "ms": 309
+        },
+        {
+          "phase": "loading:45",
+          "ms": 958
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 958
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 958
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1207
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1207
+        },
+        {
+          "phase": "init-done",
+          "ms": 1207
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1209
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1209
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1210
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1210
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2582
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2582
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2777
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2812
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2813
+        },
+        {
+          "phase": "exit",
+          "ms": 2813
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3079,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 191
+        },
+        {
+          "phase": "loading:0",
+          "ms": 191
+        },
+        {
+          "phase": "loading:0",
+          "ms": 193
+        },
+        {
+          "phase": "loading:2",
+          "ms": 193
+        },
+        {
+          "phase": "loading:12",
+          "ms": 278
+        },
+        {
+          "phase": "loading:14",
+          "ms": 278
+        },
+        {
+          "phase": "loading:20",
+          "ms": 291
+        },
+        {
+          "phase": "loading:35",
+          "ms": 326
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1031
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1032
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1032
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1232
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1232
+        },
+        {
+          "phase": "init-done",
+          "ms": 1232
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1233
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1234
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1234
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1234
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2523
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2523
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2732
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2761
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2761
+        },
+        {
+          "phase": "exit",
+          "ms": 2761
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3090,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 155
+        },
+        {
+          "phase": "loading:0",
+          "ms": 155
+        },
+        {
+          "phase": "loading:0",
+          "ms": 157
+        },
+        {
+          "phase": "loading:2",
+          "ms": 157
+        },
+        {
+          "phase": "loading:12",
+          "ms": 232
+        },
+        {
+          "phase": "loading:14",
+          "ms": 232
+        },
+        {
+          "phase": "loading:20",
+          "ms": 245
+        },
+        {
+          "phase": "loading:35",
+          "ms": 280
+        },
+        {
+          "phase": "loading:45",
+          "ms": 972
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 973
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 973
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1163
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1163
+        },
+        {
+          "phase": "init-done",
+          "ms": 1163
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1164
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1164
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1165
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1165
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2490
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2490
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2681
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2709
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2710
+        },
+        {
+          "phase": "exit",
+          "ms": 2710
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3233,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 174
+        },
+        {
+          "phase": "loading:0",
+          "ms": 174
+        },
+        {
+          "phase": "loading:0",
+          "ms": 175
+        },
+        {
+          "phase": "loading:2",
+          "ms": 175
+        },
+        {
+          "phase": "loading:12",
+          "ms": 262
+        },
+        {
+          "phase": "loading:14",
+          "ms": 263
+        },
+        {
+          "phase": "loading:20",
+          "ms": 277
+        },
+        {
+          "phase": "loading:35",
+          "ms": 314
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1030
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1030
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1031
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1268
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1268
+        },
+        {
+          "phase": "init-done",
+          "ms": 1268
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1269
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1270
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1270
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1270
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2582
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2582
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2796
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2827
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2827
+        },
+        {
+          "phase": "exit",
+          "ms": 2827
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3170,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 152
+        },
+        {
+          "phase": "loading:0",
+          "ms": 152
+        },
+        {
+          "phase": "loading:0",
+          "ms": 154
+        },
+        {
+          "phase": "loading:2",
+          "ms": 154
+        },
+        {
+          "phase": "loading:12",
+          "ms": 245
+        },
+        {
+          "phase": "loading:14",
+          "ms": 245
+        },
+        {
+          "phase": "loading:20",
+          "ms": 260
+        },
+        {
+          "phase": "loading:35",
+          "ms": 301
+        },
+        {
+          "phase": "loading:45",
+          "ms": 982
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 982
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 983
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1172
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1173
+        },
+        {
+          "phase": "init-done",
+          "ms": 1173
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1174
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1174
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1175
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1175
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2575
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2575
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2794
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2826
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2827
+        },
+        {
+          "phase": "exit",
+          "ms": 2827
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4125,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 195
+        },
+        {
+          "phase": "loading:0",
+          "ms": 196
+        },
+        {
+          "phase": "loading:0",
+          "ms": 197
+        },
+        {
+          "phase": "loading:2",
+          "ms": 197
+        },
+        {
+          "phase": "loading:12",
+          "ms": 288
+        },
+        {
+          "phase": "loading:14",
+          "ms": 288
+        },
+        {
+          "phase": "loading:20",
+          "ms": 303
+        },
+        {
+          "phase": "loading:35",
+          "ms": 339
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1169
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1169
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1170
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1421
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1421
+        },
+        {
+          "phase": "init-done",
+          "ms": 1421
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1423
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1423
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1424
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1424
+        },
+        {
+          "phase": "converting:60",
+          "ms": 3371
+        },
+        {
+          "phase": "converting:70",
+          "ms": 3371
+        },
+        {
+          "phase": "converting:90",
+          "ms": 3612
+        },
+        {
+          "phase": "complete:100",
+          "ms": 3648
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3649
+        },
+        {
+          "phase": "exit",
+          "ms": 3649
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3436,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 249
+        },
+        {
+          "phase": "loading:0",
+          "ms": 249
+        },
+        {
+          "phase": "loading:0",
+          "ms": 251
+        },
+        {
+          "phase": "loading:2",
+          "ms": 251
+        },
+        {
+          "phase": "loading:12",
+          "ms": 336
+        },
+        {
+          "phase": "loading:14",
+          "ms": 336
+        },
+        {
+          "phase": "loading:20",
+          "ms": 351
+        },
+        {
+          "phase": "loading:35",
+          "ms": 386
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1183
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1184
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1185
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1402
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1402
+        },
+        {
+          "phase": "init-done",
+          "ms": 1402
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1404
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1404
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1404
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1405
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2764
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2764
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2957
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2992
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2992
+        },
+        {
+          "phase": "exit",
+          "ms": 2992
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3727,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 181
+        },
+        {
+          "phase": "loading:0",
+          "ms": 181
+        },
+        {
+          "phase": "loading:0",
+          "ms": 183
+        },
+        {
+          "phase": "loading:2",
+          "ms": 183
+        },
+        {
+          "phase": "loading:12",
+          "ms": 265
+        },
+        {
+          "phase": "loading:14",
+          "ms": 265
+        },
+        {
+          "phase": "loading:20",
+          "ms": 278
+        },
+        {
+          "phase": "loading:35",
+          "ms": 313
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1076
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1076
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1077
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1298
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1298
+        },
+        {
+          "phase": "init-done",
+          "ms": 1298
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1300
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1300
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1300
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1301
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2894
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2895
+        },
+        {
+          "phase": "converting:90",
+          "ms": 3150
+        },
+        {
+          "phase": "complete:100",
+          "ms": 3184
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3185
+        },
+        {
+          "phase": "exit",
+          "ms": 3185
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3534,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 198
+        },
+        {
+          "phase": "loading:0",
+          "ms": 199
+        },
+        {
+          "phase": "loading:0",
+          "ms": 200
+        },
+        {
+          "phase": "loading:2",
+          "ms": 200
+        },
+        {
+          "phase": "loading:12",
+          "ms": 280
+        },
+        {
+          "phase": "loading:14",
+          "ms": 280
+        },
+        {
+          "phase": "loading:20",
+          "ms": 299
+        },
+        {
+          "phase": "loading:35",
+          "ms": 334
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1094
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1094
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1096
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1362
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1362
+        },
+        {
+          "phase": "init-done",
+          "ms": 1362
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1363
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1364
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1364
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1364
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2873
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2873
+        },
+        {
+          "phase": "converting:90",
+          "ms": 3109
+        },
+        {
+          "phase": "complete:100",
+          "ms": 3140
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3140
+        },
+        {
+          "phase": "exit",
+          "ms": 3141
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3752,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 157
+        },
+        {
+          "phase": "loading:0",
+          "ms": 157
+        },
+        {
+          "phase": "loading:0",
+          "ms": 159
+        },
+        {
+          "phase": "loading:2",
+          "ms": 159
+        },
+        {
+          "phase": "loading:12",
+          "ms": 255
+        },
+        {
+          "phase": "loading:14",
+          "ms": 255
+        },
+        {
+          "phase": "loading:20",
+          "ms": 270
+        },
+        {
+          "phase": "loading:35",
+          "ms": 316
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1131
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1131
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1132
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1428
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1428
+        },
+        {
+          "phase": "init-done",
+          "ms": 1428
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1430
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1430
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1431
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1431
+        },
+        {
+          "phase": "converting:60",
+          "ms": 3093
+        },
+        {
+          "phase": "converting:70",
+          "ms": 3093
+        },
+        {
+          "phase": "converting:90",
+          "ms": 3310
+        },
+        {
+          "phase": "complete:100",
+          "ms": 3341
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3341
+        },
+        {
+          "phase": "exit",
+          "ms": 3341
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3627,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 168
+        },
+        {
+          "phase": "loading:0",
+          "ms": 168
+        },
+        {
+          "phase": "loading:0",
+          "ms": 170
+        },
+        {
+          "phase": "loading:2",
+          "ms": 170
+        },
+        {
+          "phase": "loading:12",
+          "ms": 250
+        },
+        {
+          "phase": "loading:14",
+          "ms": 250
+        },
+        {
+          "phase": "loading:20",
+          "ms": 263
+        },
+        {
+          "phase": "loading:35",
+          "ms": 297
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1112
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1113
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1113
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1390
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1390
+        },
+        {
+          "phase": "init-done",
+          "ms": 1390
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1392
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1393
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1394
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1394
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2981
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2981
+        },
+        {
+          "phase": "converting:90",
+          "ms": 3203
+        },
+        {
+          "phase": "complete:100",
+          "ms": 3231
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3231
+        },
+        {
+          "phase": "exit",
+          "ms": 3231
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3725,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 185
+        },
+        {
+          "phase": "loading:0",
+          "ms": 185
+        },
+        {
+          "phase": "loading:0",
+          "ms": 188
+        },
+        {
+          "phase": "loading:2",
+          "ms": 188
+        },
+        {
+          "phase": "loading:12",
+          "ms": 272
+        },
+        {
+          "phase": "loading:14",
+          "ms": 272
+        },
+        {
+          "phase": "loading:20",
+          "ms": 288
+        },
+        {
+          "phase": "loading:35",
+          "ms": 322
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1117
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1118
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1119
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1384
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1384
+        },
+        {
+          "phase": "init-done",
+          "ms": 1384
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1386
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1386
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1386
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1387
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2978
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2979
+        },
+        {
+          "phase": "converting:90",
+          "ms": 3228
+        },
+        {
+          "phase": "complete:100",
+          "ms": 3270
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3270
+        },
+        {
+          "phase": "exit",
+          "ms": 3270
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3995,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 233
+        },
+        {
+          "phase": "loading:0",
+          "ms": 234
+        },
+        {
+          "phase": "loading:0",
+          "ms": 236
+        },
+        {
+          "phase": "loading:2",
+          "ms": 236
+        },
+        {
+          "phase": "loading:12",
+          "ms": 325
+        },
+        {
+          "phase": "loading:14",
+          "ms": 325
+        },
+        {
+          "phase": "loading:20",
+          "ms": 346
+        },
+        {
+          "phase": "loading:35",
+          "ms": 385
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1233
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1233
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1234
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1486
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1486
+        },
+        {
+          "phase": "init-done",
+          "ms": 1486
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1488
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1488
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1488
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1489
+        },
+        {
+          "phase": "converting:60",
+          "ms": 3228
+        },
+        {
+          "phase": "converting:70",
+          "ms": 3228
+        },
+        {
+          "phase": "converting:90",
+          "ms": 3483
+        },
+        {
+          "phase": "complete:100",
+          "ms": 3521
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3522
+        },
+        {
+          "phase": "exit",
+          "ms": 3522
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4031,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 217
+        },
+        {
+          "phase": "loading:0",
+          "ms": 217
+        },
+        {
+          "phase": "loading:0",
+          "ms": 219
+        },
+        {
+          "phase": "loading:2",
+          "ms": 219
+        },
+        {
+          "phase": "loading:12",
+          "ms": 312
+        },
+        {
+          "phase": "loading:14",
+          "ms": 312
+        },
+        {
+          "phase": "loading:20",
+          "ms": 330
+        },
+        {
+          "phase": "loading:35",
+          "ms": 368
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1224
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1225
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1226
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1637
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1638
+        },
+        {
+          "phase": "init-done",
+          "ms": 1638
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1642
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1643
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1643
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1644
+        },
+        {
+          "phase": "converting:60",
+          "ms": 3268
+        },
+        {
+          "phase": "converting:70",
+          "ms": 3268
+        },
+        {
+          "phase": "converting:90",
+          "ms": 3502
+        },
+        {
+          "phase": "complete:100",
+          "ms": 3533
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3534
+        },
+        {
+          "phase": "exit",
+          "ms": 3534
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4528,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 570
+        },
+        {
+          "phase": "loading:0",
+          "ms": 571
+        },
+        {
+          "phase": "loading:0",
+          "ms": 573
+        },
+        {
+          "phase": "loading:2",
+          "ms": 573
+        },
+        {
+          "phase": "loading:12",
+          "ms": 663
+        },
+        {
+          "phase": "loading:14",
+          "ms": 663
+        },
+        {
+          "phase": "loading:20",
+          "ms": 678
+        },
+        {
+          "phase": "loading:35",
+          "ms": 714
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1627
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1627
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1628
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 2007
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2007
+        },
+        {
+          "phase": "init-done",
+          "ms": 2007
+        },
+        {
+          "phase": "convert-start",
+          "ms": 2009
+        },
+        {
+          "phase": "converting:10",
+          "ms": 2009
+        },
+        {
+          "phase": "converting:30",
+          "ms": 2010
+        },
+        {
+          "phase": "converting:40",
+          "ms": 2010
+        },
+        {
+          "phase": "converting:60",
+          "ms": 3608
+        },
+        {
+          "phase": "converting:70",
+          "ms": 3608
+        },
+        {
+          "phase": "converting:90",
+          "ms": 3843
+        },
+        {
+          "phase": "complete:100",
+          "ms": 3882
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3882
+        },
+        {
+          "phase": "exit",
+          "ms": 3882
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3351,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 213
+        },
+        {
+          "phase": "loading:0",
+          "ms": 214
+        },
+        {
+          "phase": "loading:0",
+          "ms": 216
+        },
+        {
+          "phase": "loading:2",
+          "ms": 216
+        },
+        {
+          "phase": "loading:12",
+          "ms": 321
+        },
+        {
+          "phase": "loading:14",
+          "ms": 321
+        },
+        {
+          "phase": "loading:20",
+          "ms": 339
+        },
+        {
+          "phase": "loading:35",
+          "ms": 380
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1137
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1137
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1138
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1343
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1343
+        },
+        {
+          "phase": "init-done",
+          "ms": 1343
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1345
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1345
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1345
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1346
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2699
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2699
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2906
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2938
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2938
+        },
+        {
+          "phase": "exit",
+          "ms": 2938
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3289,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 146
+        },
+        {
+          "phase": "loading:0",
+          "ms": 146
+        },
+        {
+          "phase": "loading:0",
+          "ms": 148
+        },
+        {
+          "phase": "loading:2",
+          "ms": 148
+        },
+        {
+          "phase": "loading:12",
+          "ms": 237
+        },
+        {
+          "phase": "loading:14",
+          "ms": 237
+        },
+        {
+          "phase": "loading:20",
+          "ms": 249
+        },
+        {
+          "phase": "loading:35",
+          "ms": 290
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1094
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1095
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1095
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1358
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1358
+        },
+        {
+          "phase": "init-done",
+          "ms": 1358
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1360
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1360
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1360
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1361
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2673
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2673
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2864
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2891
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2892
+        },
+        {
+          "phase": "exit",
+          "ms": 2892
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3354,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 181
+        },
+        {
+          "phase": "loading:0",
+          "ms": 181
+        },
+        {
+          "phase": "loading:0",
+          "ms": 183
+        },
+        {
+          "phase": "loading:2",
+          "ms": 183
+        },
+        {
+          "phase": "loading:12",
+          "ms": 275
+        },
+        {
+          "phase": "loading:14",
+          "ms": 275
+        },
+        {
+          "phase": "loading:20",
+          "ms": 292
+        },
+        {
+          "phase": "loading:35",
+          "ms": 332
+        },
+        {
+          "phase": "loading:45",
+          "ms": 1089
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 1089
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 1090
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1350
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1351
+        },
+        {
+          "phase": "init-done",
+          "ms": 1351
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1352
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1353
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1353
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1353
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2738
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2738
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2927
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2960
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2961
+        },
+        {
+          "phase": "exit",
+          "ms": 2961
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3222,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 161
+        },
+        {
+          "phase": "loading:0",
+          "ms": 161
+        },
+        {
+          "phase": "loading:0",
+          "ms": 163
+        },
+        {
+          "phase": "loading:2",
+          "ms": 163
+        },
+        {
+          "phase": "loading:12",
+          "ms": 244
+        },
+        {
+          "phase": "loading:14",
+          "ms": 244
+        },
+        {
+          "phase": "loading:20",
+          "ms": 257
+        },
+        {
+          "phase": "loading:35",
+          "ms": 290
+        },
+        {
+          "phase": "loading:45",
+          "ms": 984
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 985
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 985
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1197
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1197
+        },
+        {
+          "phase": "init-done",
+          "ms": 1197
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1198
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1199
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1199
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1199
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2586
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2586
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2809
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2843
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2843
+        },
+        {
+          "phase": "exit",
+          "ms": 2843
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "mode": "library",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3167,
+      "output": "{\"bytes\":35140}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 152
+        },
+        {
+          "phase": "loading:0",
+          "ms": 153
+        },
+        {
+          "phase": "loading:0",
+          "ms": 154
+        },
+        {
+          "phase": "loading:2",
+          "ms": 154
+        },
+        {
+          "phase": "loading:12",
+          "ms": 232
+        },
+        {
+          "phase": "loading:14",
+          "ms": 232
+        },
+        {
+          "phase": "loading:20",
+          "ms": 244
+        },
+        {
+          "phase": "loading:35",
+          "ms": 280
+        },
+        {
+          "phase": "loading:45",
+          "ms": 962
+        },
+        {
+          "phase": "initializing:50",
+          "ms": 963
+        },
+        {
+          "phase": "initializing:60",
+          "ms": 963
+        },
+        {
+          "phase": "initializing:90",
+          "ms": 1169
+        },
+        {
+          "phase": "complete:100",
+          "ms": 1169
+        },
+        {
+          "phase": "init-done",
+          "ms": 1169
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1171
+        },
+        {
+          "phase": "converting:10",
+          "ms": 1171
+        },
+        {
+          "phase": "converting:30",
+          "ms": 1171
+        },
+        {
+          "phase": "converting:40",
+          "ms": 1171
+        },
+        {
+          "phase": "converting:60",
+          "ms": 2565
+        },
+        {
+          "phase": "converting:70",
+          "ms": 2565
+        },
+        {
+          "phase": "converting:90",
+          "ms": 2766
+        },
+        {
+          "phase": "complete:100",
+          "ms": 2794
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2795
+        },
+        {
+          "phase": "exit",
+          "ms": 2795
+        }
+      ]
+    }
+  ],
+  "limits": "Ensaio local sequencial, com dados fictícios. O teto de 20 s não mede um timeout de 120 s; apenas identifica execuções presas para comparação. Sem medição de produção."
+}

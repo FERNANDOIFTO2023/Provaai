@@ -63,24 +63,31 @@ class DocumentService
     }
 
     /** Valida a proporção e reaproveita o recorte pelo hash do PDF, evitando conversões concorrentes. */
-    public function header(ExamTemplate $template, float $ratio, bool $fitBoundary = false): array
+    public function header(ExamTemplate $template, float $ratio, bool $fitBoundary = false, ?ExportTiming $timing = null): array
     {
         if ($ratio < .05 || $ratio > .45) {
             throw new RuntimeException('Escolha um cabeçalho entre 5% e 45%.');
         }
-        $path = $this->path($template);
-        $key = 'pdf-header:'.$template->user_id.':'.hash_file('sha256', $path).':'.$ratio.($fitBoundary ? ':fit' : '');
-        if ($cached = Cache::get($key)) {
+        $timing ??= new ExportTiming;
+        [$path, $key] = $timing->measure('header_prepare', function () use ($template, $ratio, $fitBoundary) {
+            $path = $this->path($template);
+
+            return [$path, 'pdf-header:'.$template->user_id.':'.hash_file('sha256', $path).':'.$ratio.($fitBoundary ? ':fit' : '')];
+        });
+        if ($cached = $timing->measure('header_cache_read', fn () => Cache::get($key))) {
+            $timing->cache('header', 'hit');
             return $cached;
         }
 
-        return Cache::lock($key.':lock', 130)->block(125, function () use ($path, $ratio, $key, $fitBoundary) {
-            if ($cached = Cache::get($key)) {
+        $timing->cache('header', 'miss');
+        return $this->withLock($key.':lock', 130, 'header', $timing, function () use ($path, $ratio, $key, $fitBoundary, $timing) {
+            if ($cached = $timing->measure('header_cache_read', fn () => Cache::get($key))) {
+                $timing->cache('header', 'hit_after_wait');
                 return $cached;
             }
-            $result = $this->run(['operation' => 'header', 'templatePath' => $path, 'ratio' => $ratio, 'fitBoundary' => $fitBoundary]);
+            $result = $timing->measure('header_render', fn () => $this->run(['operation' => 'header', 'templatePath' => $path, 'ratio' => $ratio, 'fitBoundary' => $fitBoundary]));
             if (strlen($result['image']) < 8 * 1024 * 1024) {
-                Cache::put($key, $result, 300);
+                $timing->measure('header_cache_write', fn () => Cache::put($key, $result, 300));
             }
 
             return $result;
@@ -88,24 +95,31 @@ class DocumentService
     }
 
     /** Reutiliza o DOCX como base do PDF e inclui dados da prova e do modelo na chave de cache. */
-    public function export(Exam $exam, User $user, string $format, bool $answerKey, ?callable $layoutReady = null): string
+    public function export(Exam $exam, User $user, string $format, bool $answerKey, ?callable $layoutReady = null, ?ExportTiming $timing = null): string
     {
-        $template = $exam->template_id ? ExamTemplate::ownedBy($user->id)->findOrFail($exam->template_id) : null;
-        $path = $template ? $this->path($template) : null;
-        $className = ClassRoom::ownedBy($user->id)->findOrFail($exam->class_id)->name;
-        $key = 'export:v4:'.hash('sha256', json_encode([$exam->toArray(), $user->name, $className, $answerKey,
-            $template?->filename, $template?->pdf_header_ratio, $path ? hash_file('sha256', $path) : null]));
-        $docx = fn () => $this->cachedDocument($key.':docx', function () use ($exam, $user, $template, $path, $className, $answerKey) {
-            $header = $template && preg_match('/\.pdf$/i', $template->filename) ? $this->header($template, $template->pdf_header_ratio) : null;
+        $timing ??= new ExportTiming;
+        [$template, $path, $className, $key] = $timing->measure('prepare', function () use ($exam, $user, $answerKey) {
+            $template = $exam->template_id ? ExamTemplate::ownedBy($user->id)->findOrFail($exam->template_id) : null;
+            $path = $template ? $this->path($template) : null;
+            $className = ClassRoom::ownedBy($user->id)->findOrFail($exam->class_id)->name;
+            // Datas técnicas de salvamento não alteram a diagramação. O restante do registro,
+            // a conta, o nome da turma e os bytes/proporção do modelo continuam na versão.
+            $key = 'export:v5:'.hash('sha256', json_encode([$exam->except(['updated_at', 'created_at']), $user->name, $className, $answerKey,
+                $template?->filename, $template?->pdf_header_ratio, $path ? hash_file('sha256', $path) : null]));
 
-            return $this->renderFile(['operation' => 'export', 'exam' => $exam->toArray(), 'className' => $className, 'teacherName' => $user->name,
-                'format' => 'docx', 'answerKey' => $answerKey, 'templatePath' => $header ? null : $path, 'filename' => $template?->filename, 'header' => $header]);
+            return [$template, $path, $className, $key];
+        });
+        $docx = fn () => $this->cachedDocument($key.':docx', 'docx', $timing, function () use ($exam, $user, $template, $path, $className, $answerKey, $timing) {
+            $header = $template && preg_match('/\.pdf$/i', $template->filename) ? $this->header($template, $template->pdf_header_ratio, false, $timing) : null;
+
+            return $timing->measure('docx_render', fn () => $this->renderFile(['operation' => 'export', 'exam' => $exam->toArray(), 'className' => $className, 'teacherName' => $user->name,
+                'format' => 'docx', 'answerKey' => $answerKey, 'templatePath' => $header ? null : $path, 'filename' => $template?->filename, 'header' => $header]));
         });
         if ($format === 'docx') {
             return $docx();
         }
 
-        return $this->cachedDocument($key.':pdf', function () use ($docx, $layoutReady) {
+        return $this->cachedDocument($key.':pdf', 'pdf', $timing, function () use ($docx, $layoutReady, $timing) {
             $bytes = $docx();
             if ($layoutReady) {
                 $layoutReady();
@@ -116,7 +130,7 @@ class DocumentService
                     throw new RuntimeException('Não foi possível preparar o documento para conversão.');
                 }
 
-                return $this->renderFile(['operation' => 'convert', 'docxPath' => $input]);
+                return $timing->measure('pdf_convert', fn () => $this->renderFile(['operation' => 'convert', 'docxPath' => $input]));
             } finally {
                 @unlink($input);
             }
@@ -136,23 +150,42 @@ class DocumentService
         }
     }
 
-    /** Compartilha conversões sob bloqueio e retém apenas documentos dentro do limite de tamanho. */
-    private function cachedDocument(string $key, callable $render): string
+    /** Compartilha conversões sob bloqueio e reaproveita os arquivos privados por sete dias. */
+    private function cachedDocument(string $key, string $kind, ExportTiming $timing, callable $render): string
     {
-        if ($cached = Cache::get($key)) {
-            return base64_decode($cached, true);
+        $artifacts = app(ExportArtifacts::class);
+        if ($cached = $timing->measure($kind.'_cache_read', fn () => $artifacts->get($key))) {
+            $timing->cache($kind, 'hit');
+            return $cached;
         }
 
-        return Cache::lock($key.':lock', 150)->block(125, function () use ($key, $render) {
-            if ($cached = Cache::get($key)) {
-                return base64_decode($cached, true);
+        $timing->cache($kind, 'miss');
+        // O PDF pode incluir cabeçalho, montagem e conversão (até três processos de 120 s).
+        return $this->withLock($key.':lock', $kind === 'pdf' ? 450 : 300, $kind, $timing, function () use ($key, $kind, $timing, $render, $artifacts) {
+            if ($cached = $timing->measure($kind.'_cache_read', fn () => $artifacts->get($key))) {
+                $timing->cache($kind, 'hit_after_wait');
+                return $cached;
             }
             $bytes = $render();
-            if (strlen($bytes) < 8 * 1024 * 1024) {
-                Cache::put($key, base64_encode($bytes), 300);
-            }
+            $timing->measure($kind.'_cache_write', fn () => $artifacts->put($key, $bytes));
 
             return $bytes;
         });
+    }
+
+    /**
+     * Separa espera pelo bloqueio do trabalho protegido por ele. Medir block() com callback
+     * somaria a conversão à fila e levaria a um diagnóstico errado. Mantém prazos e liberação
+     * em finally, inclusive quando a conversão falha; um bloqueio não adquirido não é liberado.
+     */
+    private function withLock(string $key, int $ttl, string $kind, ExportTiming $timing, callable $operation): mixed
+    {
+        $lock = Cache::lock($key, $ttl);
+        $timing->measure($kind.'_lock_wait', fn () => $lock->block(125));
+        try {
+            return $operation();
+        } finally {
+            $timing->measure($kind.'_lock_release', fn () => $lock->release());
+        }
     }
 }

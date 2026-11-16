@@ -1,0 +1,767 @@
+{
+  "node": "v24.22.1",
+  "platform": "win32",
+  "samples": [
+    {
+      "round": 1,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3219,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 52
+        },
+        {
+          "phase": "init-done",
+          "ms": 1298
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1298
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2838
+        },
+        {
+          "phase": "render-done",
+          "ms": 2840
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2841
+        },
+        {
+          "phase": "exit",
+          "ms": 2841
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 2893,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 46
+        },
+        {
+          "phase": "init-done",
+          "ms": 1164
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1164
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2569
+        },
+        {
+          "phase": "render-done",
+          "ms": 2570
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2571
+        },
+        {
+          "phase": "exit",
+          "ms": 2571
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3033,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 54
+        },
+        {
+          "phase": "init-done",
+          "ms": 1240
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1240
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2703
+        },
+        {
+          "phase": "render-done",
+          "ms": 2705
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2705
+        },
+        {
+          "phase": "exit",
+          "ms": 2705
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3014,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 55
+        },
+        {
+          "phase": "init-done",
+          "ms": 1204
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1204
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2684
+        },
+        {
+          "phase": "render-done",
+          "ms": 2685
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2686
+        },
+        {
+          "phase": "exit",
+          "ms": 2686
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3442,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 43
+        },
+        {
+          "phase": "init-done",
+          "ms": 1200
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1200
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2972
+        },
+        {
+          "phase": "render-done",
+          "ms": 2995
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2996
+        },
+        {
+          "phase": "exit",
+          "ms": 2996
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3461,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 41
+        },
+        {
+          "phase": "init-done",
+          "ms": 1360
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1360
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3030
+        },
+        {
+          "phase": "render-done",
+          "ms": 3031
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 3032
+        },
+        {
+          "phase": "exit",
+          "ms": 3032
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3844,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 120
+        },
+        {
+          "phase": "init-done",
+          "ms": 1549
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1549
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3324
+        },
+        {
+          "phase": "render-done",
+          "ms": 3325
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 3326
+        },
+        {
+          "phase": "exit",
+          "ms": 3326
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3464,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 52
+        },
+        {
+          "phase": "init-done",
+          "ms": 1579
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1579
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3064
+        },
+        {
+          "phase": "render-done",
+          "ms": 3065
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 3065
+        },
+        {
+          "phase": "exit",
+          "ms": 3065
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3092,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 40
+        },
+        {
+          "phase": "init-done",
+          "ms": 1196
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1196
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2724
+        },
+        {
+          "phase": "render-done",
+          "ms": 2725
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2726
+        },
+        {
+          "phase": "exit",
+          "ms": 2726
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3118,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 49
+        },
+        {
+          "phase": "init-done",
+          "ms": 1225
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1225
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2775
+        },
+        {
+          "phase": "render-done",
+          "ms": 2777
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2778
+        },
+        {
+          "phase": "exit",
+          "ms": 2778
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3098,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 34
+        },
+        {
+          "phase": "init-done",
+          "ms": 1220
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1220
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2743
+        },
+        {
+          "phase": "render-done",
+          "ms": 2745
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2745
+        },
+        {
+          "phase": "exit",
+          "ms": 2745
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3225,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 38
+        },
+        {
+          "phase": "init-done",
+          "ms": 1255
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1255
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2866
+        },
+        {
+          "phase": "render-done",
+          "ms": 2868
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2868
+        },
+        {
+          "phase": "exit",
+          "ms": 2868
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3164,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 41
+        },
+        {
+          "phase": "init-done",
+          "ms": 1163
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1163
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2726
+        },
+        {
+          "phase": "render-done",
+          "ms": 2727
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2728
+        },
+        {
+          "phase": "exit",
+          "ms": 2728
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3181,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 52
+        },
+        {
+          "phase": "init-done",
+          "ms": 1301
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1301
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2812
+        },
+        {
+          "phase": "render-done",
+          "ms": 2813
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2814
+        },
+        {
+          "phase": "exit",
+          "ms": 2814
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3117,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 39
+        },
+        {
+          "phase": "init-done",
+          "ms": 1181
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1181
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2709
+        },
+        {
+          "phase": "render-done",
+          "ms": 2710
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2711
+        },
+        {
+          "phase": "exit",
+          "ms": 2711
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3272,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 37
+        },
+        {
+          "phase": "init-done",
+          "ms": 1267
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1267
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2923
+        },
+        {
+          "phase": "render-done",
+          "ms": 2925
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2926
+        },
+        {
+          "phase": "exit",
+          "ms": 2926
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3214,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 40
+        },
+        {
+          "phase": "init-done",
+          "ms": 1175
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1175
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2816
+        },
+        {
+          "phase": "render-done",
+          "ms": 2817
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2819
+        },
+        {
+          "phase": "exit",
+          "ms": 2819
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3523,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 35
+        },
+        {
+          "phase": "init-done",
+          "ms": 1327
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1327
+        },
+        {
+          "phase": "convert-done",
+          "ms": 3050
+        },
+        {
+          "phase": "render-done",
+          "ms": 3052
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 3053
+        },
+        {
+          "phase": "exit",
+          "ms": 3053
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 3249,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 39
+        },
+        {
+          "phase": "init-done",
+          "ms": 1291
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1291
+        },
+        {
+          "phase": "convert-done",
+          "ms": 2757
+        },
+        {
+          "phase": "render-done",
+          "ms": 2759
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 2760
+        },
+        {
+          "phase": "exit",
+          "ms": 2760
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "mode": "fixed",
+      "code": 0,
+      "timedOut": false,
+      "elapsedMs": 4767,
+      "output": "{\"ok\":true}",
+      "stages": [
+        {
+          "phase": "init-start",
+          "ms": 43
+        },
+        {
+          "phase": "init-done",
+          "ms": 1918
+        },
+        {
+          "phase": "convert-start",
+          "ms": 1918
+        },
+        {
+          "phase": "convert-done",
+          "ms": 4198
+        },
+        {
+          "phase": "render-done",
+          "ms": 4201
+        },
+        {
+          "phase": "stdout-done",
+          "ms": 4203
+        },
+        {
+          "phase": "exit",
+          "ms": 4203
+        }
+      ]
+    }
+  ],
+  "limits": "Ensaio local sequencial, com dados fictícios. O teto de 20 s não mede um timeout de 120 s; apenas identifica execuções presas para comparação. Sem medição de produção."
+}

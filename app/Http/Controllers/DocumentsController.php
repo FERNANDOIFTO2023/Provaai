@@ -12,6 +12,7 @@ namespace App\Http\Controllers;
 use App\Models\Exam;
 use App\Models\ExamTemplate;
 use App\Services\DocumentService;
+use App\Services\ExportTiming;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -56,22 +57,27 @@ class DocumentsController extends Controller
     /** Exige prova aprovada e informa etapas opcionais de progresso durante a conversão. */
     public function export(Request $r, DocumentService $documents)
     {
-        $v = $r->validate(['id' => 'required|uuid', 'format' => 'required|in:pdf,docx', 'answerKey' => 'sometimes|boolean', 'progressId' => 'sometimes|uuid']);
-        $exam = Exam::ownedBy($r->user()->id)->findOrFail($v['id']);
-        abort_unless($exam->status === 'approved', 409, 'Aprove a prova antes de exportar.');
+        $timing = $r->attributes->get(ExportTiming::class) ?? new ExportTiming;
+        [$v, $exam] = $timing->measure('authorize', function () use ($r) {
+            $v = $r->validate(['id' => 'required|uuid', 'format' => 'required|in:pdf,docx', 'answerKey' => 'sometimes|boolean', 'progressId' => 'sometimes|uuid']);
+            $exam = Exam::ownedBy($r->user()->id)->findOrFail($v['id']);
+            abort_unless($exam->status === 'approved', 409, 'Aprove a prova antes de exportar.');
+
+            return [$v, $exam];
+        });
         try {
             $layoutReady = null;
             if (isset($v['progressId'])) {
                 $key = 'download:'.$r->user()->id.':'.$v['progressId'];
-                Cache::put($key, 'approved', 180);
-                $layoutReady = fn () => Cache::put($key, 'layout', 180);
+                $timing->measure('progress', fn () => Cache::put($key, 'approved', 180));
+                $layoutReady = fn () => $timing->measure('progress', fn () => Cache::put($key, 'layout', 180));
             }
-            $bytes = $documents->export($exam, $r->user(), $v['format'], $v['answerKey'] ?? false, $layoutReady);
+            $bytes = $documents->export($exam, $r->user(), $v['format'], $v['answerKey'] ?? false, $layoutReady, $timing);
         } catch (\RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         } finally {
             if (isset($key)) {
-                Cache::forget($key);
+                $timing->measure('progress', fn () => Cache::forget($key));
             }
         }
 

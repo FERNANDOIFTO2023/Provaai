@@ -141,6 +141,14 @@ class RecordsController extends Controller
             $record->fill($data);
             $record->save();
 
+            if ($record instanceof Exam && $record->status === 'approved' && $record->wasChanged('status')) {
+                // As tarefas só entram na fila após confirmar a transação da aprovação.
+                // Um único trabalhador prepara prova e gabarito sem bloquear a resposta HTTP.
+                foreach ([false, true] as $answerKey) {
+                    \App\Jobs\PrepareExamDownload::dispatch($uid, $record->id, $answerKey);
+                }
+            }
+
             return response()->json(['data' => isset($input['single']) ? $record : [$record]]);
         });
     }

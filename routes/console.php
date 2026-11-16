@@ -32,3 +32,24 @@ Artisan::command('provaai:resume-batches', function () {
 });
 Schedule::command('provaai:cleanup-classes')->daily()->timezone('America/Sao_Paulo')->withoutOverlapping();
 Schedule::command('provaai:resume-batches')->everyMinute()->withoutOverlapping();
+
+Artisan::command('provaai:cleanup-downloads', function () {
+    $count = app(\App\Services\ExportArtifacts::class)->prune();
+    $this->info("Arquivos de download expirados removidos: $count");
+})->purpose('Limpa versões de downloads com mais de sete dias no armazenamento privado.');
+Schedule::command('provaai:cleanup-downloads')->daily()->withoutOverlapping();
+
+Artisan::command('provaai:prepare-downloads {--limit=100}', function () {
+    $limit = filter_var($this->option('limit'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 1000]]);
+    if ($limit === false) {
+        $this->error('Use --limit entre 1 e 1000.');
+        return 1;
+    }
+    $exams = \App\Models\Exam::where('status', 'approved')->latest('updated_at')->limit($limit)->get(['id', 'user_id']);
+    foreach ($exams as $exam) {
+        foreach ([false, true] as $answerKey) {
+            \App\Jobs\PrepareExamDownload::dispatch($exam->user_id, $exam->id, $answerKey);
+        }
+    }
+    $this->info('Provas agendadas: '.$exams->count().'. Aguarde o trabalhador documents concluir a preparação.');
+})->purpose('Prepara prova e gabarito das aprovações recentes, inclusive anteriores a esta versão.');

@@ -36,6 +36,17 @@ return [
             'after_commit' => false,
         ],
 
+        // Fila própria para documentos: não ocupa o trabalhador da geração com IA.
+        // Mantém a reserva maior que o timeout e usa as tabelas existentes da aplicação.
+        'documents' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            'queue' => 'documents',
+            'retry_after' => 480,
+            'after_commit' => true,
+        ],
+
         'beanstalkd' => [
             'driver' => 'beanstalkd',
             'host' => env('BEANSTALKD_QUEUE_HOST', 'localhost'),

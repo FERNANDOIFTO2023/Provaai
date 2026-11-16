@@ -1,0 +1,150 @@
+{
+  "date": "2026-11-16T17:09:00.100Z",
+  "node": "v24.22.1",
+  "platform": "win32",
+  "syntheticQuestions": 5,
+  "samples": [
+    {
+      "round": 1,
+      "template": "builtin",
+      "answerKey": false,
+      "headerMs": 0,
+      "docxMs": 396,
+      "pdfMs": 3599,
+      "totalMs": 3995,
+      "docxBytes": 8033,
+      "pdfBytes": 29824
+    },
+    {
+      "round": 1,
+      "template": "builtin",
+      "answerKey": true,
+      "headerMs": 0,
+      "docxMs": 383,
+      "pdfMs": 3228,
+      "totalMs": 3611,
+      "docxBytes": 7965,
+      "pdfBytes": 29497
+    },
+    {
+      "round": 1,
+      "template": "pdf",
+      "answerKey": false,
+      "headerMs": 366,
+      "docxMs": 368,
+      "pdfMs": 3115,
+      "totalMs": 3849,
+      "docxBytes": 15370,
+      "pdfBytes": 40560
+    },
+    {
+      "round": 1,
+      "template": "pdf",
+      "answerKey": true,
+      "headerMs": 366,
+      "docxMs": 324,
+      "pdfMs": 3306,
+      "totalMs": 3996,
+      "docxBytes": 15295,
+      "pdfBytes": 39699
+    },
+    {
+      "round": 1,
+      "template": "docx",
+      "answerKey": false,
+      "headerMs": 0,
+      "docxMs": 294,
+      "pdfMs": 3901,
+      "totalMs": 4195,
+      "docxBytes": 7961,
+      "pdfBytes": 23058
+    },
+    {
+      "round": 1,
+      "template": "docx",
+      "answerKey": true,
+      "headerMs": 0,
+      "docxMs": 319,
+      "pdfMs": 3467,
+      "totalMs": 3786,
+      "docxBytes": 7891,
+      "pdfBytes": 23848
+    },
+    {
+      "round": 2,
+      "template": "builtin",
+      "answerKey": false,
+      "headerMs": 0,
+      "docxMs": 347,
+      "pdfMs": 3700,
+      "totalMs": 4047,
+      "docxBytes": 8033,
+      "pdfBytes": 29824
+    },
+    {
+      "round": 2,
+      "template": "builtin",
+      "answerKey": true,
+      "headerMs": 0,
+      "docxMs": 331,
+      "pdfMs": 3424,
+      "totalMs": 3755,
+      "docxBytes": 7966,
+      "pdfBytes": 29497
+    },
+    {
+      "round": 2,
+      "template": "pdf",
+      "answerKey": false,
+      "headerMs": 402,
+      "docxMs": 385,
+      "pdfMs": 3346,
+      "totalMs": 4133,
+      "docxBytes": 15371,
+      "pdfBytes": 40560
+    },
+    {
+      "round": 2,
+      "template": "pdf",
+      "answerKey": true,
+      "headerMs": 402,
+      "docxMs": 374,
+      "pdfMs": 3915,
+      "totalMs": 4691,
+      "docxBytes": 15296,
+      "pdfBytes": 39699
+    },
+    {
+      "round": 2,
+      "template": "docx",
+      "answerKey": false,
+      "headerMs": 0,
+      "docxMs": 353,
+      "pdfMs": 3506,
+      "totalMs": 3859,
+      "docxBytes": 7961,
+      "pdfBytes": 23058
+    },
+    {
+      "round": 2,
+      "template": "docx",
+      "answerKey": true,
+      "headerMs": 0,
+      "docxMs": 322,
+      "pdfMs": 3083,
+      "totalMs": 3405,
+      "docxBytes": 7891,
+      "pdfBytes": 23848
+    }
+  ],
+  "persistentWorker": {
+    "startupMs": 1414,
+    "conversionMs": [
+      1252,
+      88,
+      79,
+      97
+    ]
+  },
+  "limits": "Medição local de subprocessos, sem rede HTTP, banco, fila concorrente ou cache Laravel. Não representa a latência de produção. Prova e gabarito têm conteúdo fictício. Assinaturas de arquivo verificadas; sem comparação visual completa."
+}

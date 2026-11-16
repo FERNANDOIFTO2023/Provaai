@@ -630,7 +630,7 @@ export default function TeacherWorkspace({
       } else setExam(saved);
       setMessage(
         approve
-          ? 'Prova aprovada e disponível para download.'
+          ? 'Prova aprovada. Os arquivos estão sendo preparados em segundo plano para agilizar o download.'
           : 'Rascunho salvo.',
       );
     });
