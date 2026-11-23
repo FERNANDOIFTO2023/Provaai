@@ -1405,6 +1405,7 @@ export default function TeacherWorkspace({
             </>
           )}
           {view === 'students' && <StudentsWorkspace students={data.students} classes={data.classes} exams={data.exams}
+            demo={demo} onImported={students => setData(previous => ({ ...previous, students: [...students, ...previous.students] }))}
             busy={busy || generation.busy} onEdit={student => { setEditing(student); setCurrent(student.class_id); open('student'); }}
             onShare={student => share('student', student)} onArchive={student => void archiveStudent(student)}
             onReactivate={student => { setEditing(student); open('reactivate'); }}

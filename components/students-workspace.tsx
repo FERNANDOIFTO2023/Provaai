@@ -9,9 +9,11 @@ import type { ClassRoom, Exam, Student } from '@/lib/model';
 import { filterStudents } from '@/lib/classroom';
 import { Search, Pencil, Users } from './animated-icons';
 import { Empty } from './workspace-ui';
+import StudentImport from './student-import';
 
-export default function StudentsWorkspace({ students, classes, exams, busy, onEdit, onShare, onArchive, onReactivate, onClass }: {
+export default function StudentsWorkspace({ students, classes, exams, busy, demo, onImported, onEdit, onShare, onArchive, onReactivate, onClass }: {
   students: Student[]; classes: ClassRoom[]; exams: Exam[]; busy: boolean;
+  demo: boolean; onImported: (students: Student[]) => void;
   onEdit: (student: Student) => void; onShare: (student: Student) => void;
   onArchive: (student: Student) => void; onReactivate: (student: Student) => void;
   onClass: (id: string) => void;
@@ -24,6 +26,9 @@ export default function StudentsWorkspace({ students, classes, exams, busy, onEd
     <div className="page-heading"><div><span className="eyebrow">CADA ALUNO, UMA POSSIBILIDADE</span>
       <h1>Alunos<span>.</span></h1><p>Encontre os perfis, acompanhe os vínculos e compartilhe uma cópia com outro professor.</p>
     </div></div>
+    <StudentImport classes={classes} busy={busy} demo={demo} onImported={students => {
+      setClassId(students[0]?.class_id ?? ''); setStatus('active'); setQuery(''); onImported(students);
+    }} />
     <div className="library-filters">
       <div className="search"><Search size={17} /><input aria-label="Buscar alunos" placeholder="Nome, código, turma ou matéria…" value={query} onChange={e => setQuery(e.target.value)} /></div>
       <select aria-label="Status dos alunos" value={status} onChange={e => setStatus(e.target.value)}>

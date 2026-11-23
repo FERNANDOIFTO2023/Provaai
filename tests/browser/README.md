@@ -1,5 +1,15 @@
 # Testes de navegação
 
+## Importação de alunos
+
+Depois de `npm run build`, execute `node --experimental-strip-types tests/browser/student-import.mjs`
+com as variáveis Playwright/Chromium descritas abaixo. Verifica download do modelo,
+formato inválido, erros por linha, prévia, troca de turma/arquivo, confirmação única
+e atualização da lista em 1440 e 375 pixels. A API é simulada, sem dados reais.
+Capturas ficam em `docs/relatorios/2026-11-23-importacao-alunos/`.
+O processamento de XLSX e a gravação no banco são exercitados por
+`php artisan test --filter=StudentImportTest` usando banco isolado e arquivos reais.
+
 ## Modelos e provas individuais
 
 `npm run test:collections` usa os mesmos requisitos de Playwright/navegador

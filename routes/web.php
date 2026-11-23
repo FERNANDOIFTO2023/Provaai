@@ -23,6 +23,7 @@ Route::post('/api/auth/code', [AuthController::class, 'code'])->middleware('thro
 Route::post('/api/auth/logout', [AuthController::class, 'logout']);
 // Todas as operações de dados e documentos abaixo exigem sessão autenticada.
 Route::middleware('auth')->group(function () {
+    Route::post('/api/students/import', \App\Http\Controllers\StudentImportController::class)->middleware('throttle:20,1');
     Route::post('/api/data/{resource}', [RecordsController::class, 'handle']);
     Route::post('/api/actions/{action}', [ActionsController::class, 'handle']);
     Route::post('/api/files/{bucket}', [DocumentsController::class, 'upload']);
