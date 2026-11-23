@@ -84,6 +84,7 @@ import { ClassIcon } from './class-icon';
 import { ClassCover } from './class-cover';
 import ClassSettings, { type BannerDraft } from './class-settings';
 import WorkspaceHeader from './workspace-header';
+import TeacherDashboard from './teacher-dashboard';
 import { classColor } from '@/lib/class-appearance';
 import { useWorkspaceHistory } from './use-workspace-history';
 import { classExpired, deletionDate, type CopyInvitation, type ShareTarget } from '@/lib/classroom';
@@ -102,6 +103,7 @@ export type Teacher = { id: string; email?: string };
 const sections = [
   { id: 'classes', short: 'Turmas', name: 'Minhas turmas', icon: LayoutGrid },
   { id: 'students', short: 'Alunos', name: 'Alunos', icon: Users },
+  { id: 'dashboard', short: 'Meu espaço', name: 'Área do professor', icon: GraduationCap },
   { id: 'exams', short: 'Provas coletivas', name: 'Provas coletivas', icon: FileText },
   { id: 'recovery', short: 'Provas individuais', name: 'Provas individuais', icon: GraduationCap },
   {
@@ -925,7 +927,8 @@ export default function TeacherWorkspace({
           <img src="/bloub/bloub-symbol.svg" alt="" width="40" height="40" />
           Provaai<span className="brand-dot">.</span>
         </button>
-        <div className="workspace">
+        <button type="button" className={`workspace workspace-dashboard-link${view === 'dashboard' ? ' is-active' : ''}`}
+          aria-label="Área do professor" aria-current={view === 'dashboard' ? 'page' : undefined} onClick={() => navigate('dashboard')}>
           <span className="workspace-avatar">
             <GraduationCap size={19} />
           </span>
@@ -933,10 +936,10 @@ export default function TeacherWorkspace({
             <strong>Meu espaço</strong>
             <small>Área do professor</small>
           </div>
-        </div>
+        </button>
         <span className="nav-caption">ORGANIZAR & ENSINAR</span>
         <nav aria-label="Menu lateral">
-          {sections.filter(section => section.id !== 'about').map((n) => (
+          {sections.filter(section => section.id !== 'about' && section.id !== 'dashboard').map((n) => (
             <button
               key={n.id}
               className={view === n.id ? 'active' : ''}
@@ -1026,6 +1029,7 @@ export default function TeacherWorkspace({
               </button>
             </div>
           )}
+          {view === 'dashboard' && <TeacherDashboard demo={demo} name={demo ? 'professor' : user?.email?.split('@')[0] || 'professor'} onNavigate={navigate} />}
           {view === 'classes' && !active && (
             <>
               <div className="page-heading">

@@ -23,6 +23,7 @@ Route::post('/api/auth/code', [AuthController::class, 'code'])->middleware('thro
 Route::post('/api/auth/logout', [AuthController::class, 'logout']);
 // Todas as operações de dados e documentos abaixo exigem sessão autenticada.
 Route::middleware('auth')->group(function () {
+    Route::get('/api/teacher/dashboard', \App\Http\Controllers\TeacherDashboardController::class)->middleware('throttle:60,1');
     Route::get('/api/classes/{classId}/materials', [\App\Http\Controllers\ClassMaterialsController::class, 'index'])->whereUuid('classId');
     Route::post('/api/classes/{classId}/materials', [\App\Http\Controllers\ClassMaterialsController::class, 'upload'])->whereUuid('classId')->middleware('throttle:15,1');
     Route::patch('/api/classes/{classId}/materials', [\App\Http\Controllers\ClassMaterialsController::class, 'settings'])->whereUuid('classId');

@@ -83,7 +83,7 @@ class AiService
                 }
             }
             $reportStage?->__invoke('generating');
-            $content = app(GeneratedExamContent::class)->prepare($this->ask($provider, 'generation', $context));
+            $content = app(GeneratedExamContent::class)->prepare($this->ask($provider, 'generation', $context, $userId));
             $instructions = trim($exam->content['instructions'] ?? '');
             if ($instructions !== '' && $instructions !== 'Leia com atenção.') {
                 $content['instructions'] = $instructions;
@@ -101,7 +101,7 @@ class AiService
             $reviewContext = ['subject' => $exam->subject, 'topics' => $exam->topics, 'instructions' => $content['instructions'], 'questions' => $content['questions']];
             if ($sources) $reviewContext['sources'] = $sources;
             if ($research) $reviewContext['external_research'] = $research['text'];
-            $review = $this->ask($provider, 'review', $reviewContext);
+            $review = $this->ask($provider, 'review', $reviewContext, $userId);
             if (($review['aligned'] ?? null) !== true || ! isset($review['offTopicQuestions'],$review['missingTopics']) || $review['offTopicQuestions'] !== [] || $review['missingTopics'] !== []) {
                 throw new RuntimeException('A conferência não confirmou a matéria e os conteúdos. O rascunho foi preservado.');
             }
@@ -122,7 +122,7 @@ class AiService
     }
 
     /** Executa geração ou revisão com prazos próprios e fallback de Gemini para Groq quando configurado. */
-    private function ask(string &$provider, string $stage, array $context): array
+    private function ask(string &$provider, string $stage, array $context, string $userId): array
     {
         $instruction = file_get_contents(resource_path('prompts/'.$stage.'.txt'));
         $review = $stage === 'review';
@@ -139,11 +139,11 @@ class AiService
                     if (! $review) {
                         $generationConfig['responseJsonSchema'] = app(GeneratedExamContent::class)->schema($context['count'], $context['distribution']['objective']);
                     }
-                    $send = fn (int $timeout) => Http::connectTimeout(min(8, $timeout))->timeout($timeout)->withHeaders(['x-goog-api-key' => config('provaai.gemini_key')])
+                    $send = fn (int $timeout) => app(AiUsage::class)->request($userId, 'gemini', $model, $stage, fn () => Http::connectTimeout(min(8, $timeout))->timeout($timeout)->withHeaders(['x-goog-api-key' => config('provaai.gemini_key')])
                         ->post('https://generativelanguage.googleapis.com/v1beta/models/'.rawurlencode($model).':generateContent', [
                             'systemInstruction' => ['parts' => [['text' => $instruction]]], 'contents' => [['parts' => [['text' => json_encode($context, JSON_UNESCAPED_UNICODE)]]]],
                             'generationConfig' => $generationConfig,
-                        ]);
+                        ]));
                     $response = $send($budget);
                     if (! $hasFallback && in_array($response->status(), [500, 502, 503, 504], true) && microtime(true) - $start < 2) {
                         Log::info('gemini_retry', ['stage' => $stage, 'status' => $response->status()]);
@@ -197,7 +197,7 @@ class AiService
             } else {
                 $body['max_tokens'] = $review ? 2048 : 12000;
             }
-            $response = Http::withToken($key)->connectTimeout(8)->timeout($review ? 15 : 40)->post($groq ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://api.mistral.ai/v1/chat/completions', $body);
+            $response = app(AiUsage::class)->request($userId, $provider, $body['model'], $stage, fn () => Http::withToken($key)->connectTimeout(8)->timeout($review ? 15 : 40)->post($groq ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://api.mistral.ai/v1/chat/completions', $body));
             if (! $response->successful()) {
                 throw new RuntimeException($response->status() === 429 ? 'O provedor atingiu o limite de uso. Aguarde antes de tentar novamente.' : 'O provedor não concluiu a etapa. Confira a configuração e tente novamente.');
             }

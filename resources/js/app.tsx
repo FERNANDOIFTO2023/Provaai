@@ -13,6 +13,7 @@ import '../css/icon-motion.css';
 import '../css/class-appearance.css';
 import '../css/workspace-header.css';
 import '../css/collections.css';
+import '../css/teacher-dashboard.css';
 createRoot(document.getElementById('app')!).render(
   <React.StrictMode>
     <MotionProvider>
