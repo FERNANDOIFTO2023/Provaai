@@ -40,7 +40,7 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     const data = demoData();
     data.classes[2].archived_at = '2026-11-01T00:00:00Z';
-    let reject = true, imports = 0, requests = 0;
+    let reject = true, imports = 0, requests = 0, expectedClass = 'c1', importedName = 'Aluno Importado';
     await page.route('**/api/**', async route => {
       const path = new URL(route.request().url()).pathname;
       const fulfill = json => route.fulfill({ json });
@@ -51,13 +51,13 @@ try {
         requests++;
         const multipart = route.request().postDataBuffer().toString();
         assert.match(multipart, /name="file"; filename="modelo-alunos.xlsx"/);
-        assert.match(multipart, /name="class_id"\r\n\r\nc1/);
+        assert.ok(multipart.includes(`name="class_id"\r\n\r\n${expectedClass}\r\n`), 'Arquivo enviado para a turma escolhida');
         if (reject) return route.fulfill({ status: 422, json: { errors: [{ line: 3, message: 'Informe o nome do aluno.' }] } });
-        const students = [{ line: 2, name: 'Aluno Importado', level: 'Intermediário', difficulties: 'Frações', criteria: 'Enunciados curtos' }];
+        const students = [{ line: 2, name: importedName, level: 'Intermediário', difficulties: 'Frações', criteria: 'Enunciados curtos' }];
         if (/name="preview"\r\n\r\n1/.test(multipart)) return fulfill({ students, count: 1 });
         imports++;
         await new Promise(resolve => setTimeout(resolve, 250));
-        return route.fulfill({ status: 201, json: { count: 1, students: students.map(student => ({ ...student, id: 'importado', class_id: 'c1', code: 'A005', archived_at: null })) } });
+        return route.fulfill({ status: 201, json: { count: 1, students: students.map(student => ({ ...student, id: `importado-${imports}`, class_id: expectedClass, code: 'A005', archived_at: null })) } });
       }
       if (path.startsWith('/api/data/')) {
         const table = path.split('/').pop();
@@ -112,8 +112,57 @@ try {
     assert.equal(imports, 1);
     assert.match(await page.locator('.directory-card').filter({ hasText: 'Aluno Importado' }).innerText(), /A005/);
     assert.equal(await file.inputValue(), '');
+    // Acesso direto pelo cartão: outra turma fica fixada e recebe o novo aluno.
+    if (await menu.isVisible()) await menu.click();
+    await page.locator('.sidebar').getByRole('button', { name: 'Minhas turmas', exact: true }).click();
+    const room = data.classes[1];
+    expectedClass = room.id; importedName = 'Aluno via cartão';
+    await page.getByRole('button', { name: `Importar alunos para ${room.name}`, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.waitFor();
+    assert.equal(await dialog.getByLabel('1. Turma de destino').inputValue(), room.id);
+    assert.equal(await dialog.getByLabel('1. Turma de destino').isDisabled(), true);
+    assert.equal(await dialog.getByRole('link', { name: 'Modelo Excel' }).isVisible(), true);
+    await dialog.getByLabel('2. Modelo preenchido').setInputFiles(resolve(publicDir, 'modelos/modelo-alunos.xlsx'));
+    await dialog.getByRole('button', { name: 'Conferir arquivo' }).click();
+    await dialog.getByRole('region', { name: 'Prévia dos alunos' }).waitFor();
+    await dialog.screenshot({ path: resolve(artifacts, `cartao-turma-${width}.png`) });
+    await dialog.getByRole('button', { name: 'Confirmar importação de 1 aluno', exact: true }).click();
+    await dialog.getByRole('status').filter({ hasText: `1 aluno cadastrado em ${room.name}` }).waitFor();
+    await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
+    const card = page.locator('.class-card').filter({ has: page.getByRole('button', { name: `Abrir turma ${room.name}`, exact: true }) });
+    await card.waitFor();
+    assert.match(await card.locator('.class-count').innerText(), /3 alunos/);
+    await page.locator('.class-grid').screenshot({ path: resolve(artifacts, `cartoes-${width}.png`) });
+
+    // O acesso na página da turma também fixa o destino e abre sem rascunhos anteriores.
+    const firstRoom = data.classes[0];
+    expectedClass = firstRoom.id; importedName = 'Aluno dentro da turma';
+    await page.getByRole('button', { name: `Abrir turma ${firstRoom.name}`, exact: true }).click();
+    await page.getByRole('button', { name: 'Importar alunos', exact: true }).click();
+    assert.equal(await dialog.getByLabel('1. Turma de destino').inputValue(), firstRoom.id);
+    assert.equal(await dialog.getByLabel('2. Modelo preenchido').inputValue(), '');
+    await dialog.getByLabel('2. Modelo preenchido').setInputFiles(resolve(publicDir, 'modelos/modelo-alunos.xlsx'));
+    await dialog.getByRole('button', { name: 'Conferir arquivo' }).click();
+    await dialog.getByRole('button', { name: 'Confirmar importação de 1 aluno', exact: true }).click();
+    await dialog.getByRole('status').filter({ hasText: `1 aluno cadastrado em ${firstRoom.name}` }).waitFor();
+    await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
+    await page.getByRole('heading', { name: `${firstRoom.name}.`, exact: true }).waitFor();
+    assert.match(await page.locator('.table-wrap').innerText(), /Aluno dentro da turma/);
+    await page.goBack();
+    await page.getByRole('button', { name: `Abrir turma ${firstRoom.name}`, exact: true }).waitFor();
+    await page.goForward();
+    await page.getByRole('heading', { name: `${firstRoom.name}.`, exact: true }).waitFor();
+    assert.equal(await dialog.count(), 0, 'Avançar não reabre a importação concluída');
+    assert.equal(imports, 3);
+    await page.getByRole('button', { name: 'Todas as turmas', exact: true }).click();
+    await page.getByLabel('Status das turmas').selectOption('inactive');
+    const archived = data.classes[2];
+    assert.equal(await page.getByRole('button', { name: `Importar alunos para ${archived.name}`, exact: true }).isDisabled(), true);
+    await page.getByRole('button', { name: `Abrir turma ${archived.name}`, exact: true }).click();
+    assert.equal(await page.getByRole('button', { name: 'Importar alunos', exact: true }).isDisabled(), true);
     assert.deepEqual(errors, []);
-    console.log(`PASS ${width}px: modelo, validação, prévia, troca de turma/arquivo, confirmação única e atualização da lista`);
+    console.log(`PASS ${width}px: importação em Alunos, cartão e página da turma; destino fixo, atualização e histórico`);
     await context.close();
   }
 } finally {

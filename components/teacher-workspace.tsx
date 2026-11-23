@@ -76,6 +76,7 @@ import { fetchExamFile } from '@/lib/download-file';
 import { ProgressMeter } from './progress-meter';
 import { Dialog, Field, Empty } from './workspace-ui';
 import StudentsWorkspace from './students-workspace';
+import StudentImport from './student-import';
 import CopySharing, { ShareCopyForm } from './copy-sharing';
 import { ClassIcon } from './class-icon';
 import { ClassCover } from './class-cover';
@@ -84,7 +85,7 @@ import WorkspaceHeader from './workspace-header';
 import { classColor } from '@/lib/class-appearance';
 import { useWorkspaceHistory } from './use-workspace-history';
 import { classExpired, deletionDate, type CopyInvitation, type ShareTarget } from '@/lib/classroom';
-type Modal = 'class' | 'edit-class' | 'delete-class' | 'reactivate' | 'share' | 'student' | 'generate' | 'template' | 'uploads' | 'downloads' | 'exam' | null;
+type Modal = 'class' | 'edit-class' | 'delete-class' | 'reactivate' | 'share' | 'student' | 'import-students' | 'generate' | 'template' | 'uploads' | 'downloads' | 'exam' | null;
 const uploadStages = { queued: 'Na fila', uploading: 'Enviando arquivo', reading: 'Lendo conteúdo', ready: 'Pronto', failed: 'Não concluído' };
 const empty: DataSet = { classes: [], students: [], exams: [], templates: [] };
 const initials = (name: string) =>
@@ -1191,6 +1192,14 @@ export default function TeacherWorkspace({
                       </button>
                       <button type="button" className="class-card-edit" title="Editar turma" aria-label={`Editar turma ${c.name}`}
                         disabled={busy} onClick={()=>{setCurrent(c.id);setError('');setModal('edit-class');}}><Pencil size={19}/></button>
+                      <div className="class-card-actions">
+                        <button type="button" className="button secondary small-button" aria-label={`Importar alunos para ${c.name}`}
+                          disabled={busy || generation.busy || Boolean(c.archived_at)}
+                          title={c.archived_at ? 'Reative a turma para importar alunos' : undefined}
+                          onClick={() => { setCurrent(c.id); setError(''); setModal('import-students'); }}>
+                          <Upload size={16} />Importar alunos
+                        </button>
+                      </div>
                       </article>
                     );
                   })}
@@ -1242,6 +1251,8 @@ export default function TeacherWorkspace({
                 <div className="actions">
                   <button className="button secondary" disabled={busy} onClick={() => open('edit-class')}><Pencil size={17} />Editar turma</button>
                   <button className="button secondary" disabled={busy} onClick={() => share('class', active)}>Compartilhar cópia</button>
+                  <button className="button secondary" disabled={busy || generation.busy || Boolean(active.archived_at)}
+                    onClick={() => open('import-students')}><Upload size={17} />Importar alunos</button>
                   <button
                     className="button secondary"
                     disabled={Boolean(active.archived_at) || busy}
@@ -1619,6 +1630,7 @@ export default function TeacherWorkspace({
         <Dialog
           title={
             modal === 'edit-class' ? 'Configurações da turma'
+              : modal === 'import-students' ? 'Importar alunos'
               : modal === 'delete-class' ? 'Excluir turma'
               : modal === 'share' ? 'Compartilhar uma cópia'
               : modal === 'reactivate' ? 'Reativar aluno'
@@ -1636,7 +1648,7 @@ export default function TeacherWorkspace({
                     ? 'Adicionar modelos de referência'
                     : 'Revisar prova'
           }
-          wide={modal === 'exam' || modal === 'generate' || modal === 'class' || modal === 'edit-class'}
+          wide={modal === 'exam' || modal === 'generate' || modal === 'class' || modal === 'edit-class' || modal === 'import-students'}
           onClose={() => {
             if (!busy) closeModal();
           }}
@@ -1646,6 +1658,12 @@ export default function TeacherWorkspace({
               {error}
             </p>
           )}
+          {modal === 'import-students' && active && <StudentImport key={active.id}
+            classes={data.classes} classRoom={active} busy={busy || generation.busy} demo={demo}
+            onImported={students => {
+              setData(previous => ({ ...previous, students: [...students, ...previous.students] }));
+              setSearch(''); setShowArchived(false);
+            }} />}
           {modal === 'downloads' && <section className="upload-wait">
             <BloubMood mood={downloads.error ? 'frustrado' : downloads.busy ? 'sonolento' : 'feliz'} />
             <h3 role="status">{downloads.busy ? 'Preparando suas provas! Aguarde um pouquinho.' : downloads.error ? 'Não foi possível concluir o download.' : 'Arquivo pronto!'}</h3>

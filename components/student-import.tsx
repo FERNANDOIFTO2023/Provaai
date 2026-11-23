@@ -11,8 +11,9 @@ import { Download, Upload, Users } from './animated-icons';
 type PreviewStudent = Pick<Student, 'name' | 'level' | 'difficulties' | 'criteria'> & { line: number };
 type RowError = { line?: number; message: string };
 
-export default function StudentImport({ classes, busy, demo, onImported }: {
+export default function StudentImport({ classes, busy, demo, onImported, classRoom }: {
   classes: ClassRoom[]; busy: boolean; demo: boolean; onImported: (students: Student[]) => void;
+  classRoom?: ClassRoom;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [classId, setClassId] = useState('');
@@ -24,7 +25,9 @@ export default function StudentImport({ classes, busy, demo, onImported }: {
   const inFlight = useRef(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const activeClasses = classes.filter(room => !room.archived_at);
-  const selected = activeClasses.find(room => room.id === classId);
+  // Dentro de uma turma, o destino fica fixo: a seleção global só é usada na tela Alunos.
+  const destinationId = classRoom?.id ?? classId;
+  const selected = activeClasses.find(room => room.id === destinationId);
   const disabled = busy || pending;
 
   function resetPreview() {
@@ -36,7 +39,7 @@ export default function StudentImport({ classes, busy, demo, onImported }: {
     inFlight.current = true;
     setPending(true); setErrors([]); setMessage('');
     const form = new FormData();
-    form.set('file', file); form.set('class_id', classId); form.set('preview', confirm ? '0' : '1');
+    form.set('file', file); form.set('class_id', destinationId); form.set('preview', confirm ? '0' : '1');
     try {
       const response = await apiFetch('/api/students/import', { method: 'POST', body: form });
       const result = await response.json();
@@ -68,21 +71,21 @@ export default function StudentImport({ classes, busy, demo, onImported }: {
   return <section className="student-import" aria-labelledby="student-import-title" aria-busy={pending}>
     <div className="student-import-heading">
       <span className="overview-symbol"><Users size={24} /></span>
-      <div><span className="section-kicker">CADASTRO EM LOTE</span><h2 id="student-import-title">Traga sua lista de alunos</h2>
+      <div><span className="section-kicker">CADASTRO EM LOTE</span><h2 id="student-import-title">{classRoom ? `Alunos de ${classRoom.name}` : 'Traga sua lista de alunos'}</h2>
         <p>Preencha o modelo Excel e importe para uma turma. O site cria os códigos para você.</p></div>
       <div className="student-import-actions">
         <a className="button secondary" href="/modelos/modelo-alunos.xlsx" download><Download size={16} />Modelo Excel</a>
-        <button className="button primary" disabled={disabled} aria-expanded={expanded} aria-controls="student-import-form"
-          onClick={() => setExpanded(value => !value)}><Upload size={16} />{expanded ? 'Fechar importação' : 'Importar alunos'}</button>
+        {!classRoom && <button className="button primary" disabled={disabled} aria-expanded={expanded} aria-controls="student-import-form"
+          onClick={() => setExpanded(value => !value)}><Upload size={16} />{expanded ? 'Fechar importação' : 'Importar alunos'}</button>}
       </div>
     </div>
-    {expanded && <div id="student-import-form" className="student-import-body">
+    {(expanded || classRoom) && <div id="student-import-form" className="student-import-body">
       <p className="helper-note">Na aba Alunos do modelo, informe nome, nível, dificuldades/objetivos e critérios para as provas. Somente o nome é obrigatório. Nível em branco será Intermediário. Até 500 alunos e 5 MB por arquivo .xlsx.</p>
       {demo ? <p role="status">Você pode baixar o modelo na demonstração. Entre na sua conta para importar alunos.</p>
-        : !activeClasses.length ? <p role="status">Crie ou reative uma turma antes de importar alunos.</p>
+        : !activeClasses.length || classRoom?.archived_at ? <p role="status">Crie ou reative uma turma antes de importar alunos.</p>
         : <>
           <div className="student-import-fields">
-            <label>1. Turma de destino<select value={classId} disabled={disabled} onChange={e => { setClassId(e.target.value); resetPreview(); }}>
+            <label>1. Turma de destino<select value={destinationId} disabled={disabled || !!classRoom} onChange={e => { setClassId(e.target.value); resetPreview(); }}>
               <option value="">Selecione uma turma</option>
               {activeClasses.map(room => <option key={room.id} value={room.id}>{room.name} · {room.subject}</option>)}
             </select></label>
