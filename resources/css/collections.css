@@ -6,24 +6,87 @@
  */
 /* A biblioteca de modelos e as provas individuais compartilham as variáveis visuais do Provaai. */
 /* Materiais / painel privado de fontes, leitura e limite de pesquisa externa. */
-.class-materials { border: 1px solid var(--border); border-radius: 18px; background: #fff; margin: 24px 0; }
-.class-materials-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 22px; }
-.class-materials-heading > div { flex: 1; min-width: 180px; }
-.class-materials h2 { font-size: 19px; margin: 0 0 6px; }
-.class-materials p, .external-research p { font-size: 13px; color: var(--muted); line-height: 1.65; margin: 6px 0 12px; }
-.class-materials-body { border-top: 1px solid var(--border); padding: 22px; }
-.materials-warning { background: #fff6e1; color: #68450b !important; padding: 12px; border-radius: 9px; }
-.materials-upload { display: block; margin: 18px 0; }
-.materials-upload span { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 650; }
-.materials-upload input { max-width: 100%; }
-.materials-toggle { display: flex; gap: 10px; align-items: start; margin: 20px 0 10px; font-weight: 650; font-size: 14px; }
-.materials-toggle input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--color-action); }
-.materials-list { list-style: none; padding: 0; }
-.materials-list li { padding: 16px 0; border-top: 1px solid var(--border); }
-.materials-list strong { overflow-wrap: anywhere; }
-.materials-list span { display: block; font-size: 12px; color: var(--muted); margin: 5px 0 12px; }
-.materials-list details { margin-top: 12px; }
-.materials-list pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow: auto; padding: 12px; background: #f8f6fa; font: inherit; font-size: 13px; }
+/* Os botões da turma também precisam quebrar linha para não alargar a página em tablets. */
+.class-page-heading > .actions { flex-wrap: wrap; max-width: 100%; }
+.class-materials { container: class-materials / inline-size; border: 1px solid var(--border); border-radius: 20px; background: #fff; margin: 24px 0; color: #14202b; }
+.class-materials-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 24px 28px; }
+.materials-heading-copy { flex: 1; min-width: 180px; }
+.materials-symbol { display: grid; place-items: center; flex-shrink: 0; width: 48px; height: 48px; border-radius: 14px; background: #f0eafa; color: #5210ce; }
+.class-materials h2 { font-size: 21px; line-height: 1.3; margin: 0 0 6px; text-wrap: balance; }
+.class-materials h3 { font-size: 16px; line-height: 1.4; margin: 0; text-wrap: balance; }
+.class-materials h4 { font-size: 15px; line-height: 1.5; margin: 0 0 6px; }
+.class-materials p { font-size: 14px; color: #515969; line-height: 1.65; margin: 0; text-wrap: pretty; }
+.class-materials-body { border-top: 1px solid var(--border); padding: 28px; }
+.class-materials .button { min-height: 44px; font-size: 13px; }
+.class-materials :is(button, a, input, summary):focus-visible { outline: 3px solid #5210ce; outline-offset: 4px; }
+.materials-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 28px; }
+.materials-layout > div { min-width: 0; }
+.materials-section-title { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 16px; }
+.materials-count { font-size: 12px; font-variant-numeric: tabular-nums; color: #515969; }
+.materials-upload { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 24px 18px; border: 1px dashed #c4b3e0; border-radius: 14px; background: #fcfaff; }
+.materials-upload > .app-icon { color: #5210ce; margin-bottom: 4px; }
+.materials-upload h4 { margin: 0; }
+.materials-upload .button { margin: 4px 0; }
+.materials-upload small { font-size: 12px; color: #515969; line-height: 1.6; max-width: 36ch; text-wrap: pretty; }
+.class-materials .materials-private { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; }
+.materials-private > .app-icon { color: #187460; flex-shrink: 0; }
+.materials-scope { border: 1px solid #e4ddeb; background: #faf8fc; border-radius: 14px; padding: 22px; }
+.materials-scope .materials-section-title { margin-bottom: 8px; }
+.materials-state { font-size: 12px; font-weight: 650; color: #515969; }
+.materials-scope.is-external { border-color: #ead4a2; background: #fffaf0; }
+.materials-scope.is-external .materials-state { color: #805314; }
+.materials-toggle { display: flex; gap: 12px; align-items: center; min-height: 48px; padding: 12px 0; margin: 12px 0; cursor: pointer; font-weight: 650; font-size: 14px; line-height: 1.5; }
+.materials-toggle:has(input:disabled) { cursor: not-allowed; }
+.materials-toggle input { margin: 0; width: 20px; height: 20px; flex-shrink: 0; accent-color: #5210ce; }
+.materials-scope-description { border-top: 1px solid #e4ddeb; padding-top: 16px; }
+.materials-scope-description strong { display: block; font-size: 14px; line-height: 1.5; margin-bottom: 8px; }
+.materials-scope.is-external .materials-scope-description { border-color: #ead4a2; }
+.materials-scope.is-external .materials-scope-description strong { color: #805314; }
+.class-materials .materials-unavailable { margin-top: 12px; }
+.class-materials .materials-empty { margin-top: 22px; padding: 14px 18px; border-left: 3px solid #b6dcd2; background: #f4faf8; border-radius: 0 8px 8px 0; }
+.materials-empty strong { color: #234e43; }
+.materials-files { margin-top: 28px; }
+.materials-files .materials-section-title { margin-bottom: 6px; }
+.materials-list { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 12px; }
+.materials-list li { padding: 18px; border: 1px solid var(--border); border-radius: 12px; }
+.materials-file-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.materials-file-icon { color: #5210ce; display: grid; place-items: center; width: 40px; height: 44px; flex-shrink: 0; }
+.materials-file-name { flex: 1; min-width: 120px; }
+.materials-file-name strong { display: block; overflow-wrap: anywhere; font-size: 14px; line-height: 1.5; }
+.materials-file-name > span { display: block; font-size: 12px; color: #515969; margin-top: 4px; }
+.materials-file-heading .actions { flex-wrap: wrap; gap: 8px; }
+.materials-list details { margin-top: 12px; border-top: 1px solid #eeeaf3; }
+.class-materials summary { cursor: pointer; min-height: 44px; padding: 12px 0; font-size: 14px; line-height: 1.5; color: #5210ce; }
+.materials-list pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow: auto; padding: 16px; background: #f8f6fa; border-radius: 8px; font: inherit; font-size: 14px; line-height: 1.7; }
+.materials-warning { display: flex; align-items: flex-start; gap: 12px; background: #fff7e5; color: #714a0e; padding: 16px 18px; border-radius: 12px; margin-top: 24px; }
+.materials-warning > .app-icon { margin-top: 2px; flex-shrink: 0; }
+.materials-warning strong { display: block; font-size: 14px; margin-bottom: 4px; }
+.class-materials .materials-warning p { color: #714a0e; }
+.materials-help { margin-top: 12px; }
+.materials-help summary { font-weight: 650; }
+.materials-help-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding: 12px 0 4px; }
+.materials-help-grid p + p { margin-top: 12px; }
+.class-materials .materials-feedback { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 10px; margin-top: 20px; background: #f1ecfa; color: #453568; }
+.materials-feedback .app-icon { flex-shrink: 0; margin-top: 2px; }
+.class-materials .materials-feedback.is-success { background: #edf9f4; color: #205d47; }
+.class-materials .materials-feedback.is-error { background: #fff0f0; color: #9a2727; }
+/* As colunas se adaptam à largura do painel, inclusive quando a barra lateral ocupa parte da tela. */
+@container class-materials (max-width: 760px) {
+  .materials-layout, .materials-help-grid { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .class-materials-heading, .class-materials-body { padding: 20px; }
+  .materials-scope { padding: 18px; }
+}
+@container class-materials (max-width: 420px) {
+  .class-materials-heading { gap: 12px; }
+  .materials-heading-copy { min-width: 140px; }
+  .class-materials h2 { font-size: 19px; }
+  .class-materials-heading > .button { width: 100%; }
+  .materials-upload { padding: 22px 14px; }
+  .materials-warning { padding: 16px; }
+  .materials-file-heading .actions { width: 100%; }
+  .materials-file-heading .actions .button { flex: 1; }
+}
+.external-research p { font-size: 13px; color: var(--muted); line-height: 1.65; margin: 6px 0 12px; }
 .external-research { margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; }
 .research-text { white-space: pre-wrap; max-height: 260px; overflow: auto; }
 .external-research iframe { border: 0; width: 100%; min-height: 150px; }

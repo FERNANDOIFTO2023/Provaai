@@ -9,7 +9,7 @@ import { demoData } from '../../lib/model.ts';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const publicDir = resolve(root, 'public');
-const artifacts = resolve(root, 'docs/relatorios/2026-11-23-materiais-turma');
+const artifacts = resolve(root, 'docs/relatorios/2026-11-23-materiais-ui');
 await mkdir(artifacts, { recursive: true });
 const entry = JSON.parse(await readFile(resolve(publicDir, 'build/manifest.json'), 'utf8'))['resources/js/app.tsx'];
 const server = createServer(async (req, res) => {
@@ -29,7 +29,7 @@ await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 let browser;
 try {
   browser = await chromium.launch({ headless: true, ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) });
-  for (const width of [1440, 375]) {
+  for (const width of [1440, 768, 375, 320]) {
     const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' });
     await context.addInitScript(() => localStorage.setItem('provaai:activity:v1:visual:fixture', JSON.stringify({ lastActivity: Date.now(), ended: false })));
     const page = await context.newPage();
@@ -79,20 +79,39 @@ try {
     const checkbox = panel.getByRole('checkbox');
     assert.equal(await checkbox.isChecked(), false);
     assert.match(await panel.innerText(), /animações avançadas/);
+    await panel.screenshot({ path: resolve(artifacts, `vazio-${width}.png`) });
+    const help = panel.getByText('Limites, leitura dos arquivos e uso nas provas', { exact: true });
+    await help.focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await panel.getByRole('heading', { name: 'O que pode ser lido', exact: true }).isVisible(), true);
+    assert.match(await panel.innerText(), /60.000 caracteres/);
+    await page.keyboard.press('Enter');
+    assert.equal(await panel.getByRole('heading', { name: 'O que pode ser lido', exact: true }).isVisible(), false);
+    const select = panel.getByRole('button', { name: 'Selecionar arquivo', exact: true });
+    await select.focus();
+    assert.equal(await select.evaluate(e => getComputedStyle(e).outlineStyle), 'solid', 'Foco visível no botão de envio');
+    const buttonBox = await select.boundingBox();
+    assert.ok(buttonBox.height >= 44, 'Alvo de toque com pelo menos 44 px');
     const file = { name: 'aula.pdf', mimeType: 'application/pdf', buffer: await readFile(resolve(root, 'tests/fixtures/class-material.pdf')) };
-    await upload.setInputFiles(file);
+    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.keyboard.press('Enter')]);
+    await chooser.setFiles(file);
     await panel.getByRole('status').filter({ hasText: 'Processando' }).waitFor();
     assert.equal(await page.getByRole('button', { name: 'Preparar provas', exact: true }).isDisabled(), true);
     await panel.getByRole('status').filter({ hasText: 'Material lido.' }).waitFor();
     assert.equal(await upload.inputValue(), '');
     assert.equal(postCount, 1);
+    assert.match(await panel.locator('.materials-count').first().innerText(), /1 de 5/);
+    assert.equal(await panel.getByText('Os anexos são opcionais.', { exact: true }).count(), 0);
     await panel.getByText('Conferir texto lido', { exact: true }).click();
     assert.match(await panel.locator('pre').innerText(), /Fotossíntese/);
+    await panel.screenshot({ path: resolve(artifacts, `restrito-${width}.png`) });
     await checkbox.check();
     await panel.getByRole('status').filter({ hasText: 'Preferência salva' }).waitFor();
     assert.match(await panel.innerText(), /não estão nos arquivos anexados/);
     await panel.screenshot({ path: resolve(artifacts, `materiais-${width}.png`) });
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'Sem rolagem horizontal');
+    const overflow = await page.evaluate(() => ({ width: innerWidth, scrollWidth: document.documentElement.scrollWidth,
+      elements: [...document.querySelectorAll('body *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > innerWidth + 1; }).slice(0, 12).map(e => ({ tag: e.tagName, class: e.className, right: e.getBoundingClientRect().right })) }));
+    assert.ok(overflow.scrollWidth <= overflow.width, `Sem rolagem horizontal: ${JSON.stringify(overflow)}`);
     await page.reload();
     await page.getByRole('button', { name: 'Materiais da turma', exact: true }).click();
     await panel.getByRole('link', { name: 'Baixar original' }).waitFor();
@@ -118,7 +137,7 @@ try {
     assert.equal(await upload.isDisabled(), true);
     assert.equal(await checkbox.isDisabled(), true);
     assert.deepEqual(errors, []);
-    console.log(`PASS ${width}px: anexar, prévia, baixar, pesquisa persistente, falha, remover, turma arquivada e responsividade`);
+    console.log(`PASS ${width}px: seletor por teclado, foco, ajuda expansível, anexar, prévia, baixar, pesquisa persistente, falha, remover, turma arquivada e responsividade`);
     await context.close();
   }
 } finally { await browser?.close(); await new Promise(resolve => server.close(resolve)); }

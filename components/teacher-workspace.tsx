@@ -1240,7 +1240,7 @@ export default function TeacherWorkspace({
                 <ArrowLeft size={16} />
                 Todas as turmas
               </button>
-              <div className="page-heading">
+              <div className="page-heading class-page-heading">
                 <div>
                   <span className="eyebrow"><ClassIcon icon={active.icon} size={20} /> {active.subject}{active.period ? ` · ${active.period}` : ''}</span>
                   <h1>
