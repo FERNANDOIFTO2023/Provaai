@@ -15,6 +15,9 @@ class Exam extends OwnedModel
 
     protected function casts(): array
     {
-        return ['content' => 'array', 'profile_snapshot' => 'array', 'question_count' => 'integer'];
+        return ['content' => 'array', 'profile_snapshot' => 'array', 'source_snapshot' => 'array', 'external_research' => 'array', 'question_count' => 'integer'];
     }
+
+    // O contexto completo fica no servidor; a revisão recebe somente os dados da pesquisa e a prova.
+    protected $hidden = ['source_snapshot'];
 }

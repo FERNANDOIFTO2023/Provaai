@@ -15,6 +15,6 @@ class ClassRoom extends OwnedModel
 
     protected function casts(): array
     {
-        return ['banner_crop' => 'array', 'use_provaai_template' => 'boolean', 'archived_at' => 'datetime', 'deletion_due_at' => 'datetime'];
+        return ['allow_external_sources' => 'boolean', 'banner_crop' => 'array', 'use_provaai_template' => 'boolean', 'archived_at' => 'datetime', 'deletion_due_at' => 'datetime'];
     }
 }

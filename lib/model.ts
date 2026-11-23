@@ -38,6 +38,7 @@ export type Student = {
   created_at: string;
 };
 export type Exam = {
+  external_research?: { text: string; sources: { url: string; title: string }[]; suggestions: string; searched_at: string } | null;
   purpose?: 'regular' | 'recovery';
   id: string;
   user_id: string;

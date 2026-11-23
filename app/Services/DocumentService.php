@@ -32,7 +32,7 @@ class DocumentService
         file_put_contents($path, json_encode($input, JSON_UNESCAPED_UNICODE));
         try {
             $process = new Process([config('provaai.node_binary'), '--experimental-strip-types', base_path('scripts/render-document.mjs'), $path], base_path());
-            $process->setTimeout(120);
+            $process->setTimeout(($input['operation'] ?? '') === 'class-material' ? 40 : 120);
             $process->run();
             if (! $process->isSuccessful()) {
                 if (str_contains($process->getErrorOutput(), 'PROVAAI_INVALID_MATH')) {

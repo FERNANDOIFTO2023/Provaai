@@ -69,6 +69,19 @@ class AiService
                 'profile' => array_intersect_key($exam->profile_snapshot, array_flip(['difficulties', 'criteria', 'level'])),
                 'reference' => mb_substr($reference, 0, 60000), 'exclude' => array_slice($exclude, -100)];
             $provider = config('provaai.provider') === 'mistral' ? 'mistral' : (config('provaai.gemini_key') ? 'gemini' : 'groq');
+            $sources = $exam->source_snapshot;
+            $research = null;
+            if ($sources) {
+                if (empty($sources['materials'])) throw new RuntimeException('Os materiais desta prova estão indisponíveis. Prepare uma nova prova.');
+                $context['sources'] = $sources;
+                if (!empty($sources['allow_external'])) {
+                    $research = app(ExternalResearch::class)->find($userId, $exam->class_id, $exam->subject, $exam->topics);
+                    $context['external_research'] = $research['text'];
+                } else {
+                    // Modelo de diagramação não pode introduzir matéria fora dos anexos no modo restrito.
+                    $context['reference'] = '';
+                }
+            }
             $reportStage?->__invoke('generating');
             $content = app(GeneratedExamContent::class)->prepare($this->ask($provider, 'generation', $context));
             $instructions = trim($exam->content['instructions'] ?? '');
@@ -85,13 +98,20 @@ class AiService
             }
             $reportStage?->__invoke('reviewing');
             // A segunda chamada confere matéria e tópicos. Ela não aprova a prova para download.
-            $review = $this->ask($provider, 'review', ['subject' => $exam->subject, 'topics' => $exam->topics, 'instructions' => $content['instructions'], 'questions' => $content['questions']]);
+            $reviewContext = ['subject' => $exam->subject, 'topics' => $exam->topics, 'instructions' => $content['instructions'], 'questions' => $content['questions']];
+            if ($sources) $reviewContext['sources'] = $sources;
+            if ($research) $reviewContext['external_research'] = $research['text'];
+            $review = $this->ask($provider, 'review', $reviewContext);
             if (($review['aligned'] ?? null) !== true || ! isset($review['offTopicQuestions'],$review['missingTopics']) || $review['offTopicQuestions'] !== [] || $review['missingTopics'] !== []) {
                 throw new RuntimeException('A conferência não confirmou a matéria e os conteúdos. O rascunho foi preservado.');
             }
             $content['objectiveCount'] = $objective;
+            if ($sources && empty($sources['allow_external']) && (($review['sourcesGrounded'] ?? null) !== true || ($review['offSourceQuestions'] ?? null) !== [])) {
+                throw new RuntimeException('A conferência encontrou conteúdo sem apoio nos anexos. O rascunho foi preservado. Confira os materiais e os tópicos solicitados.');
+            }
             $content = app(MathVerificationService::class)->verify($exam->subject, $content);
             $exam->content = $content;
+            $exam->external_research = $research;
             $exam->status = 'draft';
             $exam->save();
 
@@ -112,6 +132,8 @@ class AiService
             if ($provider === 'gemini') {
                 try {
                     $budget = $hasFallback ? ($review ? 10 : 35) : ($review ? 25 : 90);
+                    // Reserva tempo para a pesquisa opcional sem ampliar o prazo da fila existente.
+                    if (!empty($context['sources']['allow_external'])) $budget = min($budget, $review ? 20 : 75);
                     $model = config('provaai.gemini_model');
                     $generationConfig = ['responseMimeType' => 'application/json', 'maxOutputTokens' => $review ? 2048 : 12000, 'temperature' => $review ? 0 : .7];
                     if (! $review) {

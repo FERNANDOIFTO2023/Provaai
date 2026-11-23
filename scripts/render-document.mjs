@@ -12,13 +12,17 @@ let converter;
 // Reutiliza o motor somente dentro deste processo isolado. O PHP já executa este CLI
 // fora do servidor HTTP: não é necessário o wrapper WorkerConverter, que não permite
 // configurar o loader para impedir a inicialização automática concorrente de main().
-async function convertOffice(bytes, outputFormat) {
+async function convertOffice(bytes, outputFormat, inputFormat) {
   converter ??= await createOfficeConverter();
-  return (await converter.convert(bytes, { outputFormat })).data;
+  return (await converter.convert(bytes, { outputFormat, ...(inputFormat ? { inputFormat } : {}) })).data;
 }
 
 // Despacha a operação informada pelo PHP e carrega apenas as bibliotecas necessárias.
 async function render(input) {
+  if (input.operation === 'class-material') {
+    const { extractClassMaterial } = await import('./class-material.mjs');
+    return { text: await extractClassMaterial(await readFile(input.templatePath), input.extension, convertOffice) };
+  }
   if (input.operation === 'convert') {
     await writeFile(input.outputPath, await convertOffice(await readFile(input.docxPath), 'pdf'));
     return { ok: true };

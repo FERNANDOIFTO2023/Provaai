@@ -109,6 +109,7 @@ class RecordsController extends Controller
                         abort_unless(DB::table('sala_recovery_students')->where('user_id', $uid)->where('student_id', $student->id)->exists(), 409);
                     }
                     $data['profile_snapshot'] = $student->only(['name', 'code', 'difficulties', 'criteria', 'level']);
+                    $data['source_snapshot'] = app(\App\Services\ClassSources::class)->snapshot($uid, $room->id);
                     $data['status'] = 'draft';
                 } else {
                     unset($data['class_id'],$data['student_id'],$data['template_id'],$data['purpose']);

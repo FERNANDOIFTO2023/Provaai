@@ -63,7 +63,10 @@ class ActionsController extends Controller
     {
         abort_if(app(BatchService::class)->running($room->user_id), 409, 'Aguarde a geração em andamento.');
         DB::table('class_deletion_audits')->insert(['user_id' => $room->user_id, 'class_id' => $room->id, 'class_name' => $room->name, 'reason' => $reason, 'deleted_at' => now()]);
+        $materials = \App\Models\ClassMaterial::ownedBy($room->user_id)->where('class_id', $room->id)->pluck('path')->all();
         $room->delete();
+        // A cascata remove os registros. Os originais só saem após a confirmação da exclusão.
+        DB::afterCommit(fn () => \Illuminate\Support\Facades\Storage::disk('local')->delete($materials));
     }
 
     /** Exige motivo de exclusão e busca a turma dentro da conta autenticada. */

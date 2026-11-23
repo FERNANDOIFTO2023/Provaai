@@ -53,13 +53,14 @@ class BatchService
         } else {
             $room->fill(['template_override_id' => in_array($v['choice'], ['inherit', 'builtin']) ? null : $template, 'use_provaai_template' => $v['choice'] === 'builtin'])->save();
         }
+        $sources = app(ClassSources::class)->snapshot($uid, $room->id);
         $ids = [];
         foreach ($v['students'] as $id) {
             $student = Student::ownedBy($uid)->where('class_id', $room->id)->whereNull('archived_at')->findOrFail($id);
             $exam = new Exam;
             $exam->forceFill(['user_id' => $uid, 'class_id' => $room->id, 'student_id' => $id, 'template_id' => $template, 'title' => $v['title'], 'subject' => $v['subject'], 'topics' => $v['topics'], 'question_count' => $v['count'], 'purpose' => $purpose, 'status' => 'draft',
                 'content' => ['instructions' => 'Leia com atenção.', 'questions' => [], 'objectiveCount' => $v['objectiveCount']],
-                'profile_snapshot' => $student->only(['name', 'code', 'difficulties', 'criteria', 'level'])])->save();
+                'profile_snapshot' => $student->only(['name', 'code', 'difficulties', 'criteria', 'level']), 'source_snapshot' => $sources])->save();
             $ids[] = $exam->id;
         }
         return $this->enqueue($uid, $v['title'], $ids);

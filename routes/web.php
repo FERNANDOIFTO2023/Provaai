@@ -23,6 +23,11 @@ Route::post('/api/auth/code', [AuthController::class, 'code'])->middleware('thro
 Route::post('/api/auth/logout', [AuthController::class, 'logout']);
 // Todas as operações de dados e documentos abaixo exigem sessão autenticada.
 Route::middleware('auth')->group(function () {
+    Route::get('/api/classes/{classId}/materials', [\App\Http\Controllers\ClassMaterialsController::class, 'index'])->whereUuid('classId');
+    Route::post('/api/classes/{classId}/materials', [\App\Http\Controllers\ClassMaterialsController::class, 'upload'])->whereUuid('classId')->middleware('throttle:15,1');
+    Route::patch('/api/classes/{classId}/materials', [\App\Http\Controllers\ClassMaterialsController::class, 'settings'])->whereUuid('classId');
+    Route::delete('/api/classes/{classId}/materials/{materialId}', [\App\Http\Controllers\ClassMaterialsController::class, 'remove'])->whereUuid(['classId', 'materialId']);
+    Route::get('/api/classes/{classId}/materials/{materialId}', [\App\Http\Controllers\ClassMaterialsController::class, 'download'])->whereUuid(['classId', 'materialId']);
     Route::post('/api/students/import', \App\Http\Controllers\StudentImportController::class)->middleware('throttle:20,1');
     Route::post('/api/data/{resource}', [RecordsController::class, 'handle']);
     Route::post('/api/actions/{action}', [ActionsController::class, 'handle']);

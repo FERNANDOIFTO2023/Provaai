@@ -77,6 +77,8 @@ import { ProgressMeter } from './progress-meter';
 import { Dialog, Field, Empty } from './workspace-ui';
 import StudentsWorkspace from './students-workspace';
 import StudentImport from './student-import';
+import ClassMaterials from './class-materials';
+import ExternalResearch from './external-research';
 import CopySharing, { ShareCopyForm } from './copy-sharing';
 import { ClassIcon } from './class-icon';
 import { ClassCover } from './class-cover';
@@ -153,6 +155,7 @@ export default function TeacherWorkspace({
     [templateFiles, setTemplateFiles] = useState<File[]>([]),
     [generationChoice, setGenerationChoice] = useState('inherit');
   const [classStatus, setClassStatus] = useState('active');
+  const [materialsBusy, setMaterialsBusy] = useState(false);
   const [shareTarget, setShareTarget] = useState<ShareTarget | null>(null);
   const [invitations, setInvitations] = useState<CopyInvitation[]>([]);
   const active = data.classes.find((c) => c.id === current),
@@ -281,7 +284,7 @@ export default function TeacherWorkspace({
     if (error) throw error;
     setData(previous => ({...previous,exams:exams as Exam[]}));
   });
-  const workInProgress = busy || uploading || downloads.busy || generation.busy;
+  const workInProgress = busy || uploading || downloads.busy || generation.busy || materialsBusy;
   useEffect(() => { onWorkChange(workInProgress); }, [workInProgress, onWorkChange]);
   useEffect(() => () => onWorkChange(false), [onWorkChange]);
   useEffect(() => {
@@ -1266,7 +1269,7 @@ export default function TeacherWorkspace({
                   </button>
                   <button
                     className="button primary"
-                    disabled={Boolean(active.archived_at) || !students.length || generation.busy || downloads.busy}
+                    disabled={Boolean(active.archived_at) || !students.length || generation.busy || downloads.busy || materialsBusy}
                     title={
                       !students.length
                         ? 'Adicione um aluno à turma primeiro'
@@ -1306,6 +1309,7 @@ export default function TeacherWorkspace({
                   provas
                 </span>
               </div>
+              <ClassMaterials key={active.id} room={active} demo={demo} busy={busy || generation.busy} onBusy={setMaterialsBusy} />
               <div className="section-heading">
                 <h2>Alunos da turma</h2>
                 <button className="button secondary small-button" onClick={() => setShowArchived(value => !value)}>
@@ -1947,6 +1951,7 @@ export default function TeacherWorkspace({
               </div>
             </form>
           )}
+          {modal === 'exam' && exam && <ExternalResearch research={exam.external_research} />}
           {modal === 'exam' && exam && (
             <div className="exam-editor">
               <div className="editor-summary">

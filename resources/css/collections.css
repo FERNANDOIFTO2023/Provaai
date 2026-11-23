@@ -5,6 +5,28 @@
  * adaptação a telas pequenas e regras de movimento reduzido ao alterar este setor.
  */
 /* A biblioteca de modelos e as provas individuais compartilham as variáveis visuais do Provaai. */
+/* Materiais / painel privado de fontes, leitura e limite de pesquisa externa. */
+.class-materials { border: 1px solid var(--border); border-radius: 18px; background: #fff; margin: 24px 0; }
+.class-materials-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 22px; }
+.class-materials-heading > div { flex: 1; min-width: 180px; }
+.class-materials h2 { font-size: 19px; margin: 0 0 6px; }
+.class-materials p, .external-research p { font-size: 13px; color: var(--muted); line-height: 1.65; margin: 6px 0 12px; }
+.class-materials-body { border-top: 1px solid var(--border); padding: 22px; }
+.materials-warning { background: #fff6e1; color: #68450b !important; padding: 12px; border-radius: 9px; }
+.materials-upload { display: block; margin: 18px 0; }
+.materials-upload span { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 650; }
+.materials-upload input { max-width: 100%; }
+.materials-toggle { display: flex; gap: 10px; align-items: start; margin: 20px 0 10px; font-weight: 650; font-size: 14px; }
+.materials-toggle input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--color-action); }
+.materials-list { list-style: none; padding: 0; }
+.materials-list li { padding: 16px 0; border-top: 1px solid var(--border); }
+.materials-list strong { overflow-wrap: anywhere; }
+.materials-list span { display: block; font-size: 12px; color: var(--muted); margin: 5px 0 12px; }
+.materials-list details { margin-top: 12px; }
+.materials-list pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow: auto; padding: 12px; background: #f8f6fa; font: inherit; font-size: 13px; }
+.external-research { margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; }
+.research-text { white-space: pre-wrap; max-height: 260px; overflow: auto; }
+.external-research iframe { border: 0; width: 100%; min-height: 150px; }
 /* Importação / etapas e prévia contidas no cartão, inclusive no celular. */
 .student-import { margin: 0 0 26px; background: #fff; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
 .student-import-heading { display: flex; align-items: center; gap: 18px; padding: 24px; background: linear-gradient(110deg, #fff, #f4efff); flex-wrap: wrap; }
