@@ -149,7 +149,10 @@ class ActionsController extends Controller
     /** Permite ao remetente revogar apenas um convite ainda não aceito. */
     private function cancelCopy(string $uid, array $v)
     {
-        $invite = CopyInvitation::where('owner_id', $uid)->findOrFail($v['p_invitation'] ?? '');
+        Validator::make($v, ['p_invitation' => 'required|uuid'])->validate();
+        // Remetente e destinatário têm bloqueios de conta diferentes. Trave o próprio convite,
+        // como no aceite, para que cancelar e receber não confirmem estados contraditórios.
+        $invite = CopyInvitation::where('owner_id', $uid)->lockForUpdate()->findOrFail($v['p_invitation']);
         abort_if($invite->accepted_at,409,'A cópia já foi recebida.');
         $invite->revoked_at = now();
         $invite->save();

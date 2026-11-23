@@ -36,6 +36,10 @@ Route::middleware('auth')->group(function () {
         $id = $r->validate(['examId' => 'required|uuid'])['examId'];
         try {
             return response()->json(['exam' => $ai->generate($r->user()->id, $id)]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // IDs alheios ou inexistentes continuam como 404, sem expor detalhes do modelo.
+            // ModelNotFoundException também é RuntimeException; preserve a autorização antes do erro de IA.
+            throw $e;
         } catch (RuntimeException $e) {
             return response()->json(['error' => ['message' => $e->getMessage()]], 502);
         }

@@ -81,6 +81,7 @@ export default function StudentImport({ classes, busy, demo, onImported, classRo
     </div>
     {(expanded || classRoom) && <div id="student-import-form" className="student-import-body">
       <p className="helper-note">Na aba Alunos do modelo, informe nome, nível, dificuldades/objetivos e critérios para as provas. Somente o nome é obrigatório. Nível em branco será Intermediário. Até 500 alunos e 5 MB por arquivo .xlsx.</p>
+      <p className="helper-note">O arquivo cadastra cópias dos alunos na sua turma. Ele não dá acesso às turmas de outro professor nem altera os cadastros originais.</p>
       {demo ? <p role="status">Você pode baixar o modelo na demonstração. Entre na sua conta para importar alunos.</p>
         : !activeClasses.length || classRoom?.archived_at ? <p role="status">Crie ou reative uma turma antes de importar alunos.</p>
         : <>

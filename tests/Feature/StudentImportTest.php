@@ -74,6 +74,32 @@ class StudentImportTest extends TestCase
         $this->postJson('/api/data/sala_students', ['op' => 'insert', 'single' => 'single', 'values' => ['class_id' => $room->id, 'name' => 'Manual']])->assertOk()->assertJsonPath('data.code', 'A012');
     }
 
+    public function test_excel_into_existing_class_creates_only_owned_copies_and_never_opens_source_class(): void
+    {
+        $owner = User::factory()->create();
+        $source = $this->room($owner);
+        $original = new Student;
+        $original->forceFill(['user_id' => $owner->id, 'class_id' => $source->id, 'name' => 'Ana Silva', 'code' => 'A007', 'criteria' => 'Original'])->save();
+        $recipient = User::factory()->create();
+        $target = $this->room($recipient);
+        $file = $this->file([['Ana Silva', 'Avançado', 'Objetivo editado', 'Critério da cópia']]);
+        // Conhecer o ID da origem ou anexar uma lista não autoriza escrever na turma alheia.
+        $this->send($source, $file, true)->assertNotFound();
+        $this->send($source, $file)->assertNotFound();
+        $this->postJson('/api/students/import', ['class_id' => $target->id, 'file' => $file, 'preview' => false,
+            'user_id' => $owner->id, 'student_id' => $original->id])->assertCreated()
+            ->assertJsonPath('students.0.user_id', $recipient->id)->assertJsonPath('students.0.class_id', $target->id)
+            ->assertJsonPath('students.0.code', 'A001');
+        $this->assertSame('Original', $original->fresh()->criteria);
+        $this->assertSame('A007', $original->fresh()->code);
+        $this->assertDatabaseCount('sala_classes', 2);
+        $this->assertDatabaseCount('sala_students', 2);
+        $this->postJson('/api/data/sala_classes', ['op' => 'select', 'filters' => [['id', $source->id]]])->assertExactJson(['data' => []]);
+        $copy = Student::ownedBy($recipient->id)->sole();
+        $this->assertNotSame($original->id, $copy->id);
+        $this->actingAs($owner)->postJson('/api/data/sala_students', ['op' => 'select', 'filters' => [['id', $copy->id]]])->assertExactJson(['data' => []]);
+    }
+
     public function test_validation_is_atomic_and_reports_original_rows(): void
     {
         $room = $this->room();
