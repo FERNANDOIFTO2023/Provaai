@@ -6,7 +6,7 @@ Referência inicial: `077beb9536ae5d755591f79ab7142d93a5c4f003` (`main`). O dire
 
 ## Solicitação e alterações
 
-Documentação do código mantido pelo projeto em português brasileiro, usando as orientações de legibilidade, simplicidade e manutenção da skill **ECC `coding-standards`**. As explicações priorizam responsabilidades, regras e motivos das decisões, sem narrar cada linha trivial.
+Documentação do código mantido pelo projeto em português brasileiro, com foco em legibilidade, simplicidade e manutenção. As explicações priorizam responsabilidades, regras e motivos das decisões, sem narrar cada linha trivial.
 
 - **211 arquivos de código e configuração** receberam comentários ou traduções de comentários: interface React/TypeScript, bibliotecas, backend PHP, views Blade, configurações, migrações, testes, CSS, scripts Node/Python, infraestrutura, ferramentas de mídia e SQL legado.
 - O `TeacherWorkspace` foi organizado visualmente em sete setores comentados: estado, navegação e operações, persistência, provas, modelos, ciclo de vida e composição visual.

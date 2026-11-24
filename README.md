@@ -30,10 +30,14 @@ Para percorrer o fluxo com dados fictícios, abra o [site](https://provaai.verce
 | No espaço do professor | O que você pode fazer |
 | --- | --- |
 | **Minhas turmas** | Criar turmas com capa, cor e ícone. Cadastrar alunos com código automático, registrar dificuldades e reativar um aluno na turma de destino. |
+| **Alunos e importação** | Baixar o modelo Excel, escolher uma turma ativa, conferir a prévia e importar até 500 alunos. Os códigos são atribuídos pelo site. O acesso também fica nos cartões e nas páginas das turmas. |
+| **Materiais da turma** | Anexar PDF, Word ou PowerPoint, conferir o texto extraído e escolher se a geração pode pesquisar fora dos materiais. Sem anexos, a geração continua pela matéria e pelos tópicos. |
 | **Modelos de prova** | Anexar PDF, DOC ou DOCX, escolher o padrão da conta e salvar uma escolha por turma. No PDF, conferir o recorte do cabeçalho. |
 | **Provas coletivas** | Preparar avaliações por turma, acompanhar a geração em segundo plano e revisar cada rascunho. |
 | **Provas individuais** | Selecionar um aluno para uma avaliação específica e manter seu vínculo com a turma de origem. |
 | **Revisão e downloads** | Ajustar enunciados e respostas, aprovar a prova e baixar PDF, Word ou gabarito. Em lote, acompanhar a montagem do ZIP enquanto navega. |
+| **Área do professor** | Abrir Meu espaço para consultar provas por período, calendário com intensidade por quantidade e consumo de tokens informado pelos provedores. Perfil sem envio de foto. |
+| **Sobre** | Conhecer o funcionamento e as tecnologias do projeto. Tema claro/escuro permanece como proposta futura. |
 
 ### Da turma à impressão
 
@@ -50,6 +54,10 @@ flowchart LR
 ```
 
 O PDF usa a faixa escolhida pelo professor como cabeçalho somente na primeira página. No Word, o exportador aproveita a diagramação do modelo para montar o documento que também dará origem ao PDF. Fórmulas têm prévia na revisão e são exportadas como equações editáveis. Matemática recebe espaço livre para cálculos; outras matérias recebem linhas entre as margens. [Modelos e formatos de exportação](docs/PDF-E-ARQUIVOS.md)
+
+Os materiais são privados: até cinco arquivos, 20 MB por arquivo e 60.000 caracteres no total. A leitura ocorre no envio. PDFs digitalizados não passam por OCR, e animações avançadas ou vídeos em PowerPoint podem não ser interpretados. A pesquisa externa começa desmarcada; habilitá-la permite complementar o conteúdo dos anexos. As fontes são reaproveitadas como referência, sem reutilizar perguntas de outras provas.
+
+Após a aprovação, uma fila própria prepara os arquivos de exportação. Downloads posteriores podem usar o arquivo pronto da mesma versão. O tempo depende da fila e da conversão; a preparação de uma nova prova continua sujeita à disponibilidade dos provedores. A conferência local com SymPy cobre formatos matemáticos delimitados e não substitui a revisão do professor.
 
 ## Tecnologias e bibliotecas
 
@@ -129,6 +137,7 @@ Para conferir cálculos, instale também **Python 3.11+** e as dependências de 
 
    ```sh
    php artisan queue:work --tries=1 --timeout=130
+   php artisan queue:work documents --queue=documents --tries=1 --timeout=420
    php artisan schedule:work
    ```
 
@@ -167,6 +176,8 @@ A aplicação e o PostgreSQL de produção rodam na AWS. A Vercel mantém o dom�
 ## Equipe
 
 Projeto acadêmico do **IFTO**, desenvolvido na disciplina **Linguagens e Técnicas de Programação III**, com orientação do professor **Marcos Raimundo**.
+
+Campus **Paraíso do Tocantins** · **Bacharelado em Sistemas de Informação** · 2026. Documentação revisada em **24/11/2026**.
 
 **Fernando de Paula Matos** · **Vinicius Celestino** · **João Francisco** · **Gabriel Gutemberg**
 

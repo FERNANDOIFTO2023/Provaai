@@ -60,7 +60,7 @@ O `click-soft` foi instalado com o CLI shadcn em **`C:/Users/R3/.codex/tools/sou
 
 Trilha original refeita com 50 eventos sonoros: cliques suaves, passagens estéreo em camadas, impactos graves, papel, sinais de conexão e confirmações. A música abre espaço para os efeitos por redução localizada de volume; reflexões curtas dão profundidade. O MP4 usa AAC estéreo 48 kHz/256 kbps e normalização com alvo de -16 LUFS e true peak de -1,5 dBTP. Sem locução.
 
-A skill [motion-design / LottieFiles](https://github.com/LottieFiles/motion-design-skill) está instalada em **`C:/Users/R3/.codex/skills/motion-design`**, pelo instalador do Codex. Nenhum arquivo de skill foi instalado no projeto. Aplicados seus princípios de antecipação, trajetórias em arco, movimentos secundários e hierarquia de atenção. O catálogo de motion SaaS do Higgsfield foi consultado; não foi gerado ou incorporado material de lá.
+A composição aplica princípios de antecipação, trajetórias em arco, movimentos secundários e hierarquia de atenção. Referência de movimento: [LottieFiles](https://github.com/LottieFiles/motion-design-skill). Os créditos e as licenças dos recursos incorporados são mantidos nas respectivas fontes.
 
 ```powershell
 node docs/motion/render-v7.mjs --stills

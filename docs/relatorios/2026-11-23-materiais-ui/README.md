@@ -17,7 +17,7 @@ O painel agora prioriza o envio do material e a escolha de pesquisa externa. No 
 | Teclado e toque | Seletor nativo e pouco destaque | Botão acessível pelo teclado, foco visível e alvo de pelo menos 44 px |
 | Tablet | Botões do topo da turma ultrapassavam a página em 768 px | Botões quebram linha dentro da largura disponível |
 
-A skill `ecc:make-interfaces-feel-better` orientou os ajustes de espaçamento, hierarquia, bordas, foco e áreas de clique. As regras de upload, privacidade, geração, limites e gravação da preferência foram preservadas. A interface continua informando que os anexos são opcionais, que cada geração cria novas questões e que alterações nas fontes só valem para novas provas.
+Os ajustes priorizaram espaçamento, hierarquia, bordas, foco e áreas de clique. As regras de upload, privacidade, geração, limites e gravação da preferência foram preservadas. A interface continua informando que os anexos são opcionais, que cada geração cria novas questões e que alterações nas fontes só valem para novas provas.
 
 ## Arquivos alterados
 

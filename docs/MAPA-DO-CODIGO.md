@@ -24,6 +24,17 @@ O Nginx encaminha a requisição ao [public/index.php](../public/index.php). O L
 
 As telas de alunos, provas coletivas, provas individuais e modelos estão em componentes próprios. Elas recebem dados e callbacks; a autorização definitiva não é feita pela visibilidade de um botão.
 
+### Funcionalidades acrescentadas em novembro de 2026
+
+| Interface | Servidor e regra principal |
+| --- | --- |
+| [student-import.tsx](../components/student-import.tsx) | [StudentImportController](../app/Http/Controllers/StudentImportController.php) e [StudentSpreadsheet](../app/Services/StudentSpreadsheet.php): prévia XLSX, confirmação transacional, turma do proprietário e códigos automáticos. |
+| [class-materials.tsx](../components/class-materials.tsx) | [ClassMaterialsController](../app/Http/Controllers/ClassMaterialsController.php) e [class-material.mjs](../scripts/class-material.mjs): leitura no envio, arquivos privados e preferência de pesquisa; o rascunho preserva suas fontes. |
+| [teacher-dashboard.tsx](../components/teacher-dashboard.tsx) | [TeacherDashboardController](../app/Http/Controllers/TeacherDashboardController.php) agrega dados da conta; [AiUsage](../app/Services/AiUsage.php) registra consumo informado pelo provedor sem prompts nem credenciais. |
+| Downloads após aprovação | [DocumentService](../app/Services/DocumentService.php), [ExportArtifacts](../app/Services/ExportArtifacts.php) e [supervisord.conf](../deploy/supervisord.conf): artefatos privados por versão e worker separado na conexão/fila documents. |
+
+Ao publicar essas funcionalidades, inclua as migrações e o modelo `public/modelos/modelo-alunos.xlsx`. A aprovação do CI e a atualização da origem AWS são etapas distintas da publicação da Vercel.
+
 ## 2. Navegação, sessão e tarefas
 
 | Arquivo | O que controla |

@@ -12,9 +12,11 @@ Provas aprovadas podem ser exportadas em PDF e DOCX, com ou sem gabarito. Editar
 
 Laravel gerencia upload, autorização e download. Arquivos ficam em `storage/app/private/{bucket}/{user_id}/...`, fora de `public/`. Não crie link público dessa pasta. O navegador recebe uma rota que exige sessão, não um link público permanente.
 
-A conversão é um processo Node iniciado por PHP, limitado a 120 segundos. Exportações são temporárias; o conteúdo estruturado fica no banco e pode ser exportado novamente. O cache dura cinco minutos. Testes executaram Word, cabeçalho PDF e exportações PDF/DOCX reais; não cobrem todos os documentos possíveis. A limitação de expansão DOCX está em [Segurança](SEGURANCA.md).
+A conversão usa processos Node iniciados por PHP, com limite de 120 segundos por operação de documento. Uma exportação pode encadear leitura de cabeçalho, montagem e conversão; esse limite não é promessa de duração total. O conteúdo estruturado fica no banco e pode ser exportado novamente. Testes executaram Word, cabeçalho PDF e exportações PDF/DOCX reais; não cobrem todos os documentos possíveis. Os limites de isolamento estão em [Segurança](SEGURANCA.md).
 
-O servidor monta o DOCX uma vez por versão da prova, configuração de modelo e tipo de arquivo do aluno ou gabarito. O PDF usa esse mesmo Word. Documentos com menos de 8 MiB podem ser reaproveitados durante os cinco minutos de cache. O indicador avança nas etapas concluídas de preparação, na transferência dos bytes e na montagem do ZIP. Chega a 100% quando o site entrega o arquivo ao navegador.
+O servidor monta o DOCX por versão da prova, configuração de modelo e tipo de arquivo do aluno ou gabarito. O PDF usa esse mesmo Word. Após aprovação, o worker `documents` prepara os arquivos; artefatos válidos ficam no armazenamento privado e podem atender downloads seguintes sem repetir a conversão. A chave considera o conteúdo e as configurações relevantes; alterações não podem entregar uma versão antiga. O cache de cabeçalho continua com cinco minutos. O indicador acompanha preparação, transferência e montagem do ZIP e chega a 100% quando o site entrega o arquivo ao navegador.
+
+A fila de documentos usa timeout de 420 segundos e reserva de 480 segundos; há um worker de preparação por contêiner. O conversor usa `noInitialRun: true` para evitar o conflito entre a entrada automática do runtime e a inicialização pela biblioteca LibreOfficeKit, associado ao travamento observado. Esses controles não garantem download imediato: arquivos ainda não preparados podem exigir conversão. Reaproveitar o arquivo da mesma prova não copia questões de outra avaliação. Evidências em [preparação de downloads](relatorios/2026-11-16-downloads/IMPLEMENTACAO.md) e [correção do conversor](relatorios/2026-11-16-downloads/CORRECAO-CONVERSOR.md).
 
 ## Fórmulas e espaço para respostas
 
@@ -28,7 +30,13 @@ Nas questões discursivas de Matemática e disciplinas matemáticas reconhecidas
 
 A demonstração local gera DOCX com equações. Seu exportador PDF simplificado não possui composição matemática e orienta o uso do DOCX quando encontra fórmulas. Na conta autenticada, PDF e DOCX passam pelo servidor e suportam as equações testadas.
 
-Essa implementação trata apresentação, não comprovação matemática. SymPy ainda não está integrado. A revisão do professor permanece necessária. A validação local cobre frações, potências, índices, raízes, integrais, somatórios, limites, matrizes, vetores e conjuntos; não implica suporte a todos os comandos LaTeX nem a todos os modelos Word.
+Essa implementação trata apresentação. Separadamente, o SymPy está integrado à conferência de cálculos explícitos e equações de primeiro/segundo grau nos formatos delimitados pelo [verificador matemático](VERIFICACAO-MATEMATICA.md). Casos não suportados exigem revisão e não recebem certificação. A revisão do professor permanece necessária. A validação de apresentação cobre frações, potências, índices, raízes, integrais, somatórios, limites, matrizes, vetores e conjuntos; isso não significa que todos esses conteúdos sejam conferidos matematicamente nem que todos os comandos LaTeX e modelos Word sejam suportados.
+
+## Materiais de estudo da turma
+
+Os materiais de estudo são separados dos modelos de diagramação. Em **Minhas turmas → abrir turma → Conteúdo para as provas → Materiais da turma**, anexe PDF, DOC, DOCX, PPT ou PPTX. São até cinco arquivos, 20 MB por arquivo e 60.000 caracteres agregados; a leitura ocorre no envio. Não há OCR para documentos digitalizados. Animações avançadas, vídeos e conteúdo visual complexo podem falhar na leitura. Confira a prévia textual antes de preparar a prova.
+
+Com anexos e pesquisa externa desativada, a geração se restringe às fontes lidas. Habilitar pesquisa permite complementação externa e pode acrescentar demora. Sem anexos, o fluxo original continua. O rascunho mantém as fontes da preparação; mudanças posteriores valem para novas provas. Os materiais permanecem privados e não seguem com cópias compartilhadas.
 
 Dependências: [KaTeX (MIT)](https://github.com/KaTeX/KaTeX) e [mathml2omml (LGPL-3.0-or-later)](https://github.com/fiduswriter/mathml2omml), utilizadas sem modificar seus pacotes. As licenças acompanham as dependências.
 

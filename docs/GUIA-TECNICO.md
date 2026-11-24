@@ -1,6 +1,6 @@
 # Guia técnico — Laravel
 
-Atualizado em 10/11/2026. Laravel controla HTTP, autenticação, autorização, regras de negócio, Eloquent, filas e IA. React é apresentação. Node é conversor auxiliar de arquivos, sem servidor HTTP ou acesso ao banco.
+Atualizado em 24/11/2026. Laravel controla HTTP, autenticação, autorização, regras de negócio, Eloquent, filas e IA. React é apresentação. Node é conversor auxiliar de arquivos, sem servidor HTTP ou acesso ao banco. A aplicação e o PostgreSQL de produção estão na AWS; a Vercel encaminha o domínio público para essa origem.
 
 ## Organização
 
@@ -42,7 +42,7 @@ Siga o README. Use PHP 8.3+, Node 24 e Composer 2. Configure PHP com `upload_max
 | `GROQ_API_KEY` | Reserva `openai/gpt-oss-120b`; atende também quando só ela está configurada. |
 | `MISTRAL_API_KEY`, `MISTRAL_MODEL` | Provedor opcional. |
 
-Não coloque segredos em variáveis `VITE_`, JavaScript, Git ou logs. `.env` está ignorado. Depois de alterar configuração em produção, execute `php artisan config:cache` e reinicie workers.
+Não coloque segredos em variáveis `VITE_`, JavaScript, Git ou logs. `.env` está ignorado. No Docker, alterar `.env.production` exige recriar o serviço com os mesmos arquivos Compose, projeto e imagem da instalação para aplicar as novas variáveis. Apenas reiniciar o contêiner ou limpar cache não recarrega seu `env_file`. Se houver cache de configuração, regenere-o no ambiente atualizado e reinicie os workers. Preserve os volumes e não misture produção e homologação.
 
 ## Funcionamento
 
@@ -56,23 +56,33 @@ Inativar turma define prazo de um ano-calendário. O agendador elimina turmas ve
 
 Laravel envia matéria, tópicos, distribuição e perfil pedagógico, sem nome/e-mail do aluno. Gemini e Groq recebem as mesmas instruções/contexto; não há transferência de raciocínio interno. Falhas de rede, timeout e certos erros HTTP do Gemini acionam uma tentativa da etapa na Groq. Se a conferência falhar, a reserva recebe as questões prontas, sem regenerá-las. Recusas e respostas truncadas são informadas ao professor.
 
-Formato, distribuição, duplicatas e pertinência são validados antes de salvar o rascunho. A aprovação humana permanece obrigatória. Lotes avançam no worker mesmo sem navegador aberto; uma reserva temporária evita etapas concorrentes e o agendador retoma interrupções. Cabeçalhos PDF e exportações têm cache privado de cinco minutos, sensível ao conteúdo/modelo/nome da turma. Não foram medidas latências reais dos provedores nesta migração.
+Formato, distribuição, duplicatas e pertinência são validados antes de salvar o rascunho. A aprovação humana permanece obrigatória. Lotes avançam no worker mesmo sem navegador aberto; uma reserva temporária evita etapas concorrentes e o agendador retoma interrupções. Cabeçalhos PDF usam cache privado de cinco minutos. Exportações prontas ficam em armazenamento privado por versão, com preparação antecipada na fila `documents`; veja [PDF e arquivos](PDF-E-ARQUIVOS.md).
+
+Na inspeção de produção de 23/11, o Gemini retornou HTTP 503 e a chave Groq estava ausente. O fallback depende de `GROQ_API_KEY` válida no processo que executa a etapa. `aiConfigured: true` informa presença de configuração, não saúde da API. Testes simples não substituem uma geração com revisão. Consulte o [diagnóstico](relatorios/2026-11-23-verificacao-provedores.md) para as evidências datadas.
+
+## Importação, materiais e indicadores
+
+- `POST /api/students/import`: prévia e confirmação de XLSX para turma ativa do proprietário. Modelo em `public/modelos/modelo-alunos.xlsx`; até 5 MB e 500 alunos. A gravação é transacional e atribui códigos sem receber uma coluna de código.
+- Materiais da turma: PDF/DOC/DOCX/PPT/PPTX, até cinco arquivos e 60.000 caracteres agregados. A leitura ocorre no envio; fontes e preferência ficam congeladas no rascunho. Pesquisa externa começa desativada e, sem materiais, o fluxo anterior continua. Não há OCR. Arquivos não acompanham o compartilhamento de cópias.
+- `GET /api/teacher/dashboard`: sessão, filtro por proprietário e resposta `private, no-store`. Períodos de um, três ou doze meses, calendário no fuso de São Paulo e contagem de provas com questões pela criação. Tokens vêm dos provedores; ausência não equivale a zero.
+- As migrações de materiais e `ai_usage_events` precisam acompanhar o código. O processo de release executa migrações; um commit ou deploy da Vercel isolado não comprova atualização da origem.
+- A conferência matemática usa Python/SymPy local, com entradas delimitadas e aviso de revisão para casos não suportados. Instalação e limites em [Verificação matemática](VERIFICACAO-MATEMATICA.md).
 
 ## Publicação
 
-O Dockerfile prepara PHP-FPM, Nginx, Node, conversor, worker e agendador. A imagem não foi construída nesta máquina, que não dispõe de Docker; valide-a em homologação. Também é possível instalar os mesmos processos diretamente.
+O Dockerfile prepara PHP-FPM, Nginx, Node, conversor, Python/SymPy, workers de geração e documentos e agendador. A construção da imagem e a migração PostgreSQL integram o CI; os relatórios de 23/11 registram execução aprovada e publicação. Os passos abaixo orientam novas instalações e alterações, sem substituir validação em homologação.
 
 1. Provisione PHP 8.3+/Node 24, PostgreSQL e disco persistente; a raiz pública é somente `public/`.
 2. Configure segredos, SMTP real, HTTPS, `APP_DEBUG=false` e `SESSION_SECURE_COOKIE=true`.
 3. Use `composer install --no-dev --optimize-autoloader`, `npm ci` e `npm run build`. Inclua as dependências Node de produção e `public/build` na imagem. O pacote de conversão do LibreOffice já contém o motor usado nas exportações.
 4. Em banco novo, execute `php artisan migrate --force`; importe/confira o legado pelo guia de migração. Nunca execute `migrate:fresh` em produção.
 5. Dê escrita ao processo PHP em `storage/` e `bootstrap/cache/`; preserve `storage/app/private` entre versões e faça backups de banco e arquivos.
-6. Supervisione `php artisan queue:work --tries=1 --timeout=130` e `php artisan schedule:work`. Como alternativa ao segundo processo, rode `schedule:run` por cron a cada minuto.
+6. Supervisione `php artisan queue:work --tries=1 --timeout=130`, `php artisan queue:work documents --queue=documents --tries=1 --timeout=420` e `php artisan schedule:work`. A conexão `documents` tem reserva de 480 segundos, superior ao timeout do worker. Como alternativa ao agendador contínuo, rode `schedule:run` por cron a cada minuto.
 7. Execute `php artisan optimize` e `php artisan queue:restart`; valide `/up`, login, isolamento, upload, geração e exportação em homologação.
 8. Só então altere domínio/roteamento; mantenha backup e o ambiente anterior durante a conferência.
 
 **Supabase como PostgreSQL:** use banco novo ou schema dedicado `provaai`, criado pelo administrador e configurado com `DB_SCHEMA=provaai`. Não exponha esse schema pela Data API nem conceda acesso a `anon`/`authenticated`. Em projeto exclusivo do Laravel, a Data API pode ficar desabilitada. Laravel usa credenciais PostgreSQL privadas. Não aplique as novas migrações nas tabelas `public.sala_*` existentes.
 
-O deploy antigo na Vercel não executará Laravel simplesmente ao receber este commit. O workflow de validação não publica: a hospedagem PHP deve estar configurada antes de ligar deploy automático.
+A Vercel usa `PROVAAI_ORIGIN` para encaminhar à AWS. O serviço de release da VM consulta a branch configurada, exige CI aprovado, constrói a imagem e aplica as migrações. Confira a versão servida pela origem e os logs do release quando uma funcionalidade não aparecer. Veja [Migração e publicação](MIGRACAO-LARAVEL.md).
 
 Referências: [Laravel 13 — deploy](https://laravel.com/docs/13.x/deployment), [Supabase — segurança da Data API](https://supabase.com/docs/guides/api/securing-your-api).
