@@ -11,6 +11,21 @@ namespace App\Services;
 
 class GeneratedExamContent
 {
+    /** Identifica só alternativas repetidas em questões com estrutura suficiente para substituição. */
+    public function repeatedOptionPositions(array $content): array
+    {
+        if (!is_array($content['questions'] ?? null) || !array_is_list($content['questions'])) return [];
+        $positions = [];
+        foreach ($content['questions'] as $position => $question) {
+            if (!is_array($question) || ($question['type'] ?? null) !== 'objective') continue;
+            $options = $question['options'] ?? null;
+            if (!is_array($options) || !array_is_list($options) || count($options) !== 4
+                || count(array_filter($options, 'is_string')) !== 4) continue;
+            if (count(array_unique(array_map(self::optionKey(...), $options))) !== 4) $positions[] = $position;
+        }
+        return $positions;
+    }
+
     /** Monta o esquema JSON conforme total e distribuição; objetivas indicam a resposta por índice de zero a três. */
     public function schema(int $count, int $objective): array
     {

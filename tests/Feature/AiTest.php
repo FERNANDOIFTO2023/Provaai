@@ -48,6 +48,67 @@ class AiTest extends TestCase
         return ['instructions' => 'Responda.', 'questions' => [['type' => 'essay', 'statement' => 'Explique a fotossíntese.', 'options' => [], 'answer' => 'Produção de açúcares com luz.', 'objective' => 'Compreender a fotossíntese', 'points' => 10]]];
     }
 
+    public function test_repeated_options_are_replaced_once_and_all_ten_questions_are_reviewed(): void
+    {
+        config(['provaai.gemini_key' => null, 'provaai.groq_key' => 'test']);
+        $exam = $this->exam();
+        $sources = ['allow_external' => false, 'materials' => [['text' => 'Material fictício de fotossíntese.']]];
+        $exam->forceFill(['question_count' => 10, 'content' => ['instructions' => 'Instrução do professor.', 'questions' => [], 'objectiveCount' => 10], 'source_snapshot' => $sources])->save();
+        $questions = [];
+        for ($i = 0; $i < 10; $i++) $questions[] = ['type' => 'objective', 'statement' => 'Questão original número '.$i,
+            'options' => ['luz', 'vento', 'solo', 'chuva'], 'answerIndex' => 0, 'objective' => 'Fotossíntese', 'points' => 1];
+        $questions[0]['options'][1] = ' luz ';
+        $questions[7]['options'][2] = 'vento';
+        $calls = 0;
+        Http::fake(function ($request) use (&$calls, $questions, $sources) {
+            $ctx = json_decode($request['messages'][1]['content'], true);
+            $this->assertSame($sources, $ctx['sources']);
+            $this->assertStringNotContainsString('PRIVATE NAME', $request->body());
+            $calls++;
+            if ($calls === 1) $result = ['instructions' => 'IA', 'questions' => $questions];
+            elseif ($calls === 2) {
+                $this->assertSame(2, $ctx['count']);
+                $this->assertSame(['objective' => 2, 'essay' => 0], $ctx['distribution']);
+                $this->assertContains($questions[1]['statement'], $ctx['exclude']);
+                $replacement = $questions[1];
+                $replacement['statement'] = 'Primeira questão substituta';
+                $second = $replacement;
+                $second['statement'] = 'Segunda questão substituta';
+                $result = ['instructions' => 'IA', 'questions' => [$replacement, $second]];
+            } else {
+                $this->assertCount(10, $ctx['questions']);
+                $this->assertSame('Primeira questão substituta', $ctx['questions'][0]['statement']);
+                $this->assertSame('Segunda questão substituta', $ctx['questions'][7]['statement']);
+                $this->assertSame($questions[1]['statement'], $ctx['questions'][1]['statement']);
+                $this->assertSame('Instrução do professor.', $ctx['instructions']);
+                $result = ['aligned' => true, 'offTopicQuestions' => [], 'missingTopics' => [], 'sourcesGrounded' => true, 'offSourceQuestions' => []];
+            }
+            return Http::response(['choices' => [['finish_reason' => 'stop', 'message' => ['content' => json_encode($result)]]]]);
+        });
+        $saved = app(AiService::class)->generate($exam->user_id, $exam->id);
+        $this->assertCount(10, $saved->content['questions']);
+        $this->assertSame(10, array_sum(array_column($saved->content['questions'], 'points')));
+        Http::assertSentCount(3);
+    }
+
+    public function test_invalid_repair_does_not_loop_or_save_repeated_options(): void
+    {
+        config(['provaai.gemini_key' => null, 'provaai.groq_key' => 'test']);
+        $exam = $this->exam();
+        $exam->forceFill(['content' => ['instructions' => '', 'questions' => [], 'objectiveCount' => 1]])->save();
+        $invalid = ['instructions' => '', 'questions' => [['statement' => 'Questão inválida de teste', 'type' => 'objective',
+            'options' => ['luz', 'luz', 'terra', 'vento'], 'answerIndex' => 0, 'objective' => 'Fotossíntese', 'points' => 10]]];
+        Http::fake(fn () => Http::response(['choices' => [['finish_reason' => 'stop', 'message' => ['content' => json_encode($invalid)]]]]));
+        try {
+            app(AiService::class)->generate($exam->user_id, $exam->id);
+            $this->fail('Alternativas repetidas nunca devem ser salvas.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('alternativas repetidas', $e->getMessage());
+        }
+        Http::assertSentCount(2);
+        $this->assertSame([], $exam->fresh()->content['questions']);
+    }
+
     public function test_math_notation_survives_generation_review_and_storage(): void
     {
         config(['provaai.gemini_key' => 'test', 'provaai.groq_key' => null]);
@@ -221,6 +282,54 @@ class AiTest extends TestCase
         $this->assertSame(0, $batch->failed);
         $this->assertNull($batch->stage);
         $this->assertCount(1, $exam->fresh()->content['questions']);
+    }
+
+    public function test_unwritable_log_does_not_interrupt_generation_or_leave_batch_running(): void
+    {
+        Queue::fake();
+        config(['provaai.gemini_key' => 'test', 'provaai.groq_key' => 'reserve',
+            'logging.default' => 'stack', 'logging.channels.stack.channels' => ['single'],
+            'logging.channels.single.path' => storage_path('logs')]);
+        app('log')->forgetChannel('single');
+        app('log')->forgetChannel('stack');
+        $exam = $this->exam();
+        $service = app(BatchService::class);
+        $id = $service->begin($exam->user_id, ['retry' => $exam->id]);
+        // O caminho aponta a um diretório: Monolog não consegue abri-lo como arquivo.
+        // Simula a falha Gemini para também exercitar o log da troca de provedor.
+        Http::fake(function ($request) {
+            if (!str_contains($request->url(), 'groq.com')) return Http::response([], 503);
+            $context = json_decode($request['messages'][1]['content'], true);
+            $result = isset($context['questions']) ? ['aligned' => true, 'offTopicQuestions' => [], 'missingTopics' => []] : $this->content();
+            return Http::response(['choices' => [['finish_reason' => 'stop', 'message' => ['content' => json_encode($result)]]]]);
+        });
+        (new GenerateBatchStep($exam->user_id, $id))->handle($service, app(AiService::class));
+        $batch = ExamBatch::findOrFail($exam->user_id);
+        $this->assertSame(1, $batch->completed);
+        $this->assertSame(0, $batch->failed);
+        $this->assertNull($batch->lease_until);
+        $this->assertCount(1, $exam->fresh()->content['questions']);
+        Http::assertSentCount(3);
+    }
+
+    public function test_error_reporting_failure_cannot_leave_a_batch_stuck(): void
+    {
+        Queue::fake();
+        $exam = $this->exam();
+        $service = app(BatchService::class);
+        $id = $service->begin($exam->user_id, ['retry' => $exam->id]);
+        $ai = $this->mock(AiService::class);
+        $ai->shouldReceive('generate')->once()->andThrow(new \RuntimeException('Falha transitória de teste'));
+        $this->mock(\Illuminate\Contracts\Debug\ExceptionHandler::class)->shouldReceive('report')->once()
+            ->andThrow(new \UnexpectedValueException('Destino de log indisponível'));
+        (new GenerateBatchStep($exam->user_id, $id))->handle($service, $ai);
+        $batch = ExamBatch::findOrFail($exam->user_id);
+        $this->assertSame(1, $batch->completed);
+        $this->assertSame(1, $batch->failed);
+        $this->assertSame('Falha transitória de teste', $batch->last_error);
+        $this->assertNull($batch->lease_until);
+        $this->assertFalse($service->running($exam->user_id));
+        $this->assertSame([], $exam->fresh()->content['questions']);
     }
 
     public function test_batch_lease_prevents_duplicate_work_and_old_worker_cannot_finish(): void

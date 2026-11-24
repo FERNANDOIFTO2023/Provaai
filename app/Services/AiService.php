@@ -29,6 +29,7 @@ class AiService
     /** Gera somente rascunho vazio sob bloqueio; valida estrutura, repetição e aderência antes de salvar. */
     public function generate(string $userId, string $examId, ?\Closure $reportStage = null): Exam
     {
+        $started = hrtime(true);
         $lock = Cache::lock('generate:'.$examId, 150);
         if (! $lock->get()) {
             throw new RuntimeException('Esta geração já está em andamento.');
@@ -83,7 +84,28 @@ class AiService
                 }
             }
             $reportStage?->__invoke('generating');
-            $content = app(GeneratedExamContent::class)->prepare($this->ask($provider, 'generation', $context, $userId));
+            $raw = $this->ask($provider, 'generation', $context, $userId);
+            $contract = app(GeneratedExamContent::class);
+            $repeated = $contract->repeatedOptionPositions($raw);
+            // Uma única recuperação curta substitui somente as questões defeituosas desta geração.
+            // Não inventa alternativas ou respostas, nem aproveita questões de outra prova.
+            // Se o pedido inicial já demorou, preserva o limite da fila e deixa a validação explicar a falha.
+            if ($repeated && (hrtime(true) - $started) / 1e9 < 20) {
+                $repair = $context;
+                $repair['count'] = count($repeated);
+                $repair['distribution'] = ['objective' => count($repeated), 'essay' => 0];
+                $repair['exclude'] = array_values(array_unique([...$context['exclude'],
+                    ...array_filter(array_column($raw['questions'], 'statement'), 'is_string')]));
+                $repair['generation_feedback'] = 'Substitua questões que vieram com alternativas repetidas. Crie questões novas com quatro alternativas distintas, apenas uma correta e answerIndex válido. Não repita os enunciados de exclude.';
+                $replacement = $contract->prepare($this->ask($provider, 'generation', $repair, $userId, 12));
+                app(ExamValidator::class)->validate($replacement, count($repeated), count($repeated));
+                foreach ($repeated as $index => $position) {
+                    // A substituição não deve redistribuir a pontuação das demais questões.
+                    $replacement['questions'][$index]['points'] = $raw['questions'][$position]['points'] ?? null;
+                    $raw['questions'][$position] = $replacement['questions'][$index];
+                }
+            }
+            $content = $contract->prepare($raw);
             $instructions = trim($exam->content['instructions'] ?? '');
             if ($instructions !== '' && $instructions !== 'Leia com atenção.') {
                 $content['instructions'] = $instructions;
@@ -122,7 +144,7 @@ class AiService
     }
 
     /** Executa geração ou revisão com prazos próprios e fallback de Gemini para Groq quando configurado. */
-    private function ask(string &$provider, string $stage, array $context, string $userId): array
+    private function ask(string &$provider, string $stage, array $context, string $userId, ?int $timeoutLimit = null): array
     {
         $instruction = file_get_contents(resource_path('prompts/'.$stage.'.txt'));
         $review = $stage === 'review';
@@ -134,6 +156,7 @@ class AiService
                     $budget = $hasFallback ? ($review ? 10 : 35) : ($review ? 25 : 90);
                     // Reserva tempo para a pesquisa opcional sem ampliar o prazo da fila existente.
                     if (!empty($context['sources']['allow_external'])) $budget = min($budget, $review ? 20 : 75);
+                    if ($timeoutLimit !== null) $budget = min($budget, $timeoutLimit);
                     $model = config('provaai.gemini_model');
                     $generationConfig = ['responseMimeType' => 'application/json', 'maxOutputTokens' => $review ? 2048 : 12000, 'temperature' => $review ? 0 : .7];
                     if (! $review) {
@@ -193,7 +216,12 @@ class AiService
             } else {
                 $body['max_tokens'] = $review ? 2048 : 12000;
             }
-            $response = app(AiUsage::class)->request($userId, $provider, $body['model'], $stage, fn () => Http::withToken($key)->connectTimeout(8)->timeout($review ? 15 : 40)->post($groq ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://api.mistral.ai/v1/chat/completions', $body));
+            $timeout = $review ? 15 : 40;
+            if ($timeoutLimit !== null) {
+                $timeout = min($timeout, (int) floor($timeoutLimit - (microtime(true) - $start)));
+                if ($timeout < 1) throw new RuntimeException('O prazo de correção das alternativas terminou. O rascunho foi preservado.');
+            }
+            $response = app(AiUsage::class)->request($userId, $provider, $body['model'], $stage, fn () => Http::withToken($key)->connectTimeout(min(8, $timeout))->timeout($timeout)->post($groq ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://api.mistral.ai/v1/chat/completions', $body));
             if (! $response->successful()) {
                 throw new RuntimeException($response->status() === 429 ? 'O provedor atingiu o limite de uso. Aguarde antes de tentar novamente.' : 'O provedor não concluiu a etapa. Confira a configuração e tente novamente.');
             }

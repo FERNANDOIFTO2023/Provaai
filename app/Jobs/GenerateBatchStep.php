@@ -33,13 +33,23 @@ class GenerateBatchStep implements ShouldQueue
             return;
         }
         $error = null;
+        $failure = null;
         try {
             $ai->generate($this->userId, $step['id'], fn (string $stage) =>
                 $batches->setStage($this->userId, $this->batchId, $step['lease'], $stage));
         } catch (\Throwable $e) {
             $error = $e instanceof ValidationException ? collect($e->errors())->flatten()->first() : $e->getMessage();
-            report($e);
+            $failure = $e;
         }
+        // Libera a reserva e publica o resultado antes de tentar registrar a exceção.
+        // Um destino de log sem permissão não deve deixar o professor esperando outra reserva.
         $batches->finish($this->userId, $this->batchId, $step['lease'], $error);
+        if ($failure) {
+            try {
+                report($failure);
+            } catch (\Throwable) {
+                // O erro original já está no lote; não repete a geração nem mascara seu resultado.
+            }
+        }
     }
 }

@@ -41,7 +41,8 @@ return [
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),
-            'ignore_exceptions' => false,
+            // Uma indisponibilidade do destino de log não pode interromper provas ou sua finalização.
+            'ignore_exceptions' => true,
         ],
 
         'single' => [
