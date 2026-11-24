@@ -147,6 +147,20 @@ class ClassMaterialsTest extends TestCase
         Http::assertSentCount(3);
     }
 
+    public function test_external_research_recovers_from_503_and_records_each_attempt_once(): void
+    {
+        Http::fakeSequence()->pushStatus(503)->push(['candidates' => [['finishReason' => 'STOP',
+            'content' => ['parts' => [['text' => 'Conceitos sobre fotossíntese.']]],
+            'groundingMetadata' => ['groundingChunks' => [['web' => ['uri' => 'https://example.org/aula', 'title' => 'Fonte']]]]]]]);
+        $research = app(ExternalResearch::class);
+        $first = $research->find($this->user->id, $this->room->id, 'Ciências', 'Fotossíntese');
+        $second = $research->find($this->user->id, $this->room->id, 'Ciências', 'Fotossíntese');
+        $this->assertSame($first, $second);
+        $this->assertSame('https://example.org/aula', $first['sources'][0]['url']);
+        Http::assertSentCount(2);
+        $this->assertSame([503, 200], DB::table('ai_usage_events')->orderBy('created_at')->pluck('http_status')->all());
+    }
+
     public function test_batch_and_manual_drafts_take_server_snapshot_and_ignore_forged_sources(): void
     {
         $this->material();
@@ -235,6 +249,33 @@ class ClassMaterialsTest extends TestCase
         try { app(AiService::class)->generate($this->user->id, $second->id); $this->fail('A questão repetida deve ser bloqueada.'); }
         catch (\Illuminate\Validation\ValidationException $e) { $this->assertStringContainsString('repetidas', $e->getMessage()); }
         $this->assertSame([], $second->fresh()->content['questions']);
+    }
+
+    public function test_repeated_review_outage_recovers_without_regenerating_or_losing_material_restriction(): void
+    {
+        $this->material();
+        $exam = $this->exam();
+        $generated = 0;
+        $reviewed = 0;
+        Http::fake(function ($request) use (&$generated, &$reviewed) {
+            $context = json_decode($request['contents'][0]['parts'][0]['text'], true);
+            $this->assertFalse($context['sources']['allow_external']);
+            $this->assertSame($this->text, $context['sources']['materials'][0]['text']);
+            if (isset($context['questions'])) {
+                $this->assertSame($this->content()['questions'], $context['questions']);
+                if (++$reviewed < 3) return Http::response([], 503);
+                $result = ['aligned' => true, 'offTopicQuestions' => [], 'missingTopics' => [], 'sourcesGrounded' => true, 'offSourceQuestions' => []];
+            } else {
+                $generated++;
+                $result = $this->content();
+            }
+            return Http::response(['candidates' => [['finishReason' => 'STOP', 'content' => ['parts' => [['text' => json_encode($result)]]]]]]);
+        });
+        app(AiService::class)->generate($this->user->id, $exam->id);
+        $this->assertSame(1, $generated);
+        $this->assertSame(3, $reviewed);
+        $this->assertSame($this->content()['questions'], $exam->fresh()->content['questions']);
+        Http::assertSentCount(4);
     }
 
     public function test_total_text_limit_does_not_truncate_or_replace_existing_materials(): void

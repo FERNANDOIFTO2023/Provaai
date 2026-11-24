@@ -144,12 +144,8 @@ class AiService
                             'systemInstruction' => ['parts' => [['text' => $instruction]]], 'contents' => [['parts' => [['text' => json_encode($context, JSON_UNESCAPED_UNICODE)]]]],
                             'generationConfig' => $generationConfig,
                         ]));
-                    $response = $send($budget);
-                    if (! $hasFallback && in_array($response->status(), [500, 502, 503, 504], true) && microtime(true) - $start < 2) {
-                        Log::info('gemini_retry', ['stage' => $stage, 'status' => $response->status()]);
-                        usleep(300000);
-                        $response = $send(max(1, (int) ($budget - (microtime(true) - $start))));
-                    }
+                    // Com reserva configurada, troca direto para Groq; sem ela, recupera falhas transitórias.
+                    $response = app(GeminiRetry::class)->send($send, $budget, $stage, $hasFallback ? 1 : 3);
                     if (! $response->successful()) {
                         Log::warning('gemini_request_failed', ['stage' => $stage, 'model' => $model, 'status' => $response->status()]);
                         if ($hasFallback && (in_array($response->status(), [401, 403, 404, 408, 429]) || $response->serverError())) {
