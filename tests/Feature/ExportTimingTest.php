@@ -103,7 +103,7 @@ class ExportTimingTest extends TestCase
         });
         $lock->shouldReceive('release')->once()->andReturn(true);
         Cache::partialMock()->shouldReceive('lock')->once()->with(Mockery::type('string'), 300)->andReturn($lock);
-        $this->mock(ExportArtifacts::class)->shouldReceive('get')->with(Mockery::pattern('/^export:v5:[0-9a-f]{64}:docx$/'))->twice()->andReturn(null, 'PK-reutilizado');
+        $this->mock(ExportArtifacts::class)->shouldReceive('get')->with(Mockery::pattern('/^export:v6:[0-9a-f]{64}:docx$/'))->twice()->andReturn(null, 'PK-reutilizado');
         $this->partialMock(DocumentService::class)->shouldNotReceive('run');
 
         $response = $this->postJson('/api/export/exam', ['id' => $exam->id, 'format' => 'docx'])->assertOk()->assertContent('PK-reutilizado');
@@ -130,7 +130,7 @@ class ExportTimingTest extends TestCase
         $this->assertArrayHasKey('docx_lock_release', $this->durations($failed));
         $this->assertNull(Cache::get('download:'.$exam->user_id.':'.$progress));
         // Comprova a liberação de verdade, sem esperar os 125 segundos de timeout em uma regressão.
-        $key = 'export:v5:'.hash('sha256', json_encode([$exam->fresh()->except(['updated_at', 'created_at']), auth()->user()->name, 'Turma privada', false, null, null, null]));
+        $key = 'export:v6:'.hash('sha256', json_encode([$exam->fresh()->except(['updated_at', 'created_at']), auth()->user()->name, 'Turma privada', false, null, null, null]));
         $lock = Cache::lock($key.':docx:lock', 300);
         $this->assertTrue($lock->get());
         $lock->release();

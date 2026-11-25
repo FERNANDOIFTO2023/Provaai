@@ -104,7 +104,7 @@ class DocumentService
             $className = ClassRoom::ownedBy($user->id)->findOrFail($exam->class_id)->name;
             // Datas técnicas de salvamento não alteram a diagramação. O restante do registro,
             // a conta, o nome da turma e os bytes/proporção do modelo continuam na versão.
-            $key = 'export:v5:'.hash('sha256', json_encode([$exam->except(['updated_at', 'created_at']), $user->name, $className, $answerKey,
+            $key = 'export:v6:'.hash('sha256', json_encode([$exam->except(['updated_at', 'created_at']), $user->name, $className, $answerKey,
                 $template?->filename, $template?->pdf_header_ratio, $path ? hash_file('sha256', $path) : null]));
 
             return [$template, $path, $className, $key];

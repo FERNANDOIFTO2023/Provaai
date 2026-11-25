@@ -30,6 +30,8 @@ test('espaço livre é escolhido pela matéria; outras disciplinas com fórmulas
 test('Word padrão reserva espaço sem linhas em matemática e pauta até a margem nas outras matérias', async () => {
   for (const subject of ['Matemática', 'Português']) {
     const doc = await xml(new Uint8Array(await (await examFile(exam(subject),'docx')).arrayBuffer()));
+    assert.ok(!doc.documentElement!.textContent!.includes(exam(subject).title));
+    assert.equal(doc.getElementsByTagNameNS(W, 'pStyle').length, 0, 'a identificação não recebe o estilo do título removido');
     const leaders = Array.from(doc.getElementsByTagNameNS(W,'tab')).filter(n=>n.getAttributeNS(W,'leader')==='underscore');
     assert.equal(leaders.length, subject === 'Matemática' ? 0 : answerRows);
     leaders.forEach(n=>assert.equal(n.getAttributeNS(W,'pos'),'9906'));
@@ -45,6 +47,7 @@ test('modelo Word usa cabeçalho apenas na primeira folha, mantém rodapé e pau
   }]})));
   for (const subject of ['Matemática','Português']) {
     const doc=await xml(await fillDocxLayout(template,exam(subject),'7º A','Professor',false));
+    assert.ok(!doc.documentElement!.textContent!.includes(exam(subject).title), 'não acrescenta título aos modelos sem campo Tema');
     const headers=Array.from(doc.getElementsByTagNameNS(W,'headerReference'));
     assert.equal(headers.length,1);assert.equal(headers[0].getAttributeNS(W,'type'),'first');
     assert.equal(doc.getElementsByTagNameNS(W,'titlePg').length,1);

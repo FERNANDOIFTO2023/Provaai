@@ -97,6 +97,7 @@ test('PDF usa só pixels do cabeçalho na primeira página e não leva perguntas
         assert.ok(item.transform[5] < page.getViewport({scale:1}).height*(1-0.2));
     }
     assert.match(all,/Questão nova 12/);
+    assert.ok(!all.includes(exam.title), 'não imprime o título interno da prova');
     assert.doesNotMatch(all,/PERGUNTA ANTIGA|OUTRA QUESTAO|RESPOSTA RESERVADA/);
   } finally {await loading.destroy();}
   const key=await examFile(exam,'pdf',true,header);
@@ -105,6 +106,7 @@ test('PDF usa só pixels do cabeçalho na primeira página e não leva perguntas
   assert.ok(docx.file(/word\/header\d+\.xml/).length);
   assert.ok(docx.file(/word\/media\/.+\.png/).length);
   const mainXml = await docx.file('word/document.xml')!.async('string');
+  assert.ok(!mainXml.includes(exam.title));
   assert.match(mainXml, /w:type="first"/);
   assert.doesNotMatch(mainXml, /<w:headerReference[^>]*w:type="default"/);
   assert.match(mainXml, /<w:titlePg/);

@@ -67,6 +67,7 @@ test('CLI converte provas e gabaritos distintos, preservando perguntas, cabeçal
             }
           }
           assert.ok(hasHeaderImage, 'O cabeçalho deve continuar presente no PDF.');
+          assert.ok(!text.includes(exam.title), 'O título interno não deve aparecer no PDF convertido.');
           assert.ok(text.includes(statement), text);
           assert.ok(!text.includes(statements[1 - index]), 'Não pode copiar a pergunta da outra prova.');
           assert.equal(text.includes(`GABARITORESERVADO${index + 1}`), answerKey);

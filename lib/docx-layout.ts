@@ -48,7 +48,7 @@ export async function fillDocxLayout(bytes: Uint8Array, exam: Exam, room: string
   if (!body) throw new Error('O modelo não tem corpo de documento.');
   const blocks = Array.from(body.childNodes).filter(n => n.nodeType === 1).map(n => n as XmlElement);
   const section = blocks.findLast(n=>n.localName === 'sectPr') ?? null;
-  const title = key ? 'Gabarito · ' + exam.title : exam.title;
+  const title = key ? 'Gabarito · ' + exam.title : '';
   let anchor = -1, hasTitle = false, hasStudent = false;
   // Reconhece campos vazios de identificação; não sobrescreve livremente qualquer texto do modelo.
   const fields = [
@@ -150,7 +150,7 @@ export async function fillDocxLayout(bytes: Uint8Array, exam: Exam, room: string
     body.insertBefore(p, section);
   }
   // Setor de conteúdo: acrescenta identificação ausente, instruções e questões da prova atual.
-  if (!hasTitle) paragraph(title,{bold:true,keepNext:true});
+  if (title && !hasTitle) paragraph(title,{bold:true,keepNext:true});
   if (!hasStudent) paragraph('Aluno: '+exam.profile_snapshot.name+(room?' · Turma: '+room:''));
   if (exam.content.instructions) paragraph(exam.content.instructions);
   exam.content.questions.forEach((q,i)=>{

@@ -22,7 +22,7 @@ export async function examFile(
   if (exam.status !== 'approved')
     throw new Error('Revise e aprove a prova antes de baixar.');
   const lines = [
-    answerKey ? 'GABARITO DO PROFESSOR' : exam.title,
+    ...(answerKey ? ['GABARITO DO PROFESSOR'] : []),
     `${exam.subject} | Aluno: ${exam.profile_snapshot.name}`,
     `Código: ${exam.profile_snapshot.code}     Data: ____/____/________`,
     exam.content.instructions,
@@ -35,7 +35,7 @@ export async function examFile(
     const children = lines.map(
       (l, i) =>
         new Paragraph({
-          heading: i === 0 ? HeadingLevel.TITLE : undefined,
+          heading: answerKey && i === 0 ? HeadingLevel.TITLE : undefined,
           children: [new TextRun(l)],
           spacing: { after: 180 },
         }),
@@ -125,7 +125,7 @@ export async function examFile(
     }
     y += 4;
   };
-  lines.forEach((l, i) => write(l, i === 0 ? 18 : 11));
+  lines.forEach((l, i) => write(l, answerKey && i === 0 ? 18 : 11));
   exam.content.questions.forEach((q, i) => {
     write(`${i + 1}. ${q.statement} (${q.points} pontos)`);
     if (answerKey) write(`Resposta: ${q.answer}`);

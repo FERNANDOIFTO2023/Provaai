@@ -10,6 +10,10 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 25/11/2026 — Provas sem título impresso
+
+Retirada a impressão automática do título interno nos arquivos PDF e DOCX destinados ao aluno, tanto no layout padrão quanto nos modelos anexados. Mantidos o título usado na organização do site, a identificação, as instruções, as questões e o cabeçalho do professor. O gabarito permanece no formato anterior. Atualizada a versão do cache de documentos para não reutilizar arquivos com o título antigo. [Relatório de validação](relatorios/2026-11-25-provas-sem-titulo.md).
+
 ### 25/11/2026 — Tela de downloads após a revisão
 
 Após a confirmação da aprovação pelo servidor, a revisão abre uma tela compacta com PDF, DOCX e gabarito, sem exigir rolagem até o fim das questões. Reabrir uma prova aprovada leva à mesma tela; a opção de editar continua disponível e alterações exigem nova aprovação. O salvamento informa a etapa atual e cada requisição de gravação da prova tem limite de espera de 60 segundos, preservando o editor e avisando que um pedido sem resposta pode ter sido salvo no servidor. A preparação antecipada e os bloqueios durante geração ou download permanecem. Validação local: 68 testes de frontend, 20 de navegador com API simulada, TypeScript e build aprovados. A inspeção do site aberto ficou limitada à leitura: a ferramenta de controle do Chrome falhou ao clicar e capturar a janela. Sem commit ou deploy. [Relatório](relatorios/2026-11-25-revisao-downloads.md).

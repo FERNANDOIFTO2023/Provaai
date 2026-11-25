@@ -35,7 +35,8 @@ test('modelo mantém cabeçalho, imagem, margens e estilo; substitui campos e at
   const xml=await zip.file('word/document.xml')!.async('string');
   const doc=new DOMParser().parseFromString(xml,'application/xml');
   assert.match(doc.documentElement!.textContent!,/Ana & João <A>/);
-  for(const text of ['Turma : Turma B','Cálculo ∫ ≤ ∞','w:top="1440"','w:val="center"'])assert.ok(xml.includes(text));
+  for(const text of ['Turma : Turma B','w:top="1440"','w:val="center"'])assert.ok(xml.includes(text));
+  assert.ok(!xml.includes(exam.title), 'o título interno não preenche o campo Tema do modelo');
   assert.ok(!xml.includes('Exercício antigo'));
   assert.ok(!xml.includes('Resposta:'));
   assert.equal(await zip.file('word/header1.xml')!.async('string'),'cabeçalho da instituição');
