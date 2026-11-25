@@ -7,11 +7,11 @@ Professor: Marcos Raimundo
 Equipe: Fernando de Paula Matos, Vinicius Celestino, João Francisco e Gabriel Gutemberg
 Paraíso do Tocantins — 2026
 
-Revisão documental: 24/11/2026. Base funcional: código e registros de validação disponíveis até esta data.
+Revisão documental: 25/11/2026. Base funcional: código e registros de validação disponíveis até esta data.
 
 # 1. HISTÓRICO DE ALTERAÇÕES
 
-O quadro reúne as principais mudanças de escopo, interface e implementação até 24/11/2026. Os registros anteriores à migração foram agrupados por período de desenvolvimento. A indicação 1.x identifica essa fase do projeto, sem atribuir um número de lançamento a cada ajuste. A versão 2.0 corresponde à migração para Laravel e às correções posteriores; as novas linhas não representam lançamentos adicionais.
+O quadro reúne as principais mudanças de escopo, interface e implementação até 25/11/2026. Os registros anteriores à migração foram agrupados por período de desenvolvimento. A indicação 1.x identifica essa fase do projeto, sem atribuir um número de lançamento a cada ajuste. A versão 2.0 corresponde à migração para Laravel e às correções posteriores; as novas linhas não representam lançamentos adicionais.
 
 O início do desenvolvimento é estimado em 04/11/2026, conforme a lembrança da equipe e o registro inicial da documentação. O primeiro commit disponível é de 05/11/2026; por isso, a data de início deve ser lida como aproximada.
 
@@ -45,6 +45,9 @@ O início do desenvolvimento é estimado em 04/11/2026, conforme a lembrança da
 | 23/11/2026 | 2.0 | Materiais privados PDF, Word e PowerPoint por turma, leitura no envio e escolha de pesquisa externa. Painel de materiais reorganizado para facilitar a leitura. | Equipe |
 | 23/11/2026 | 2.0 | Área do professor com períodos, gráficos, calendário por intensidade, indicadores de provas e consumo informado pelos provedores. Publicação dos painéis de materiais e atividade confirmada; perfil sem envio de foto. | Equipe |
 | 23 a 24/11/2026 | 2.0 | Diagnóstico de indisponibilidade de geração: respostas HTTP 503 do provedor principal e ausência da chave de reserva na produção inspecionada. Revisão da documentação, identificação acadêmica e sincronização dos PDFs. | Equipe |
+| 24/11/2026 | 2.0 | Separação do salvamento da revisão e da confirmação de aprovação. Atualização da prova pela resposta do servidor, sem recarregar toda a conta; liberação dos formatos sem aguardar a preparação antecipada dos arquivos. | Equipe |
+| 25/11/2026 | 2.0 | Tela compacta de downloads após aprovação confirmada, com PDF, DOCX e gabarito. Inclusão das etapas de salvamento, foco nos erros e limite de espera por requisição. Preservados os bloqueios de operações simultâneas e a exigência de nova aprovação após edição. Funcionamento da aprovação confirmado pelo responsável após o ajuste. | Equipe |
+| 25/11/2026 | 2.0 | Retirada do título interno nos arquivos da prova do aluno, mantendo identificação, cabeçalho, questões e formato do gabarito. Atualização do cache para reconstruir os documentos. Validação local de exportações, conversão e regras do servidor; publicação não executada nesta entrega. | Equipe |
 
 Responsáveis pelo projeto: Fernando de Paula Matos, Vinicius Celestino, João Francisco e Gabriel Gutemberg. Professor: Marcos Raimundo. O quadro registra as entregas do projeto de forma conjunta, sem atribuir tarefas individuais não documentadas.
 
@@ -68,6 +71,8 @@ O backend Laravel atende ao requisito da disciplina e mantém a interface React.
 
 Na inspeção de 23/11, a geração apresentou respostas HTTP 503 do Gemini e a produção não tinha a chave Groq configurada. Uma reprodução com o contrato de geração recebeu a indicação de alta demanda do modelo. Isso limita a disponibilidade da geração automática, sem significar que a publicação ou os cadastros estejam indisponíveis. A reserva precisa de credencial válida e validação real após sua configuração.
 
+Em 25/11, o responsável confirmou que o fluxo de aprovação voltou a disponibilizar os downloads. A retirada do título impresso foi concluída e validada localmente; sua publicação não foi executada nesta entrega. A revisão documental não constitui uma nova inspeção da disponibilidade dos provedores de IA.
+
 Professor responsável: Marcos Raimundo. Equipe: Fernando de Paula Matos, Vinicius Celestino, João Francisco e Gabriel Gutemberg.
 
 # 3. REQUISITOS DO SISTEMA
@@ -88,7 +93,7 @@ Professor responsável: Marcos Raimundo. Equipe: Fernando de Paula Matos, Vinici
 | RF010 | Usar Gemini como primeira opção e Groq como reserva para falhas elegíveis, mantendo as instruções e o contexto da etapa. |
 | RF011 | Executar lotes em fila no servidor, mostrar progresso e retomar etapas interrompidas. |
 | RF012 | Validar estrutura, distribuição, duplicatas e pertinência; salvar como rascunho para revisão e aprovação pelo professor. |
-| RF013 | Exportar provas aprovadas em PDF ou DOCX, com gabarito opcional. Alterações relevantes exigem nova aprovação. |
+| RF013 | Após aprovação confirmada pelo servidor, exibir tela de download em PDF ou DOCX, com gabarito opcional. O título interno não é impresso na prova do aluno. Alterações relevantes exigem nova aprovação. |
 | RF014 | Organizar provas por mês/ano e permitir retornar à tela anterior pelo botão do navegador. |
 | RF015 | Disponibilizar modelo Excel e importar alunos para turma ativa pertencente ao professor, com prévia, confirmação e códigos automáticos, sem coluna de código na planilha. |
 | RF016 | Anexar materiais PDF, DOC, DOCX, PPT e PPTX dentro de turmas existentes, conferir o texto lido e controlar sua remoção e download autenticado. |
@@ -110,7 +115,7 @@ Professor responsável: Marcos Raimundo. Equipe: Fernando de Paula Matos, Vinici
 | RNF005 | Aplicar transações, chaves estrangeiras e unicidade para preservar vínculos e evitar códigos duplicados. |
 | RNF006 | Manter arquivos privados fora da raiz pública, com upload máximo de 20 MiB e respostas de download sem cache público. |
 | RNF007 | Reduzir processamento repetido por extração de materiais no envio, preparação antecipada de exportações e reaproveitamento privado por versão. Latência depende de fila, conversor e provedores; não prometer download imediato em todas as situações. |
-| RNF008 | Oferecer interface responsiva, controles identificados, feedback de erros/progresso e organização consistente das telas. |
+| RNF008 | Oferecer interface responsiva, controles identificados, feedback de erros/progresso e organização consistente. Limitar a espera de cada gravação de prova a 60 segundos no cliente, preservando a revisão e informando a incerteza do salvamento se não houver resposta. |
 | RNF009 | Versionar código e migrações, manter testes automatizados, documentação de operação e backups de banco/arquivos. |
 | RNF010 | Preservar revisão humana: a IA auxilia o professor, não aprova automaticamente avaliações ou decisões pedagógicas. |
 | RNF011 | Respeitar movimento reduzido, oferecer foco visível e alternativa textual aos gráficos; restringir métricas ao professor autenticado. |
@@ -132,7 +137,8 @@ Fluxo: Acesso → Minhas turmas → Alunos/modelos → Gerar em fila → Revisar
 | Detalhe da turma | Lista de alunos, importação Excel, materiais de estudo, preferência de pesquisa, edição e preparação de provas. |
 | Alunos | Busca, filtros de status e turma, modelo Excel, importação, reativação e compartilhamento de cópia. |
 | Provas coletivas / individuais | Histórico por mês, acompanhamento do lote, abertura do editor e download. |
-| Editor de prova | Enunciados, alternativas, respostas, objetivos e pontuação; salvar, aprovar e exportar. |
+| Editor de prova | Enunciados, alternativas, respostas, objetivos e pontuação; salvar rascunho e confirmar aprovação com indicação da etapa e dos erros. |
+| Baixar prova aprovada | PDF, DOCX e gabarito em uma tela compacta; editar novamente ou voltar às provas. Também aparece ao reabrir uma prova aprovada. |
 | Modelos de prova | Upload Word/PDF, processamento, prévia e ajuste do cabeçalho PDF. |
 | Compartilhamentos | Convites recebidos/enviados; aceitar cópia ou cancelar convite pendente. |
 | Sobre | Resumo do funcionamento e das tecnologias, sem controles de tema nesta versão. |
@@ -160,6 +166,16 @@ Reaproveitar a leitura dos anexos não significa reaproveitar questões: cada ge
 O painel oferece períodos de um, três ou doze meses, encerrados no mês escolhido. Conta provas que possuem questões pela data de criação no fuso America/Sao_Paulo; rascunhos vazios não entram, edições não contam novamente e provas excluídas deixam o total. Aprovações refletem o estado atual das provas desse período; alunos e turmas ativos representam totais atuais.
 
 O calendário distingue dias sem provas e faixas de 1–2, 3–5, 6–10 e 11 ou mais, com intensidade crescente. Gráficos têm tabela equivalente e as animações respeitam movimento reduzido. O consumo inclui chamadas reais de geração, revisão e pesquisa, inclusive tentativas; dados não informados aparecem como desconhecidos. O histórico anterior à medição não é estimado e tokens não são convertidos em valores de cobrança. O perfil permanece sem envio de foto.
+
+## 3.7 Revisão, aprovação e documentos
+
+O professor revisa o conteúdo e escolhe Salvar rascunho ou Revisei e aprovo. A aprovação salva primeiro o conteúdo e envia uma segunda requisição apenas para confirmar o status. A interface só anuncia sucesso quando o servidor devolve a mesma prova como aprovada. Nesse momento, abre uma tela compacta com PDF, DOCX e gabarito, sem exigir rolagem pelo editor. Editar o conteúdo exige nova aprovação antes de exportar.
+
+Durante a gravação, a interface informa se está salvando a revisão ou confirmando a aprovação. Cada uma dessas requisições tem limite de espera de 60 segundos. Se não houver resposta, a revisão permanece na tela e o professor recebe um aviso: o servidor pode ter concluído a operação, pois interromper a espera no navegador não desfaz a gravação. Erros recebem foco para ficarem visíveis no editor.
+
+A preparação antecipada continua em fila própria. Os botões não dependem da conclusão dessa preparação; um download solicitado pode aproveitar um arquivo pronto ou aguardar a conversão necessária. Durante uma geração ou um download em andamento, novas operações conflitantes permanecem bloqueadas. Isso não constitui garantia de conversão instantânea.
+
+Nos arquivos destinados ao aluno, o título cadastrado serve à organização no site e não é acrescentado ao documento. Modelos Word deixam de receber esse título nos campos vazios de Tema/Título reconhecidos pelo sistema. O cabeçalho do modelo, a identificação, as instruções, as questões, as fórmulas e os espaços de resposta mantêm suas regras anteriores; o cabeçalho permanece apenas na primeira página. O gabarito mantém sua identificação própria. Textos já presentes na imagem do cabeçalho ou no modelo original não são removidos automaticamente. A nova versão do cache evita reutilizar exportações antigas com o título; arquivos já baixados não são alterados.
 
 # 4. REQUISITOS TÉCNICOS DO PROJETO
 
@@ -200,11 +216,15 @@ A sessão é mantida por cookie HttpOnly, com CSRF nas escritas e verificações
 
 Os relatórios existentes registram testes automatizados de autenticação, isolamento entre contas, ciclo de vida das turmas, cópias independentes, importação XLSX, materiais, regras das provas, fallback simulado, filas, exportação, matemática e indicadores. Também foram verificados tipos TypeScript, build e navegação responsiva. O relatório da área do professor de 23/11 registra 91 testes PHP com 678 verificações, 63 testes Node e 17 cenários de navegação; são resultados daquela execução, não uma nova execução desta revisão documental.
 
-Os registros de publicação confirmam implantação na AWS, migrações e presença dos painéis no site. Testes com respostas simuladas não comprovam disponibilidade ou precisão contínua dos provedores. A falha HTTP 503 diagnosticada e a reserva não configurada permanecem limitações operacionais. Esta revisão altera documentação e PDFs, sem mudar código funcional, banco ou produção.
+Na validação de 25/11, a tela de downloads passou por 20 cenários de navegador com API simulada, incluindo revisão longa em desktop e celular, recusa de aprovação, reabertura e edição. A retirada do título foi validada por 68 testes de frontend, 103 testes PHP com 755 verificações, checagem TypeScript e build. Dois testes do conversor foram reexecutados após incluir a verificação de ausência do título no PDF; os cenários preservam o cabeçalho e as questões. O build mantém um aviso sobre bundle superior a 500 kB. A execução local do backend exigiu instalar uma dependência já registrada no lockfile e preparar a configuração de testes; ao final, não houve falhas.
+
+Os registros de publicação confirmam implantação na AWS, migrações e presença dos painéis no site. Testes com respostas simuladas não comprovam disponibilidade ou precisão contínua dos provedores. A falha HTTP 503 e a reserva não configurada correspondem à última inspeção operacional citada, sem nova comprovação de resolução nesta revisão. O responsável confirmou o funcionamento da aprovação em 25/11; os testes locais não medem a latência da VM nem certificam todas as provas reais. Esta revisão altera documentação e PDFs, sem mudar código funcional, banco ou produção.
 
 ## 5.2 Documentação complementar
 
 O repositório inclui [README](../README.md), [guia técnico](GUIA-TECNICO.md), [mapa do código](MAPA-DO-CODIGO.md), [histórico de migração](MIGRACAO-LARAVEL.md), [modelos e exportações](PDF-E-ARQUIVOS.md), [verificação matemática](VERIFICACAO-MATEMATICA.md) e [segurança](SEGURANCA.md). Os relatórios em docs/relatorios registram resultados datados. Os dois PDFs de especificação são cópias da mesma revisão deste Markdown, evitando capas e conteúdos divergentes.
+
+As alterações recentes estão detalhadas nos relatórios de [revisão e downloads](relatorios/2026-11-25-revisao-downloads.md) e [provas sem título impresso](relatorios/2026-11-25-provas-sem-titulo.md). A confirmação posterior do responsável sobre a aprovação complementa a limitação de inspeção do navegador registrada no primeiro relatório.
 
 ## Referências técnicas
 

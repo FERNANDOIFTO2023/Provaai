@@ -10,6 +10,10 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 25/11/2026 — Atualização da documentação acadêmica
+
+Atualizada a especificação acadêmica em Markdown e sincronizadas suas duas cópias PDF. O histórico passou a incluir a confirmação da aprovação, a tela compacta de downloads, o tratamento da espera no salvamento e a retirada do título impresso. Revisados os requisitos, o mapa de telas e as evidências de testes, distinguindo confirmação do responsável, validação local e publicação. Mantida a capa anterior, conferida por comparação de imagens. [Relatório documental](relatorios/2026-11-25-documentacao-academica.md).
+
 ### 25/11/2026 — Provas sem título impresso
 
 Retirada a impressão automática do título interno nos arquivos PDF e DOCX destinados ao aluno, tanto no layout padrão quanto nos modelos anexados. Mantidos o título usado na organização do site, a identificação, as instruções, as questões e o cabeçalho do professor. O gabarito permanece no formato anterior. Atualizada a versão do cache de documentos para não reutilizar arquivos com o título antigo. [Relatório de validação](relatorios/2026-11-25-provas-sem-titulo.md).
