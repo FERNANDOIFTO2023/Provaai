@@ -10,6 +10,10 @@ A produção e a homologação da AWS usam bancos, volumes de documentos e chave
 
 ## Histórico de alterações
 
+### 24/11/2026 — Aprovação com acesso imediato aos downloads
+
+Separada a confirmação de aprovação do salvamento do conteúdo. A interface envia somente o status na segunda chamada e confere se o servidor devolveu a mesma prova como aprovada antes de anunciar sucesso. Isso evita reenviar o conteúdo e o parecer matemático como uma possível nova edição. A resposta de cada gravação atualiza a prova localmente, eliminando duas recargas completas da conta. PDF, DOCX e gabarito ficam disponíveis após a confirmação, independentemente da preparação antecipada dos arquivos. Testes: 67 de frontend, 18 de navegador e 10 de preparação de downloads no backend (90 verificações), além de TypeScript e build. Alteração local, sem commit ou deploy. [Relatório](relatorios/2026-11-24-aprovacao-downloads.md).
+
 ### 14/11/2026 — Conferência e encerramento da avaliação externa
 
 Concluído o download do ambiente Kali e conferido o relatório da execução 2 do PentAGI. Confirmadas as consultas de cabeçalhos à página pública e registradas as limitações do relatório automático. A lista de ferramentas desabilitadas não impediu essas consultas, portanto não foi considerada uma barreira de isolamento validada. O fluxo foi encerrado, seu contêiner temporário removido e as evidências exportadas sanitizadas. Mantida a regra SSH por decisão do responsável; inspeção interna da VM e testes com duas contas seguem pendentes. Documentação revisada sem commit ou publicação. [Relatório](relatorios/2026-11-13-seguranca-pentagi.md).

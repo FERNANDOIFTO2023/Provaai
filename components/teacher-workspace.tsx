@@ -73,6 +73,7 @@ import {
 } from '@/lib/model';
 import { downloadExams } from '@/lib/export';
 import { fetchExamFile } from '@/lib/download-file';
+import { approveSavedExam } from '@/lib/exam-approval';
 import { ProgressMeter } from './progress-meter';
 import { Dialog, Field, Empty } from './workspace-ui';
 import StudentsWorkspace from './students-workspace';
@@ -369,7 +370,12 @@ export default function TeacherWorkspace({
       : apiClient.from(table).insert(value);
     const { data: saved, error } = await query.select().single();
     if (error) throw error;
-    await load();
+    if (kind === 'exams') {
+      // A resposta já contém a prova validada. Não atrase a revisão recarregando a conta.
+      setData(previous => ({ ...previous, exams: update
+        ? previous.exams.map(item => item.id === saved.id ? saved as Exam : item)
+        : [saved as Exam, ...previous.exams] }));
+    } else await load();
     return saved;
   }
   const uid = demo ? 'demo' : user?.id;
@@ -625,18 +631,16 @@ export default function TeacherWorkspace({
         { ...exam, content: parsed.data, status: 'draft', updated_at: now() },
         true,
       )) as Exam;
+      setExam(saved);
       if (approve) {
-        const approved = (await persist(
-          'exams',
-          'sala_exams',
-          { ...saved, status: 'approved' },
-          true,
-        )) as Exam;
+        const approved = await approveSavedExam(saved, approval => persist(
+          'exams', 'sala_exams', demo ? { ...saved, ...approval } : approval, true,
+        ) as Promise<Exam>);
         setExam(approved);
-      } else setExam(saved);
+      }
       setMessage(
         approve
-          ? 'Prova aprovada. Os arquivos estão sendo preparados em segundo plano para agilizar o download.'
+          ? 'Prova aprovada! Escolha PDF ou DOCX para baixar.'
           : 'Rascunho salvo.',
       );
     });

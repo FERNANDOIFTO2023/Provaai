@@ -82,6 +82,7 @@ async function run(name, test, width = 1440) {
   } catch (error) {
     failures.push(name);
     console.error(`FAIL: ${name}\n${error.stack}`);
+    console.error({ errors, text: (await page.locator('body').innerText()).slice(0, 1200) });
     console.error(await page.evaluate(() => ({ location: history.state?.provaai?.location, heading: document.querySelector('h1')?.textContent, dialogs: [...document.querySelectorAll('dialog[open] h2')].map(node => node.textContent) })));
   } finally { await context.close(); }
 }
@@ -308,6 +309,10 @@ try {
     await expectPage(page, 'exams', 'c1');
     await page.getByRole('button', { name: 'Revisar', exact: true }).first().click();
     await page.getByRole('button', { name: 'Revisei e aprovo', exact: true }).click();
+    await page.getByText('Prova aprovada! Escolha PDF ou DOCX para baixar.', { exact: true }).waitFor();
+    assert.equal(await page.getByRole('button', { name: 'DOCX', exact: true }).isEnabled(), true);
+    assert.equal(await page.getByRole('button', { name: 'Baixar PDF', exact: true }).isEnabled(), true);
+    assert.equal(await page.getByRole('button', { name: 'Revisei e aprovo', exact: true }).count(), 0);
     const downloadReady = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Baixar PDF', exact: true }).click();
     const download = await downloadReady;
@@ -318,6 +323,62 @@ try {
     await expectPage(page, 'exams');
     await page.goForward();
     await expectPage(page, 'exams', 'c1');
+  });
+
+  await run('aprovação autenticada libera PDF e DOCX sem aguardar a fila ou recarregar a conta', async page => {
+    const timestamp = new Date().toISOString();
+    const activityToken = `test.${Buffer.from(JSON.stringify({ sub: 'teacher-test', session_id: 'review-test' })).toString('base64url')}.test`;
+    const room = { id: 'c1', user_id: 'teacher-test', name: '7º ano A', grade: '7º', subject: 'Matemática', color: 'sage', icon: 'book', created_at: timestamp };
+    const student = { id: 's1', user_id: 'teacher-test', class_id: 'c1', name: 'Aluno fictício', code: 'A001', difficulties: '', criteria: '', level: 'Intermediário', created_at: timestamp };
+    let exam = { id: 'e1', user_id: 'teacher-test', class_id: 'c1', student_id: 's1', purpose: 'regular', title: 'Operações', subject: 'Matemática', topics: 'Multiplicação', question_count: 1, status: 'draft', template_id: null,
+      content: { instructions: 'Apresente os cálculos.', objectiveCount: 0, questions: [{ type: 'essay', statement: 'Calcule 14 vezes 400.', options: [], answer: '5600', objective: 'Multiplicar', points: 1 }] },
+      profile_snapshot: student, created_at: timestamp, updated_at: timestamp };
+    const updates = [], exports = [];
+    let selects = 0;
+    await page.route('**/api/**', route => {
+      const path = new URL(route.request().url()).pathname;
+      if (path === '/api/auth/session') return route.fulfill({ json: { session: { access_token: activityToken, refresh_token: '', user: { id: 'teacher-test', email: 'teacher@example.test', user_metadata: {} } } } });
+      if (path === '/api/config') return route.fulfill({ json: { aiConfigured: true } });
+      if (path.startsWith('/api/data/')) {
+        const resource = path.split('/').at(-1), payload = route.request().postDataJSON();
+        if (payload.op === 'update' && resource === 'sala_exams') {
+          updates.push(payload.values);
+          // Conteúdo reserializado pode ser tratado como edição. A confirmação deve enviar somente status.
+          exam = { ...exam, ...payload.values, status: payload.values.content ? 'draft' : payload.values.status };
+          return route.fulfill({ json: { data: exam } });
+        }
+        selects++;
+        const data = { sala_classes: [room], sala_students: [student], sala_exams: [exam], sala_recovery_students: [], sala_templates: [], sala_teacher_template_defaults: null, sala_copy_invitations: [] };
+        return route.fulfill({ json: { data: payload.single === 'maybe' ? null : data[resource] ?? [] } });
+      }
+      if (path === '/api/export/exam') {
+        const payload = route.request().postDataJSON();
+        exports.push(payload);
+        assert.equal(exam.status, 'approved');
+        return route.fulfill({ body: payload.format === 'pdf' ? '%PDF-test' : 'PK-test', contentType: 'application/octet-stream' });
+      }
+      if (path.startsWith('/api/export/progress/')) return route.fulfill({ json: { stage: 'pending' } });
+      throw new Error(`Unexpected authenticated request: ${path}`);
+    });
+    await page.evaluate(() => localStorage.setItem('provaai:activity:v1:teacher-test:review-test', JSON.stringify({ lastActivity: Date.now(), ended: false })));
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expectPage(page, 'classes');
+    await navigate(page, 'Provas coletivas');
+    await page.getByRole('button', { name: 'Abrir provas', exact: true }).first().click();
+    await page.getByRole('button', { name: 'Revisar', exact: true }).first().click();
+    const before = selects;
+    await page.getByRole('button', { name: 'Revisei e aprovo', exact: true }).click();
+    await page.getByText('Prova aprovada! Escolha PDF ou DOCX para baixar.', { exact: true }).waitFor();
+    assert.equal(updates.length, 2);
+    assert.deepEqual(updates[1], { status: 'approved' });
+    assert.equal(selects, before, 'Aprovar não precisa recarregar todas as coleções');
+    assert.equal(exports.length, 0, 'A interface não espera exportação para liberar os botões');
+    assert.equal(await page.getByRole('button', { name: 'DOCX', exact: true }).isEnabled(), true);
+    assert.equal(await page.getByRole('button', { name: 'Baixar PDF', exact: true }).isEnabled(), true);
+    const ready = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'DOCX', exact: true }).click();
+    assert.match((await ready).suggestedFilename(), /\.docx$/i);
+    assert.equal(exports[0].format, 'docx');
   });
 
   console.log(`Navigation: ${passed} passed, ${failures.length} failed`);
