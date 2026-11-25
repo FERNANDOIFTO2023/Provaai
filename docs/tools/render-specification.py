@@ -33,10 +33,23 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--font-regular", type=Path, required=True)
     parser.add_argument("--font-bold", type=Path, required=True)
+    parser.add_argument("--table-font-regular", type=Path,
+                        help="Fonte opcional para tabelas; recomenda-se uma fonte sem serifa.")
+    parser.add_argument("--table-font-bold", type=Path,
+                        help="Variante em negrito da fonte das tabelas.")
     args = parser.parse_args()
+    if bool(args.table_font_regular) != bool(args.table_font_bold):
+        parser.error("Informe as duas variantes da fonte das tabelas.")
     for name, path in [("Texto", args.font_regular), ("TextoBold", args.font_bold)]:
         pdfmetrics.registerFont(TTFont(name, str(path)))
     pdfmetrics.registerFontFamily("Texto", normal="Texto", bold="TextoBold")
+    # Tabelas usam glifos vetoriais e fonte própria, sem modificar a capa institucional.
+    table_font, table_bold = "Texto", "TextoBold"
+    if args.table_font_regular:
+        table_font, table_bold = "Tabela", "TabelaBold"
+        pdfmetrics.registerFont(TTFont(table_font, str(args.table_font_regular)))
+        pdfmetrics.registerFont(TTFont(table_bold, str(args.table_font_bold)))
+        pdfmetrics.registerFontFamily(table_font, normal=table_font, bold=table_bold)
 
     docs = Path(__file__).resolve().parents[1]
     source = docs / "ESPECIFICACAO-LTP3-PROVAAI.md"
@@ -61,9 +74,10 @@ def main():
                               spaceBefore=12, spaceAfter=10, keepWithNext=True))
     styles.add(ParagraphStyle("Subsecao", parent=styles["Secao"], fontSize=12, leading=16,
                               spaceBefore=10, spaceAfter=8))
-    styles.add(ParagraphStyle("Celula", parent=styles["Texto"], fontSize=10, leading=13,
+    styles.add(ParagraphStyle("Celula", parent=styles["Texto"], fontName=table_font,
+                              fontSize=11, leading=15, textColor=colors.black,
                               alignment=TA_LEFT, spaceAfter=0))
-    styles.add(ParagraphStyle("Cabecalho", parent=styles["Celula"], fontName="TextoBold"))
+    styles.add(ParagraphStyle("Cabecalho", parent=styles["Celula"], fontName=table_bold))
 
     output = docs / "ESPECIFICACAO-LTP3-PROVAAI.pdf"
     doc = SimpleDocTemplate(str(output), pagesize=A4, rightMargin=56, leftMargin=56,
@@ -97,7 +111,7 @@ def main():
             if any(len(row) != count for row in rows):
                 raise ValueError("Tabela com quantidade inconsistente de colunas")
             if count == 4:
-                widths = [70, 44, doc.width-164, 50]
+                widths = [74, 54, doc.width-186, 58]
             elif count == 2:
                 first = 70 if rows[0][0] == "Código" else 130
                 widths = [first, doc.width-first]
@@ -108,7 +122,7 @@ def main():
                           colWidths=widths, repeatRows=1, hAlign="LEFT")
             table.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), palette["pale"]),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fafbf9")]),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6),
                 ("TOPPADDING", (0, 0), (-1, -1), 7), ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
