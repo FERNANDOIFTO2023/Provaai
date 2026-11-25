@@ -22,19 +22,26 @@ export function apiFetch(url: string, init: RequestInit = {}) {
   else {const token=document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;if(token)headers.set('X-CSRF-TOKEN',token);}
   return fetch(url,{...init,headers,credentials:'same-origin'});
 }
-async function request(url: string, body?: unknown, method='POST'): Promise<Result> {
+async function request(url: string, body?: unknown, method='POST', timeoutMs?: number): Promise<Result> {
+  const controller = timeoutMs ? new AbortController() : undefined;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
   try {
-    const response=await apiFetch(url,{method,headers:{'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});
+    const response=await apiFetch(url,{method,signal:controller?.signal,headers:{'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});
     const result=await response.json();
     if(!response.ok) return {data:null,error:{message:typeof result.error==='string'?result.error:result.error?.message||Object.values(result.errors??{}).flat()[0]||result.message||'Não foi possível concluir.',code:result.code,status:response.status}};
     return {data:result.data===undefined?result:result.data,error:null};
-  } catch {return {data:null,error:{message:'Não foi possível conectar. Confira sua internet.'}};}
+  } catch {
+    return {data:null,error:controller?.signal.aborted
+      ? {code:'request_timeout',message:'O servidor demorou para confirmar o salvamento. Suas alterações continuam nesta tela. Confira a conexão e tente novamente; o pedido anterior pode ter sido salvo.'}
+      : {message:'Não foi possível conectar. Confira sua internet.'}};
+  } finally { if (timer !== undefined) clearTimeout(timer); }
 }
 // As chamadas encadeadas apenas montam a requisição. A execução ocorre no then, quando há await.
 // O backend decide quais operações e campos são permitidos para cada recurso.
 class Query implements PromiseLike<Result> {
   private input: Record<string,any>={op:'select',filters:[]};
   private readonly resource: string;
+  private timeoutMs?: number;
   constructor(resource: string) { this.resource = resource; }
   select(columns='*') {this.input.columns=columns;return this;}
   eq(column: string,value: unknown) {this.input.filters.push([column,value]);return this;}
@@ -47,8 +54,9 @@ class Query implements PromiseLike<Result> {
   delete() {this.input.op='delete';return this;}
   single() {this.input.single='single';return this;}
   maybeSingle() {this.input.single='maybe';return this;}
+  timeout(milliseconds: number) {this.timeoutMs=milliseconds;return this;}
   then<TResult1=Result,TResult2=never>(onfulfilled?: ((value:Result)=>TResult1|PromiseLike<TResult1>)|null,onrejected?:((reason:any)=>TResult2|PromiseLike<TResult2>)|null):Promise<TResult1|TResult2> {
-    return request('/api/data/'+encodeURIComponent(this.resource),this.input).then(onfulfilled,onrejected);
+    return request('/api/data/'+encodeURIComponent(this.resource),this.input,'POST',this.timeoutMs).then(onfulfilled,onrejected);
   }
 }
 // Reaproveita por até um minuto a consulta de sessão; force invalida essa economia de requisições.

@@ -89,7 +89,7 @@ import TeacherDashboard from './teacher-dashboard';
 import { classColor } from '@/lib/class-appearance';
 import { useWorkspaceHistory } from './use-workspace-history';
 import { classExpired, deletionDate, type CopyInvitation, type ShareTarget } from '@/lib/classroom';
-type Modal = 'class' | 'edit-class' | 'delete-class' | 'reactivate' | 'share' | 'student' | 'import-students' | 'generate' | 'template' | 'uploads' | 'downloads' | 'exam' | null;
+type Modal = 'class' | 'edit-class' | 'delete-class' | 'reactivate' | 'share' | 'student' | 'import-students' | 'generate' | 'template' | 'uploads' | 'downloads' | 'exam' | 'exam-ready' | null;
 const uploadStages = { queued: 'Na fila', uploading: 'Enviando arquivo', reading: 'Lendo conteúdo', ready: 'Pronto', failed: 'Não concluído' };
 const empty: DataSet = { classes: [], students: [], exams: [], templates: [] };
 const initials = (name: string) =>
@@ -145,6 +145,7 @@ export default function TeacherWorkspace({
     [studentCodePending, setStudentCodePending] = useState(false),
     [exam, setExam] = useState<Exam | null>(null),
     [busy, setBusy] = useState(false),
+    [reviewStage, setReviewStage] = useState(''),
     [message, setMessage] = useState(''),
     [error, setError] = useState(''),
     [dbError, setDbError] = useState(''),
@@ -167,6 +168,10 @@ export default function TeacherWorkspace({
       (s) => !s.archived_at && (s.difficulties || s.criteria),
     ).length;
   const classListHeading = useRef<HTMLHeadingElement>(null);
+  const dialogError = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error && modal) dialogError.current?.focus();
+  }, [error, modal]);
   // Lê todas as páginas de códigos antes de sugerir o próximo.
   // O servidor ainda atribui e protege a numeração no momento da gravação.
   async function readStudentCodes(classId: string): Promise<string[]> {
@@ -368,6 +373,7 @@ export default function TeacherWorkspace({
     let query = update
       ? apiClient.from(table).update(Object.fromEntries(Object.entries(value).filter(([key]) => !['id','user_id','created_at'].includes(key)))).eq('id', value.id)
       : apiClient.from(table).insert(value);
+    if (kind === 'exams') query = query.timeout(60_000);
     const { data: saved, error } = await query.select().single();
     if (error) throw error;
     if (kind === 'exams') {
@@ -602,8 +608,9 @@ export default function TeacherWorkspace({
   // Salva primeiro o conteúdo como rascunho e só depois solicita aprovação explícita.
   // Assim, alterações na questão não carregam automaticamente uma aprovação anterior.
   async function saveExam(approve = false) {
-    if (!exam) return;
-    await action(async () => {
+    if (!exam || busy) return;
+    try { await action(async () => {
+      setMessage('');
       const parsed = examContentSchema.safeParse(exam.content);
       if (!parsed.success)
         throw new Error(
@@ -625,6 +632,7 @@ export default function TeacherWorkspace({
         throw new Error(
           'Há uma questão idêntica nesta avaliação. Edite-a antes de continuar.',
         );
+      setReviewStage('Salvando a revisão…');
       const saved = (await persist(
         'exams',
         'sala_exams',
@@ -633,17 +641,19 @@ export default function TeacherWorkspace({
       )) as Exam;
       setExam(saved);
       if (approve) {
+        setReviewStage('Confirmando a aprovação…');
         const approved = await approveSavedExam(saved, approval => persist(
           'exams', 'sala_exams', demo ? { ...saved, ...approval } : approval, true,
         ) as Promise<Exam>);
         setExam(approved);
+        setModal('exam-ready');
       }
       setMessage(
         approve
           ? 'Prova aprovada! Escolha PDF ou DOCX para baixar.'
           : 'Rascunho salvo.',
       );
-    });
+    }); } finally { setReviewStage(''); }
   }
   // SETOR 5 — modelos, envio e leitura.
   // Incorpora a versão confirmada de um modelo sem duplicá-lo na coleção.
@@ -795,7 +805,7 @@ export default function TeacherWorkspace({
     setModal('generate');
   }
   // Clona a prova para que digitar no editor não altere a lista antes do salvamento.
-  function reviewExam(item: Exam) {setExam(structuredClone(item));open('exam');}
+  function reviewExam(item: Exam) {setExam(structuredClone(item));open(item.status === 'approved' ? 'exam-ready' : 'exam');}
   // SETOR 6 — ciclo dos alunos e compartilhamentos.
   // Inclui o aluno no acompanhamento individual sem removê-lo da turma de origem.
   async function addRecovery(student: Student, goToPage = false) {
@@ -1640,8 +1650,10 @@ export default function TeacherWorkspace({
       )}
       {modal && (
         <Dialog
+          key={modal === 'exam-ready' ? 'exam-ready' : modal === 'exam' ? 'exam' : 'workspace'}
           title={
-            modal === 'edit-class' ? 'Configurações da turma'
+            modal === 'exam-ready' ? 'Baixar prova aprovada'
+              : modal === 'edit-class' ? 'Configurações da turma'
               : modal === 'import-students' ? 'Importar alunos'
               : modal === 'delete-class' ? 'Excluir turma'
               : modal === 'share' ? 'Compartilhar uma cópia'
@@ -1666,7 +1678,7 @@ export default function TeacherWorkspace({
           }}
         >
           {error && (
-            <p className="error" role="alert">
+            <p ref={dialogError} className="error" role="alert" tabIndex={-1}>
               {error}
             </p>
           )}
@@ -1958,6 +1970,39 @@ export default function TeacherWorkspace({
                 </button>
               </div>
             </form>
+          )}
+          {modal === 'exam-ready' && exam?.status === 'approved' && (
+            <section className="exam-ready" aria-label="Downloads da prova aprovada">
+              <span className="status good"><CheckCircle2 size={16} />Revisão concluída</span>
+              <h3>{exam.title}</h3>
+              <p>{exam.profile_snapshot.name} · {exam.profile_snapshot.code}</p>
+              <p className="exam-ready-hint">Escolha o formato para baixar sua prova.</p>
+              <div className="exam-ready-formats">
+                <button type="button" className="button primary" autoFocus
+                  disabled={busy || downloads.busy || generation.busy}
+                  onClick={() => startDownload([exam], 'pdf')}>
+                  <Download size={18} />Baixar PDF
+                </button>
+                <button type="button" className="button secondary"
+                  disabled={busy || downloads.busy || generation.busy}
+                  onClick={() => startDownload([exam], 'docx')}>
+                  <Download size={18} />DOCX
+                </button>
+              </div>
+              <button type="button" className="button secondary exam-ready-answer"
+                disabled={busy || downloads.busy || generation.busy}
+                onClick={() => startDownload([exam], 'pdf', true)}>Gabarito</button>
+              {(downloads.busy || generation.busy) && <p role="status" className="helper-note">
+                {downloads.busy ? 'Há um download em andamento. Aguarde sua conclusão para baixar outro arquivo.'
+                  : 'Aguarde a geração em andamento para iniciar um download.'}
+              </p>}
+              <div className="dialog-actions wrap">
+                <button type="button" className="button secondary" disabled={busy}
+                  onClick={() => { setMessage(''); setModal('exam'); }}>Editar prova</button>
+                <button type="button" className="button secondary" disabled={busy}
+                  onClick={closeModal}>Voltar às provas</button>
+              </div>
+            </section>
           )}
           {modal === 'exam' && exam && <ExternalResearch research={exam.external_research} />}
           {modal === 'exam' && exam && (
@@ -2272,6 +2317,7 @@ export default function TeacherWorkspace({
                   </>
                 ) : (
                   <>
+                    {reviewStage && <p role="status" className="helper-note">{reviewStage}</p>}
                     <button
                       className="button secondary"
                       disabled={busy}

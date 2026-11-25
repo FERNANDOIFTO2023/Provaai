@@ -310,6 +310,7 @@ try {
     await page.getByRole('button', { name: 'Revisar', exact: true }).first().click();
     await page.getByRole('button', { name: 'Revisei e aprovo', exact: true }).click();
     await page.getByText('Prova aprovada! Escolha PDF ou DOCX para baixar.', { exact: true }).waitFor();
+    await page.getByRole('heading', { name: 'Baixar prova aprovada', exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: 'DOCX', exact: true }).isEnabled(), true);
     assert.equal(await page.getByRole('button', { name: 'Baixar PDF', exact: true }).isEnabled(), true);
     assert.equal(await page.getByRole('button', { name: 'Revisei e aprovo', exact: true }).count(), 0);
@@ -325,6 +326,34 @@ try {
     await expectPage(page, 'exams', 'c1');
   });
 
+  for (const width of [1440, 375]) {
+    await run(`downloads ficam visíveis após revisão longa e reabertura (${width}px)`, async page => {
+      await page.setViewportSize({ width, height: 667 });
+      await navigate(page, 'Provas coletivas');
+      await page.getByRole('button', { name: 'Abrir provas', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Revisar', exact: true }).first().click();
+      assert.equal(await page.getByRole('dialog').evaluate(node => node.scrollHeight > node.clientHeight), true);
+      await page.getByRole('button', { name: 'Revisei e aprovo', exact: true }).click();
+      await page.getByRole('heading', { name: 'Baixar prova aprovada', exact: true }).waitFor();
+      for (const name of ['Baixar PDF', 'DOCX', 'Gabarito']) {
+        const button = page.getByRole('button', { name, exact: true });
+        assert.equal(await button.isEnabled(), true);
+        const box = await button.boundingBox();
+        assert.ok(box && box.y >= 0 && box.y + box.height <= 667, `${name} visível sem rolar`);
+      }
+      assert.equal(await page.getByRole('dialog').evaluate(node => node.scrollTop), 0);
+      await page.getByRole('button', { name: 'Voltar às provas', exact: true }).click();
+      await page.getByRole('button', { name: 'Revisar', exact: true }).first().click();
+      await page.getByRole('heading', { name: 'Baixar prova aprovada', exact: true }).waitFor();
+      await page.getByRole('button', { name: 'Editar prova', exact: true }).click();
+      await page.getByLabel('Título', { exact: true }).fill('Prova revisada novamente');
+      assert.equal(await page.getByRole('button', { name: 'Baixar PDF', exact: true }).count(), 0);
+      await page.getByRole('button', { name: 'Revisei e aprovo', exact: true }).click();
+      await page.getByRole('heading', { name: 'Baixar prova aprovada', exact: true }).waitFor();
+      await page.getByRole('dialog').getByRole('heading', { name: 'Prova revisada novamente', exact: true }).waitFor();
+    }, width);
+  }
+
   await run('aprovação autenticada libera PDF e DOCX sem aguardar a fila ou recarregar a conta', async page => {
     const timestamp = new Date().toISOString();
     const activityToken = `test.${Buffer.from(JSON.stringify({ sub: 'teacher-test', session_id: 'review-test' })).toString('base64url')}.test`;
@@ -335,6 +364,7 @@ try {
       profile_snapshot: student, created_at: timestamp, updated_at: timestamp };
     const updates = [], exports = [];
     let selects = 0;
+    let refuseApproval = true;
     await page.route('**/api/**', route => {
       const path = new URL(route.request().url()).pathname;
       if (path === '/api/auth/session') return route.fulfill({ json: { session: { access_token: activityToken, refresh_token: '', user: { id: 'teacher-test', email: 'teacher@example.test', user_metadata: {} } } } });
@@ -344,7 +374,7 @@ try {
         if (payload.op === 'update' && resource === 'sala_exams') {
           updates.push(payload.values);
           // Conteúdo reserializado pode ser tratado como edição. A confirmação deve enviar somente status.
-          exam = { ...exam, ...payload.values, status: payload.values.content ? 'draft' : payload.values.status };
+          exam = { ...exam, ...payload.values, status: payload.values.content || refuseApproval ? 'draft' : payload.values.status };
           return route.fulfill({ json: { data: exam } });
         }
         selects++;
@@ -368,9 +398,17 @@ try {
     await page.getByRole('button', { name: 'Revisar', exact: true }).first().click();
     const before = selects;
     await page.getByRole('button', { name: 'Revisei e aprovo', exact: true }).click();
+    await page.getByRole('dialog').getByRole('alert').filter({ hasText: 'A aprovação não foi confirmada' }).waitFor();
+    assert.equal(await page.getByRole('dialog').getByRole('alert').evaluate(node => document.activeElement === node), true);
+    assert.equal(await page.getByRole('heading', { name: 'Baixar prova aprovada', exact: true }).count(), 0);
+    assert.equal(await page.getByRole('button', { name: 'Baixar PDF', exact: true }).count(), 0);
+    refuseApproval = false;
+    await page.getByRole('button', { name: 'Revisei e aprovo', exact: true }).click();
     await page.getByText('Prova aprovada! Escolha PDF ou DOCX para baixar.', { exact: true }).waitFor();
-    assert.equal(updates.length, 2);
+    await page.getByRole('heading', { name: 'Baixar prova aprovada', exact: true }).waitFor();
+    assert.equal(updates.length, 4);
     assert.deepEqual(updates[1], { status: 'approved' });
+    assert.deepEqual(updates[3], { status: 'approved' });
     assert.equal(selects, before, 'Aprovar não precisa recarregar todas as coleções');
     assert.equal(exports.length, 0, 'A interface não espera exportação para liberar os botões');
     assert.equal(await page.getByRole('button', { name: 'DOCX', exact: true }).isEnabled(), true);
