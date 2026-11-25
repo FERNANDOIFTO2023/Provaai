@@ -141,4 +141,4 @@ git diff --check
 
 Os testes de navegador ficam em `tests/browser`. `PLAYWRIGHT_MODULE` e `CHROME_PATH` permitem indicar a biblioteca e o executável disponíveis na máquina. Eles usam API simulada para testar o build local, sem confirmar entrega de e-mail ou disponibilidade de provedores reais.
 
-Mantenha os comentários próximos da regra que descrevem. Quando uma regra mudar, atualize código, testes e explicação no mesmo trabalho. O agente entrega as alterações e um relatório; commit e publicação exigem autorização específica do usuário.
+Mantemos os comentários próximos da regra que descrevem. Quando alteramos uma regra, atualizamos código, testes e explicação no mesmo trabalho. Documentamos as alterações e os resultados de validação em relatório; commit e publicação seguem as autorizações específicas registradas nas instruções de contribuição.

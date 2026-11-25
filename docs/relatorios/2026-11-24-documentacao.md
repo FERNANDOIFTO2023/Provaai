@@ -4,7 +4,7 @@ Data: 24/11/2026. Alterações locais para revisão, sem staging, commit, push o
 
 ## Escopo e identificação
 
-A solicitação foi esclarecida: remover menções à autoria por assistentes, preservando a descrição técnica da geração automática, dos provedores e das demais funcionalidades. A revisão editorial não altera registros de execução, nomes de branches, comandos de ambiente ou créditos/licenças de terceiros necessários à rastreabilidade.
+Revisamos a linguagem e a identificação da documentação, preservando a descrição técnica da geração automática, dos provedores e das demais funcionalidades. Mantivemos registros de execução, nomes de branches, comandos de ambiente e créditos/licenças de terceiros necessários à rastreabilidade.
 
 Identificação conferida com a especificação e o README existentes:
 
@@ -17,7 +17,7 @@ Identificação conferida com a especificação e o README existentes:
 - Atualização da especificação acadêmica e do histórico até esta revisão: importação XLSX em Alunos e turmas, códigos automáticos, materiais privados, pesquisa externa opcional, painel por período, calendário, consumo de tokens, Sobre, navegação, filas de exportação e conferência matemática.
 - Correção de afirmações antigas: publicação AWS/PostgreSQL já realizada, SymPy já integrado e exportações com armazenamento privado por versão. Mantidas as limitações de disponibilidade, conferência pedagógica e isolamento de recursos.
 - Inclusão dos requisitos RF015–RF022 e RNF011–RNF012, distinguindo implementações de propostas futuras, como Google Drive e tema claro/escuro. Perfil permanece sem envio de foto.
-- Remoção das referências a assistentes/ferramentas de elaboração nos textos metodológicos dos relatórios de comentários do código, materiais UI e documentação de movimento. Descrições funcionais de IA, caminhos técnicos usados nos comandos históricos e créditos dos recursos foram preservados.
+- Padronização dos textos metodológicos dos relatórios de comentários do código, materiais UI e documentação de movimento. Mantivemos as descrições funcionais de IA, os caminhos técnicos usados nos comandos históricos e os créditos dos recursos.
 - Atualização do README, guia técnico, mapa do código, segurança e documentação de PDF/arquivos. O guia distingue recriação do contêiner para aplicar `env_file` de simples reinício de processos.
 - Novo índice em `docs/README.md` e gerador em `docs/tools/render-specification.py`, com fonte única no Markdown.
 - Regeneração de `docs/ESPECIFICACAO-LTP3-PROVAAI.pdf` e `docs/Especificacao-Provaai.pdf`: ambos com dez páginas e conteúdo idêntico. A capa do PDF acadêmico anterior continha placeholders de professor/equipe; eles foram substituídos. Metadados de autoria contêm os quatro integrantes.

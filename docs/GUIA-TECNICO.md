@@ -1,6 +1,6 @@
 # Guia técnico — Laravel
 
-Atualizado em 24/11/2026. Laravel controla HTTP, autenticação, autorização, regras de negócio, Eloquent, filas e IA. React é apresentação. Node é conversor auxiliar de arquivos, sem servidor HTTP ou acesso ao banco. A aplicação e o PostgreSQL de produção estão na AWS; a Vercel encaminha o domínio público para essa origem.
+Atualizado em 25/11/2026. Centralizamos no Laravel o controle de HTTP, autenticação, autorização, regras de negócio, Eloquent, filas e IA. Utilizamos React na apresentação e Node como conversor auxiliar de arquivos, sem servidor HTTP ou acesso ao banco. Executamos a aplicação e o PostgreSQL de produção na AWS e utilizamos a Vercel para encaminhar o domínio público a essa origem.
 
 ## Organização
 

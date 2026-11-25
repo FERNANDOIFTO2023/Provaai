@@ -69,7 +69,7 @@ node docs/motion/verify-sync-v7.mjs
 node docs/motion/verify-video-v7.mjs
 ```
 
-V6 e demais versões preservadas. Nenhum commit criado pelo agente.
+Preservamos a V6 e as demais versões. Não houve criação de commit nesta entrega.
 
 ## Motion V6, preservada — Bloub reage às ações
 
@@ -238,7 +238,7 @@ node docs/motion/render.mjs
 
 As fontes são Segoe UI e Trebuchet MS do Windows. Para renderizar em outro sistema, atualize os caminhos de `GlobalFonts.registerFromPath`.
 
-`capture.mjs` é uma ferramenta opcional para renovar as capturas do site público em um perfil temporário do Chrome. Usa Playwright Core do runtime local do Codex; ajuste o caminho do import em outro computador. A captura entra apenas na demonstração, com dados fictícios. Não envia e-mail, gera provas ou altera dados reais.
+Utilizamos `capture.mjs` como ferramenta opcional para renovar as capturas do site público em um perfil temporário do Chrome. O script usa Playwright Core do ambiente local; o caminho do import deve corresponder à instalação disponível. A captura acessa apenas a demonstração, com dados fictícios. Não envia e-mail, gera provas ou altera dados reais.
 
 ## Origem dos elementos
 

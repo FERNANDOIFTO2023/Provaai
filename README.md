@@ -23,7 +23,7 @@
 
 ## Uma avaliação que considera cada aluno
 
-Uma turma pode estudar o mesmo conteúdo e precisar de provas diferentes. No **Provaai**, o professor registra o perfil pedagógico de cada aluno e escolhe a matéria, os objetivos e a divisão entre questões objetivas e discursivas. Pode escrever as questões ou pedir uma primeira versão à IA.
+Desenvolvemos o **Provaai** para apoiar turmas que estudam o mesmo conteúdo e precisam de avaliações diferentes. Implementamos o registro do perfil pedagógico de cada aluno e a seleção de matéria, objetivos e distribuição de questões objetivas e discursivas. Disponibilizamos edição manual e geração inicial por IA, com revisão e aprovação do professor.
 
 Para percorrer o fluxo com dados fictícios, abra o [site](https://provaai.vercel.app/) e escolha **Explorar demonstração**.
 

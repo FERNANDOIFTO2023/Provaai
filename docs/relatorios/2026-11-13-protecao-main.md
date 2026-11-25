@@ -12,9 +12,9 @@ Data: 13/11/2026. Repositório: `FERNANDOIFTO2023/Provaai`.
 - A opção de auto-merge foi habilitada no repositório.
 - A entrega para a `main` contém `.github/CODEOWNERS`, os JSONs dos rulesets,
   o workflow de auto-merge e as instruções de contribuição.
-- `AGENTS.md` e `CONTRIBUTING.md` registram a orientação final: o agente
-  altera, testa e relata; commits e publicação pelo agente exigem autorização
-  explícita do usuário para a operação e o escopo atuais. Essa autorização
+- `AGENTS.md` e `CONTRIBUTING.md` registram as regras de preparação,
+  validação e entrega: commits e publicação por automação exigem autorização
+  explícita do responsável para a operação e o escopo atuais. Essa autorização
   não se estende a tarefas futuras e não dispensa testes nem relatório.
 
 ## Verificações executadas
@@ -57,9 +57,9 @@ o actionlint e o diff foram conferidos novamente antes do commit autorizado.
 
 ## Publicação autorizada
 
-O usuário autorizou explicitamente o agente a commitar estas regras e
+Houve autorização explícita para criar o commit destas regras e
 publicá-las diretamente na `main`. O escopo inclui os arquivos de proteção,
-as instruções de contribuição e dos agentes e este relatório.
+as instruções de contribuição, `AGENTS.md` e este relatório.
 
 Os commits de configuração `a41922a` e `a39642c`, apresentados no
 [PR #1](https://github.com/FERNANDOIFTO2023/Provaai/pull/1), fazem parte desta

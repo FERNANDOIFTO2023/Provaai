@@ -51,7 +51,7 @@ O início do desenvolvimento é estimado em 04/11/2026, conforme a lembrança da
 
 Responsáveis pelo projeto: Fernando de Paula Matos, Vinicius Celestino, João Francisco e Gabriel Gutemberg. Professor: Marcos Raimundo. O quadro registra as entregas do projeto de forma conjunta, sem atribuir tarefas individuais não documentadas.
 
-As seções seguintes descrevem a implementação atual. Relatórios datados preservam as evidências e limitações de cada entrega; um teste local aprovado não comprova disponibilidade contínua dos serviços externos.
+Nas seções seguintes, descrevemos a implementação atual. Mantemos as evidências e limitações de cada entrega em relatórios datados; um teste local aprovado não comprova disponibilidade contínua dos serviços externos.
 
 # 2. DEFINIÇÃO DO PROJETO
 
@@ -61,13 +61,13 @@ Tecnologia educacional: organização de turmas e preparação de avaliações p
 
 ## 2.2 Objetivo do software
 
-O Provaai busca reduzir o trabalho repetitivo de organizar perfis de alunos e elaborar versões de provas adequadas às necessidades pedagógicas de cada turma. Seu público principal é o professor, que informa matéria, tópicos, dificuldades e critérios, revisa as questões sugeridas e aprova o material antes de exportá-lo.
+Desenvolvemos o Provaai para reduzir o trabalho repetitivo de organizar perfis de alunos e elaborar versões de provas adequadas às necessidades pedagógicas de cada turma. Definimos o professor como público principal: ele informa matéria, tópicos, dificuldades e critérios, revisa as questões sugeridas e aprova o material antes de exportá-lo.
 
-A aplicação reúne turmas, alunos, modelos e histórico de avaliações em um ambiente web. A IA atua como apoio à elaboração; o professor mantém a decisão sobre conteúdo, adequação e uso da prova. O compartilhamento cria cópias editáveis, preservando a independência de cada conta.
+Reunimos turmas, alunos, modelos e histórico de avaliações em um ambiente web. Integramos IA como apoio à elaboração das questões; mantemos com o professor a decisão sobre conteúdo, adequação e uso da prova. Implementamos o compartilhamento por cópias editáveis, preservando a independência de cada conta.
 
 ## 2.3 Delimitação e situação da entrega
 
-O backend Laravel atende ao requisito da disciplina e mantém a interface React. A aplicação e o PostgreSQL estão publicados na AWS, com a Vercel encaminhando o domínio público para essa origem. A atualização da origem depende do CI aprovado, da construção da imagem e da aplicação das migrações. A integração com Google Drive e a seleção de tema claro/escuro permanecem propostas futuras.
+Implementamos o backend em Laravel para atender ao requisito da disciplina e mantivemos React na interface. Publicamos a aplicação e o PostgreSQL na AWS e configuramos a Vercel para encaminhar o domínio público a essa origem. Condicionamos a atualização da origem ao CI aprovado, à construção da imagem e à aplicação das migrações. Mantemos a integração com Google Drive e a seleção de tema claro/escuro como propostas futuras.
 
 Na inspeção de 23/11, a geração apresentou respostas HTTP 503 do Gemini e a produção não tinha a chave Groq configurada. Uma reprodução com o contrato de geração recebeu a indicação de alta demanda do modelo. Isso limita a disponibilidade da geração automática, sem significar que a publicação ou os cadastros estejam indisponíveis. A reserva precisa de credencial válida e validação real após sua configuração.
 
@@ -143,11 +143,11 @@ Fluxo: Acesso → Minhas turmas → Alunos/modelos → Gerar em fila → Revisar
 | Compartilhamentos | Convites recebidos/enviados; aceitar cópia ou cancelar convite pendente. |
 | Sobre | Resumo do funcionamento e das tecnologias, sem controles de tema nesta versão. |
 
-O botão voltar do navegador restaura a tela anterior. Alterações de dados são confirmadas pela API; erros são apresentados ao professor, sem simular sucesso.
+Integramos o botão voltar do navegador à restauração da tela anterior. Confirmamos alterações de dados pela API e apresentamos erros ao professor, sem simular sucesso.
 
 ## 3.4 Importação de alunos
 
-O modelo XLSX contém nome, nível atual, dificuldades/objetivos e critérios específicos. O nome é obrigatório e o nível vazio assume Intermediário. A aba Alunos e seus quatro cabeçalhos devem ser preservados. São aceitos até 500 alunos por arquivo de até 5 MB; XLS, CSV e fórmulas não integram este fluxo.
+Definimos no modelo XLSX os campos nome, nível atual, dificuldades/objetivos e critérios específicos. Exigimos o nome e adotamos Intermediário quando o nível não é informado. Preservamos a aba Alunos e seus quatro cabeçalhos como contrato de importação. Aceitamos até 500 alunos por arquivo de até 5 MB; XLS, CSV e fórmulas não integram este fluxo.
 
 O professor escolhe uma turma ativa, envia a planilha, confere a prévia e confirma. O servidor valida novamente e grava o lote em transação. Nomes repetidos impedem a importação; homônimos exigem conferência e cadastro manual. A sequência de códigos considera também alunos arquivados. Não há mesclagem automática com registros existentes.
 
@@ -155,7 +155,7 @@ Importar uma planilha cria registros na turma do destinatário; não concede ace
 
 ## 3.5 Materiais e pesquisa externa
 
-O painel Conteúdo para as provas recebe até cinco arquivos de até 20 MB cada, com limite agregado de 60.000 caracteres de texto. A extração ocorre uma vez no envio, e o professor pode conferir o conteúdo lido. Não há OCR para imagens e PDFs digitalizados. Animações avançadas, vídeos e elementos complexos de PowerPoint podem não ser interpretados; recomenda-se uma versão simples com texto selecionável.
+Implementamos o painel Conteúdo para as provas com até cinco arquivos de até 20 MB cada e limite agregado de 60.000 caracteres de texto. Extraímos o texto uma vez no envio e disponibilizamos o resultado para conferência do professor. Não integramos OCR para imagens e PDFs digitalizados. Animações avançadas, vídeos e elementos complexos de PowerPoint podem não ser interpretados; recomendamos uma versão simples com texto selecionável.
 
 Com anexos e pesquisa externa desativada, as questões devem se apoiar no texto extraído. Ao habilitar a pesquisa, podem surgir questões além dos materiais, dentro da matéria e dos tópicos solicitados. Sem anexos, o fluxo original continua disponível. Materiais e preferência ficam registrados no rascunho preparado; alterações posteriores valem para novas provas. Os anexos são privados e não acompanham cópias compartilhadas.
 
@@ -193,13 +193,13 @@ Nos arquivos destinados ao aluno, o título cadastrado serve à organização no
 
 ## 4.1 Modelo de dados e arquitetura
 
-Um professor possui turmas, alunos, provas e modelos. Cada aluno pertence a uma turma; cada prova referencia aluno, turma e, opcionalmente, modelo. Materiais e preferências pertencem à turma; rascunhos preservam a versão das fontes usada na preparação. Lotes registram progresso e reserva de execução; convites armazenam uma fotografia dos dados a copiar; exclusões registram motivo e data. Eventos de consumo registram provedor, etapa, tokens disponíveis, duração e status, sem guardar prompts ou respostas.
+Modelamos professores com turmas, alunos, provas e modelos. Vinculamos cada aluno a uma turma e cada prova ao aluno, à turma e, opcionalmente, ao modelo. Associamos materiais e preferências à turma e preservamos nos rascunhos a versão das fontes usada na preparação. Registramos progresso e reserva de execução nos lotes, uma cópia dos dados nos convites e motivo e data nas exclusões. Nos eventos de consumo, registramos provedor, etapa, tokens disponíveis, duração e status, sem guardar prompts ou respostas.
 
 Fluxo técnico: navegador → rotas/middleware Laravel → controllers e serviços → Eloquent/banco e storage privado. O worker processa a fila e chama os provedores de IA. O serviço de documentos aciona o conversor auxiliar; esse processo não autentica usuários nem fornece API própria.
 
 ## 4.2 Segurança e privacidade
 
-A sessão é mantida por cookie HttpOnly, com CSRF nas escritas e verificações de proprietário no servidor, inclusive na importação, nos materiais e nas métricas. Chaves de IA, SMTP e banco ficam no ambiente privado. O gerador seleciona campos pedagógicos e não inclui os campos de nome/e-mail do aluno; textos livres e anexos podem conter dados que o professor inseriu e devem ser conferidos antes do envio. O material gerado exige revisão humana. Há validações de tamanho, formato e estrutura em leitores de planilhas e materiais; elas não equivalem a isolamento completo do conversor nem a uma auditoria de segurança integral.
+Mantemos a sessão por cookie HttpOnly, com CSRF nas escritas e verificações de proprietário no servidor, inclusive na importação, nos materiais e nas métricas. Armazenamos as chaves de IA, SMTP e banco no ambiente privado. Selecionamos campos pedagógicos para a geração e excluímos os campos de nome/e-mail do aluno; textos livres e anexos podem conter dados inseridos pelo professor e devem ser conferidos antes do envio. Exigimos revisão humana do material gerado. Validamos tamanho, formato e estrutura em leitores de planilhas e materiais, sem considerar esses controles equivalentes ao isolamento completo do conversor ou a uma auditoria de segurança integral.
 
 # 5. IDEIAS FUTURAS (BACKLOG)
 

@@ -9,7 +9,7 @@ Registry: https://github.com/kapishdima/soundcn
 
 ## V8: card slides
 
-`card-slide-1`, `card-slide-4` and `card-slide-8` were installed with the shadcn CLI into the same external Codex tools directory. The original MP3 payloads and mono 48kHz decoded samples are retained here for reproducibility.
+We installed `card-slide-1`, `card-slide-4` and `card-slide-8` with the shadcn CLI into the same external tools directory. We retain the original MP3 payloads and mono 48kHz decoded samples here for reproducibility.
 
 All three modules identify Kenney as author and CC0 as license. Registry sources:
 - https://soundcn.xyz/r/card-slide-1.json
