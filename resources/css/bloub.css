@@ -1851,6 +1851,35 @@ td {
 .class-exam-counts {display:flex;gap:20px;margin-bottom:24px;color:var(--muted);font-size:13px;}
 .class-exam-counts strong {display:block;font-size:25px;color:var(--ink,#0d1823);}
 .exam-library .exam-row-info small {color:var(--muted);}
+/* Pastas diárias: o resumo permanece visível quando as provas estão recolhidas. */
+.exam-folders-help { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 20px 0 12px; }
+.exam-day-folders { display: grid; gap: 12px; }
+.exam-day-folder { border: 1px solid var(--border); border-radius: 16px; background: white; min-width: 0; }
+.exam-day-folder > summary { display: flex; align-items: center; gap: 14px; padding: 20px; cursor: pointer; list-style: none; border-radius: 16px; }
+.exam-day-folder > summary::-webkit-details-marker { display: none; }
+.exam-day-folder > summary:hover { background: #f8f5ff; }
+.exam-day-folder > summary:focus-visible { outline: 3px solid #6530d8; outline-offset: 3px; }
+.exam-folder-icon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; color: #510bd5; background: #eee7fc; border-radius: 12px; }
+.exam-folder-info { display: grid; gap: 5px; flex: 1; min-width: 0; }
+.exam-folder-info strong { font-size: 17px; }
+.exam-folder-info > span, .exam-folder-selected { color: var(--muted); font-size: 12px; }
+.exam-folder-chevron { font-size: 28px; transition: transform .18s ease; }
+.exam-day-folder[open] > summary .exam-folder-chevron { transform: rotate(90deg); }
+.exam-day-folder > .exam-list { padding: 0 16px 16px; }
+@media (max-width: 600px) {
+  .exam-day-folder > summary { padding: 16px; gap: 10px; flex-wrap: wrap; }
+  .exam-folder-selected { order: 1; flex-basis: 100%; padding-left: 54px; }
+  .exam-day-folder > .exam-list { padding: 0 8px 8px; }
+  .exam-day-folder .exam-row { display: grid; grid-template-columns: 20px 32px minmax(0, 1fr) auto; gap: 12px 8px; padding: 14px; }
+  .exam-day-folder .exam-row > input { grid-column: 1; grid-row: 1; }
+  .exam-day-folder .exam-row > .file-icon { grid-column: 2; grid-row: 1; width: 32px; height: 38px; }
+  .exam-day-folder .exam-row-info { grid-column: 3 / -1; grid-row: 1; min-width: 0; }
+  .exam-day-folder .exam-row > .status { grid-column: 1 / 4; grid-row: 2; justify-self: start; margin: 0; }
+  .exam-day-folder .exam-row > .button { grid-column: 4; grid-row: 2; margin: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .exam-folder-chevron { transition: none; }
+}
 .recovery-add {margin-bottom:32px;background:linear-gradient(120deg,#fff,#f3f0ff);}
 .recovery-add h2 {display:flex;align-items:center;gap:10px;font-size:20px;}
 .recovery-results>div {display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--border);}

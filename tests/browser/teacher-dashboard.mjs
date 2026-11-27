@@ -10,7 +10,7 @@ import { demoData } from '../../lib/model.ts';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const publicDir = resolve(root, 'public');
-const artifacts = resolve(root, 'docs/relatorios/2026-11-23-area-professor');
+const artifacts = resolve(root, process.env.DASHBOARD_SCREENSHOT_DIR || 'docs/relatorios/2026-11-27-area-professor');
 await mkdir(artifacts, { recursive: true });
 const entry = JSON.parse(await readFile(resolve(publicDir, 'build/manifest.json'), 'utf8'))['resources/js/app.tsx'];
 const server = createServer(async (req, res) => {
@@ -73,6 +73,13 @@ try {
     await page.getByRole('button', { name: 'Área do professor', exact: true }).click();
     const panel = page.locator('.teacher-dashboard');
     await panel.getByRole('region', { name: 'Calendário de provas' }).waitFor();
+    const overview = panel.getByRole('region', { name: 'Panorama das provas' });
+    await overview.waitFor();
+    assert.equal(await overview.locator('svg circle').count(), 6, 'Três anéis e suas trilhas');
+    const snapshot = demoDashboard(dashboardToday().slice(0, 7), 'month');
+    assert.equal(await overview.locator('.dashboard-overview-values > strong').innerText(), snapshot.summary.exams.toLocaleString('pt-BR'));
+    assert.match(await overview.locator('.dashboard-approval-rate').innerText(), new RegExp(`${Math.round(snapshot.summary.approved / snapshot.summary.exams * 100)}%`));
+    assert.equal(await panel.locator('.dashboard-review-strip strong').first().innerText(), snapshot.summary.approved.toLocaleString('pt-BR'));
     assert.equal(await page.locator('input[type=file]').count(), 0, 'Não oferece envio de foto');
     assert.match(requests[0], /period=month/);
     await page.waitForFunction(() => getComputedStyle(document.querySelector('.dashboard-bar-stack')).transform === 'none');
@@ -109,10 +116,14 @@ try {
     await panel.getByRole('button', { name: 'Atualizar dados', exact: true }).click();
     await panel.getByRole('alert').waitFor();
     assert.equal(await panel.locator('.dashboard-stats').count(), 0, 'Falha não apresenta números antigos');
+    assert.equal(await panel.locator('.dashboard-rings').count(), 0, 'Falha também retira os gráficos circulares antigos');
     fail = false; empty = true;
     await panel.getByRole('button', { name: 'Tentar novamente', exact: true }).click();
     await panel.getByText('Nenhuma prova com questões neste período.', { exact: false }).waitFor();
     assert.equal(await panel.locator('.dashboard-stats article').nth(3).locator('strong').innerText(), '—');
+    assert.equal(await panel.locator('.dashboard-approval-rate').innerText(), 'Sem provas no período');
+    assert.equal(await panel.locator('.dashboard-overview-values > strong').innerText(), '0');
+    assert.ok(await panel.locator('.dashboard-rings circle:nth-child(2)').evaluateAll(nodes => nodes.every(node => getComputedStyle(node).opacity === '0')), 'Sem arcos fictícios no estado vazio');
     assert.match(await panel.locator('.dashboard-measurement-note').innerText(), /não foi registrado/);
     await panel.getByRole('button', { name: 'Ir para minhas turmas', exact: true }).click();
     await page.getByRole('button', { name: `Abrir turma ${data.classes[0].name}`, exact: true }).waitFor();

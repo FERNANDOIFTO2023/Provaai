@@ -6,7 +6,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { examMonths, examDate } from '../lib/exam-library.ts';
+import { examMonths, examDays, examDate, regularExams } from '../lib/exam-library.ts';
 import { demoData } from '../lib/model.ts';
 test('organiza meses e anos do mais recente para o mais antigo sem alterar a lista',()=>{
   const e=demoData().exams[0];
@@ -24,4 +24,24 @@ test('data inválida não derruba a lista nem perde a prova',()=>{
   const e={...demoData().exams[0],created_at:'invalid'};
   assert.equal(examMonths([e])[0].label,'Data não informada');
   assert.equal(examDate(e.created_at),'Data não informada');
+});
+
+test('pastas diárias respeitam Brasília, ordenam dias e preservam criação e entrada', () => {
+  const base = demoData().exams[0];
+  const dates = ['2026-11-28T02:59:59Z', '2026-11-28T03:00:00Z', '2026-11-27T12:00:00Z', '2025-12-31T23:00:00Z', 'invalid'];
+  const exams = dates.map((created_at, index) => ({...base, id: String(index), created_at, updated_at: '2027-01-01T12:00:00Z'}));
+  const original = structuredClone(exams);
+  const groups = examDays(exams);
+  assert.deepEqual(groups.map(group => group.key), ['2026-11-28', '2026-11-27', '2025-12-31', 'unknown']);
+  assert.deepEqual(groups[1].exams.map(exam => exam.id), ['0', '2']);
+  assert.equal(groups[1].label, '27/11/2026');
+  assert.equal(groups[3].label, 'Data não informada');
+  assert.deepEqual(exams, original);
+  assert.deepEqual(examDays([]), []);
+});
+
+test('pastas coletivas recebem somente provas da turma e preservam provas individuais fora da lista', () => {
+  const base = demoData().exams[0];
+  const exams = [{...base, id: 'regular'}, {...base, id: 'individual', purpose: 'recovery' as const}, {...base, id: 'other', class_id: 'other'}];
+  assert.deepEqual(examDays(regularExams(exams, base.class_id)).flatMap(group => group.exams.map(exam => exam.id)), ['regular']);
 });

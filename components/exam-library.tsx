@@ -1,22 +1,23 @@
 /*
  * Interface / provas coletivas
- * Filtra provas por turma e situação e agrupa o histórico por mês. A seleção para download
+ * Filtra provas por turma e situação e organiza as coletivas em pastas por dia. A seleção para download
  * considera as provas aprovadas; a revisão é aberta pelo callback do componente pai.
  */
 'use client';
 import {useState} from 'react';
-import {ArrowLeft, ArrowRight, CheckCircle2, Clock, Download, FileText, Search, Sparkles} from './animated-icons';
+import {ArrowLeft, ArrowRight, CheckCircle2, Clock, Download, FileText, FolderOpen, Search, Sparkles} from './animated-icons';
 import type {ClassRoom, Exam} from '@/lib/model';
-import {matchesSearch, regularExams, examMonths, examDate} from '@/lib/exam-library';
+import {matchesSearch, regularExams, examMonths, examDays, examDate} from '@/lib/exam-library';
 import {Empty} from './workspace-ui';
 
-export function ExamRows({exams, pending, onReview, selection, onSelect}: {
+export function ExamRows({exams, pending, onReview, selection, onSelect, dailyFolders = false}: {
   exams: Exam[]; pending: string[]; onReview: (exam: Exam) => void;
   selection?: string[]; onSelect?: (id: string, checked: boolean) => void;
+  dailyFolders?: boolean;
 }) {
-  return <div className="exam-months">{examMonths(exams).map(group => <section className="exam-month" key={group.key} aria-label={group.label}>
-    <h2 className="exam-month-heading">{group.label}<span>{group.exams.length} {group.exams.length === 1 ? 'prova' : 'provas'}</span></h2>
-    <div className="exam-list">{group.exams.map(exam => <div className="exam-row" key={exam.id}>
+  const groups = dailyFolders ? examDays(exams) : examMonths(exams);
+  return <div className={dailyFolders ? 'exam-day-folders' : 'exam-months'}>{groups.map(group => {
+    const rows = <div className="exam-list">{group.exams.map(exam => <div className="exam-row" key={exam.id}>
     {onSelect && <input type="checkbox" aria-label={`Selecionar ${exam.title} de ${exam.profile_snapshot.name}`}
       disabled={exam.status !== 'approved'} checked={selection?.includes(exam.id) ?? false}
       onChange={event => onSelect(exam.id,event.target.checked)} />}
@@ -29,7 +30,21 @@ export function ExamRows({exams, pending, onReview, selection, onSelect}: {
     </span>
     <button className="button secondary small-button" disabled={pending.includes(exam.id)}
       onClick={() => onReview(exam)}>Revisar <ArrowRight size={15}/></button>
-  </div>)}</div></section>)}</div>;
+  </div>)}</div>;
+    const count = `${group.exams.length} ${group.exams.length === 1 ? 'prova' : 'provas'}`;
+    const selectedCount = group.exams.filter(exam => selection?.includes(exam.id)).length;
+    // Details permite abrir por teclado e não cria etapas artificiais no histórico do navegador.
+    if (dailyFolders) return <details className="exam-day-folder" key={group.key}>
+      <summary><span className="exam-folder-icon"><FolderOpen size={24}/></span>
+        <span className="exam-folder-info"><strong>{group.label}</strong><span>{count} · {group.exams.filter(exam => exam.status !== 'approved').length} em revisão</span></span>
+        {!!selectedCount && <span className="exam-folder-selected">{selectedCount} {selectedCount === 1 ? 'selecionada' : 'selecionadas'}</span>}
+        <span className="exam-folder-chevron" aria-hidden="true">›</span>
+      </summary>{rows}
+    </details>;
+    return <section className="exam-month" key={group.key} aria-label={group.label}>
+      <h2 className="exam-month-heading">{group.label}<span>{count}</span></h2>{rows}
+    </section>;
+  })}</div>;
 }
 
 export default function ExamLibrary({classes, exams, pending, busy, generating, onReview, onPrepare, onDownload, roomId, onRoomChange}: {
@@ -75,10 +90,11 @@ export default function ExamLibrary({classes, exams, pending, busy, generating, 
       </article>;
     })}</div> : <>
       {!!approved.length && <div className="selection-bar"><label><input type="checkbox" checked={selected.length === approved.length}
-        onChange={event => setSelection(event.target.checked ? approved.map(exam => exam.id) : [])}/>Selecionar aprovadas desta lista</label>
+        onChange={event => setSelection(event.target.checked ? approved.map(exam => exam.id) : [])}/>Selecionar aprovadas de todas as pastas filtradas</label>
         <span>{selected.length} selecionadas</span><select aria-label="Formato de download" value={format} onChange={event => setFormat(event.target.value as 'pdf'|'docx')}><option value="pdf">PDF</option><option value="docx">DOCX</option></select>
         <button className="button secondary small-button" disabled={busy || !selected.length} onClick={() => onDownload(selected,format)}><Download size={16}/>Baixar {selected.length > 1 ? 'ZIP' : ''}</button></div>}
-      <ExamRows exams={filtered} pending={pending} onReview={onReview} selection={selection}
+      <p className="exam-folders-help">Abra uma pasta para ver as provas geradas naquele dia. Datas no horário de Brasília.</p>
+      <ExamRows key={room.id} dailyFolders exams={filtered} pending={pending} onReview={onReview} selection={selection}
         onSelect={(id,checked) => setSelection(current => checked ? [...current,id] : current.filter(value => value !== id))}/>
       {!filtered.length && <Empty title={query || status !== 'all' ? 'Nenhuma prova encontrada' : 'Esta turma ainda não tem provas'} text="Prepare uma avaliação ou ajuste os filtros acima."/>}
     </>}

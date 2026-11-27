@@ -4,10 +4,39 @@ import { motion, useReducedMotion } from 'motion/react';
 import { apiFetch } from '@/lib/api-client';
 import { activityBars, activityLevel, calendarDays, dashboardToday, demoDashboard, formatDay, monthLabel, shiftMonth, type DashboardData } from '@/lib/teacher-dashboard';
 import { ArrowLeft, ArrowRight, CheckCircle2, FileText, GraduationCap, Loader2, Sparkles, Users } from './animated-icons';
-import { BloubMood } from './motion';
 
 const number = (value: number) => value.toLocaleString('pt-BR');
 const stageNames: Record<string, string> = { generation: 'Geração', review: 'Revisão', research: 'Pesquisa externa' };
+
+/** Anéis independentes: cada arco representa uma parcela do total, sem sugerir uma meta. */
+function ExamOverview({ summary }: { summary: DashboardData['summary'] }) {
+  const reduce = useReducedMotion();
+  const series = [
+    { label: 'Aprovadas', value: summary.approved, color: 'var(--dashboard-purple)' },
+    { label: 'Coletivas', value: summary.regular, color: 'var(--dashboard-teal)' },
+    { label: 'Individuais', value: summary.recovery, color: 'var(--dashboard-amber)' },
+  ];
+  const approvedPercent = summary.exams ? Math.round(summary.approved / summary.exams * 100) : 0;
+  return <section className="dashboard-card dashboard-overview" aria-label="Panorama das provas">
+    <div className="dashboard-card-heading"><h2><FileText size={20}/>Panorama das provas</h2><span className="dashboard-total">No período</span></div>
+    <div className="dashboard-overview-body">
+      <svg className="dashboard-rings" viewBox="0 0 240 240" aria-hidden="true">
+        {series.map((item, i) => <g key={item.label} transform="rotate(-90 120 120)">
+          <circle cx="120" cy="120" r={102 - i * 22} fill="none" stroke="var(--dashboard-track)" strokeWidth="13" />
+          <motion.circle cx="120" cy="120" r={102 - i * 22} fill="none" stroke={item.color} strokeWidth="13" strokeLinecap="round" pathLength="100"
+            strokeDasharray="100 100" initial={reduce ? false : { strokeDashoffset: 100 }}
+            animate={{ strokeDashoffset: 100 - (summary.exams ? Math.min(100, item.value / summary.exams * 100) : 0) }}
+            style={{ opacity: item.value > 0 ? 1 : 0 }} transition={{ duration: reduce ? 0 : .7, delay: reduce ? 0 : i * .08 }} />
+        </g>)}
+      </svg>
+      <div className="dashboard-overview-values"><p>Total de provas</p><strong>{number(summary.exams)}</strong>
+        <span className="dashboard-approval-rate">{summary.exams ? `${approvedPercent}% aprovadas` : 'Sem provas no período'}</span>
+        <dl>{series.map(item => <div key={item.label}><dt><i style={{ background: item.color }} />{item.label}</dt><dd>{number(item.value)}</dd></div>)}</dl>
+      </div>
+    </div>
+    <p className="dashboard-ring-note">Cada anel mostra a proporção sobre o total. Coletivas e individuais também podem estar aprovadas.</p>
+  </section>;
+}
 
 export default function TeacherDashboard({ demo, name, onNavigate }: { demo: boolean; name: string; onNavigate: (view: string) => void }) {
   const today = dashboardToday(), currentMonth = today.slice(0, 7);
@@ -51,10 +80,8 @@ export default function TeacherDashboard({ demo, name, onNavigate }: { demo: boo
   return <div className="teacher-dashboard">
     <div className="dashboard-title"><div><span className="eyebrow">MEU ESPAÇO</span><h1>Área do professor<span>.</span></h1><p>Um olhar sobre suas provas e o uso da IA.</p></div>
       <button className="button secondary" disabled={loading} onClick={() => setRevision(n => n + 1)}>Atualizar dados</button></div>
-    <div className="dashboard-hero"><div><span className="dashboard-kicker">{demo ? 'VISÃO DE DEMONSTRAÇÃO' : 'SEU TRABALHO EM PERSPECTIVA'}</span>
-      <h2>Olá, {name}.</h2><p>Acompanhe o que você preparou e encontre seu ritmo ao longo do tempo.</p>
+    <div className="dashboard-welcome"><div><h2>Olá, {name}.</h2><p>{formatDay(today)} · Seu trabalho em perspectiva.</p></div>
       <button className="button primary" onClick={() => onNavigate('classes')}>Ir para minhas turmas <ArrowRight size={17} /></button></div>
-      <BloubMood mood="feliz" /></div>
     {demo && <p className="dashboard-demo" role="note">Dados ilustrativos de demonstração. Não representam provas ou consumo reais.</p>}
     <div className="dashboard-filters"><div><label htmlFor="dashboard-period">Período</label><select id="dashboard-period" value={period} onChange={e => setPeriod(e.target.value)}>
       <option value="month">Mês selecionado</option><option value="quarter">3 meses até o selecionado</option><option value="year">12 meses até o selecionado</option></select></div>
@@ -63,7 +90,15 @@ export default function TeacherDashboard({ demo, name, onNavigate }: { demo: boo
     {loading && <div className="dashboard-loading" role="status"><Loader2 size={22} />Carregando seus indicadores…</div>}
     {error && <div className="dashboard-error" role="alert">{error}<button className="button secondary" onClick={() => setRevision(n => n + 1)}>Tentar novamente</button></div>}
     {data && <motion.div key={`${month}-${period}-${revision}`} initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .25 }}>
-      <div className="dashboard-stats">{cards.map(card => <article key={card.label}><span className="dashboard-stat-icon"><card.icon size={22} /></span><p>{card.label}</p><strong>{card.value}</strong><small>{card.hint}</small></article>)}</div>
+      <div className="dashboard-overview-grid">
+        <ExamOverview summary={data.summary}/>
+        <section className="dashboard-card dashboard-work-summary" aria-label="Resumo do trabalho">
+          <div className="dashboard-card-heading"><h2><GraduationCap size={20}/>Resumo do trabalho</h2><span className="dashboard-total">{number(data.active_classes)} turmas ativas</span></div>
+          <div className="dashboard-stats">{cards.map(card => <article key={card.label}><span className="dashboard-stat-icon"><card.icon size={18} /></span><p>{card.label}</p><strong>{card.value}</strong><small>{card.hint}</small></article>)}</div>
+          <div className="dashboard-review-strip"><span><i className="dashboard-dot-approved"/>Aprovadas <strong>{number(data.summary.approved)}</strong></span><span><i className="dashboard-dot-draft"/>Em revisão <strong>{number(data.summary.drafts)}</strong></span></div>
+          <div className="dashboard-review-bar" aria-hidden="true"><span style={{ width: `${data.summary.exams ? data.summary.approved / data.summary.exams * 100 : 0}%` }}/><i style={{ width: `${data.summary.exams ? data.summary.drafts / data.summary.exams * 100 : 0}%` }}/></div>
+        </section>
+      </div>
       <p className="dashboard-definition">Cada prova com questões conta uma vez, pela data de criação. Rascunhos vazios ({number(data.summary.empty_drafts)}) ficam fora da contagem. Provas excluídas deixam de aparecer.</p>
       <div className="dashboard-main-grid">
         <section className="dashboard-card dashboard-activity" aria-label="Provas por período"><div className="dashboard-card-heading"><div><h2>Seu ritmo de criação</h2><p>{period === 'month' ? 'Provas agrupadas por dias do mês' : 'Provas agrupadas por mês'}</p></div><span className="dashboard-total">{number(data.summary.exams)} provas</span></div>

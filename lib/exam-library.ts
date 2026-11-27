@@ -1,11 +1,28 @@
 /*
  * Provas / organização e busca
- * Agrupa provas pelo mês no fuso de São Paulo e normaliza buscas sem acentos. Mantém separados o
+ * Agrupa provas por dia ou mês no fuso de São Paulo e normaliza buscas sem acentos. Mantém separados o
  * histórico coletivo e a seleção de alunos para provas individuais.
  */
 import type {ClassRoom, Exam, Student} from './model.ts';
 
 export const EXAM_TIME_ZONE = 'America/Sao_Paulo';
+// A pasta usa a data de criação, nunca a última edição. O fuso é o mesmo exibido na prova.
+export function examDays(exams: Exam[]) {
+  const groups = new Map<string, {key: string; label: string; exams: Exam[]}>();
+  const formatter = new Intl.DateTimeFormat('en', {
+    timeZone: EXAM_TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  for (const exam of exams) {
+    const date = new Date(exam.created_at);
+    const fields = Number.isFinite(date.getTime()) ? formatter.formatToParts(date) : [];
+    const key = fields.length ? ['year', 'month', 'day'].map(type => fields.find(part => part.type === type)!.value).join('-') : 'unknown';
+    if (!groups.has(key)) groups.set(key, {key, label: examDate(exam.created_at), exams: []});
+    groups.get(key)!.exams.push(exam);
+  }
+  // Datas ausentes ficam por último, sem descartar registros antigos nem alterar a lista recebida.
+  return [...groups.values()].sort((a, b) => a.key === 'unknown' ? 1 : b.key === 'unknown' ? -1 : b.key.localeCompare(a.key))
+    .map(group => ({...group, exams: group.exams.sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0))}));
+}
 export function examDate(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? 'Data não informada' : date.toLocaleDateString('pt-BR', {timeZone: EXAM_TIME_ZONE});
